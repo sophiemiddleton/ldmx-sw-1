@@ -7,7 +7,7 @@
  *        sim particle's trajectory to a reconstructed Hcal hit.
  *        Plots and results are then tabulated in ROOT based on the sim particle and Hcal hit matches.
  *
- * @author Matthew Forsman 
+ * @author Matthew Forsman , Tom Eichlersmith
  */
 
 #include "Hcal/HcalHitMatcher.h"
