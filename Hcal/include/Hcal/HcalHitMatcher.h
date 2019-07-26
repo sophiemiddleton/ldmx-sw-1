@@ -117,8 +117,10 @@ namespace ldmx {
 
             //Event information (i.e. One Entry per Event)
             TH1D* h_Ecal_SummedEnergy;
+            TH1D* h_NumHcalHits; //NOT IMPLEMENTED
             TH2D* h_NumParticles;
             TH2D* h_EventMaxPE;
+            TH2D* h_EventMaxPE_Excluded; //NOT IMPLEMENTED
 
             //SimParticle
             TH2D* h_Particle_PDGID_All; //All PDG IDs

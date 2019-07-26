@@ -38,29 +38,67 @@ namespace ldmx {
         const TClonesArray* ecalScoringPlaneHits = event.getCollection( EcalScoringPlane_ );
         const TClonesArray* simParticles = event.getCollection("SimParticles"); // side-effect is to make TRefs all valid
 
-        std::vector<ldmx::SimTrackerHit*> simVec;
+        std::vector<ldmx::SimTrackerHit*> simTrackerHits_ScorePlane;
     
         for (int i = 0; i < ecalScoringPlaneHits->GetEntriesFast(); i++ ) {
             ldmx::SimTrackerHit* ecalSPH = (ldmx::SimTrackerHit*)(ecalScoringPlaneHits->At(i));
-            simVec.push_back(ecalSPH);
+
+            int layerID = ecalSPH->getLayerID();
+            std::vector<double> momentum = ecalSPH->getMomentum();
+
+            //skip particles that are entering the ECAL (mostly incoming electron)
+            bool isLeavingECAL = false;
+            switch( layerID ) {
+                case 1: //front - nothing - not going towards HCAL
+                    isLeavingECAL = false;
+                    break;
+                case 2: //back - z needs to be positive
+                    isLeavingECAL = (momentum[2] > 0);
+                    break;
+                case 3: //top - y needs to be postive
+                    isLeavingECAL = (momentum[1] > 0);
+                    break;
+                case 4: //bottom - y needs to be negative
+                    isLeavingECAL = (momentum[1] < 0);
+                    break;
+                case 5: //right - x needs to be negative
+                    isLeavingECAL = (momentum[0] < 0);
+                    break;
+                case 6: //left - x needs to be positive
+                    isLeavingECAL = (momentum[0] > 0);
+                    break;
+                default:
+                    isLeavingECAL = false;
+                    std::cerr << "[ Warning ] : HcalHitMatcher found a ECAL Scoring Plane Hit with layerID " << layerID << std::endl;
+                    std::cerr << "    which is not one of the options (1 - 6)." << std::endl;
+            }
+
+            if ( isLeavingECAL ) {
+                simTrackerHits_ScorePlane.push_back(ecalSPH);
+                ecalSPH->Print();
+            }
         }
 
-        std::sort(simVec.begin(), simVec.end(), compSims);
+        std::sort(simTrackerHits_ScorePlane.begin(), simTrackerHits_ScorePlane.end(), compSims);
 
         //SimParticles that cross Ecal Scoring Planes
         std::vector< ldmx::SimParticle* > simParticleCrossEcalSP;
 
         ldmx::SimParticle* lastP = 0; //sometimes multiple SP hits from same particle
-        for ( std::vector<ldmx::SimTrackerHit*>::iterator it_simVec = simVec.begin();
-              it_simVec != simVec.end(); ++it_simVec ) {
+        for ( std::vector<ldmx::SimTrackerHit*>::iterator it_simVec = simTrackerHits_ScorePlane.begin();
+              it_simVec != simTrackerHits_ScorePlane.end(); ++it_simVec ) {
 
             ldmx::SimParticle* sP = (*it_simVec)->getSimParticle();
             if ( sP != lastP ) {
                 //make sure there aren't any repeats
+                sP->Print();
                 lastP = sP;
                 simParticleCrossEcalSP.push_back( sP );
             }
+
         }
+
+        std::cout << "Number of SimParticles: " << simParticleCrossEcalSP.size() << std::endl;
 
         //---------- This section obtains a list of sim particles that cross the hcal scoring plane -------->
         //Currently it is NOT being used to obtain any information
@@ -303,217 +341,113 @@ namespace ldmx {
         // Make directory tree to organize histograms in
         TDirectory* d_base = getHistoDirectory();
 
-        //////////// Directory Tree
-        //  Ecal_SummedEnergy
-        //  NumParticles
-        //  EventMaxPE
-        //  Particle
-        //      PDGID
-        //          All
-        //          Matched
-        //      HitDistance
-        //          All
-        //          Matched
-        //      Energy
-        //          All
-        //          Matched
-        //  HcalHit
-        //      Z
-        //      ZbyR
-        //          All
-        //          Unmatched
-        //          TimeLess15
-        //          TimeGreat40
-        //          Matched
-        //              Photon
-        //              Electron
-        //              Neutron
-        //              Other
-        //              TdifLess15
-        //              TdifGreat40
-        //      PE
-        //          All
-        //          TimeLess15
-        //          TimeGreat40
-        //          Matched
-        //              TdifLess15
-        //              TdifGreat40
-        //      Time
-        //          All
-        //          Matched
-        //              All
-        //              Nucleons
-        //              Tdif
-
-        TDirectory* d_Ecal_SummedEnergy                 = d_base->mkdir( "Ecal_SummedEnergy" );
-        TDirectory* d_NumParticles                      = d_base->mkdir( "NumParticles" );
-        TDirectory* d_EventMaxPE                        = d_base->mkdir( "EventMaxPE" );
-
-        TDirectory* d_Particle                          = d_base->mkdir( "Particle" );
-        TDirectory* d_Particle_PDGID                    = d_Particle->mkdir( "PDGID" );
-        TDirectory* d_Particle_PDGID_All                = d_Particle_PDGID->mkdir( "All" );
-        TDirectory* d_Particle_PDGID_Matched            = d_Particle_PDGID->mkdir( "Matched" );
-        TDirectory* d_Particle_HitDistance              = d_Particle->mkdir( "HitDistance" );
-        TDirectory* d_Particle_HitDistance_All          = d_Particle_HitDistance->mkdir( "All" );
-        TDirectory* d_Particle_HitDistance_Matched      = d_Particle_HitDistance->mkdir( "Matched" );
-        TDirectory* d_Particle_Energy                   = d_Particle->mkdir( "Energy" );
-        TDirectory* d_Particle_Energy_All               = d_Particle_Energy->mkdir( "All" );
-        TDirectory* d_Particle_Energy_Matched           = d_Particle_Energy->mkdir( "Matched" );
-
-        TDirectory* d_HcalHit                           = d_base->mkdir( "HcalHit" );
-        TDirectory* d_HcalHit_Z                         = d_HcalHit->mkdir( "Z" );
-        TDirectory* d_HcalHit_ZbyR                      = d_HcalHit->mkdir( "ZbyR" );
-        TDirectory* d_HcalHit_ZbyR_All                  = d_HcalHit_ZbyR->mkdir( "All" );
-        TDirectory* d_HcalHit_ZbyR_Unmatched            = d_HcalHit_ZbyR->mkdir( "Unmatched" );
-        TDirectory* d_HcalHit_ZbyR_TimeLess15           = d_HcalHit_ZbyR->mkdir( "TimeLess15" );
-        TDirectory* d_HcalHit_ZbyR_TimeGreat40          = d_HcalHit_ZbyR->mkdir( "TimeGreat40" );
-        TDirectory* d_HcalHit_ZbyR_Matched              = d_HcalHit_ZbyR->mkdir( "Matched" );
-        TDirectory* d_HcalHit_ZbyR_Matched_Photon       = d_HcalHit_ZbyR_Matched->mkdir( "Photon" );
-        TDirectory* d_HcalHit_ZbyR_Matched_Electron     = d_HcalHit_ZbyR_Matched->mkdir( "Electron" );
-        TDirectory* d_HcalHit_ZbyR_Matched_Neutron      = d_HcalHit_ZbyR_Matched->mkdir( "Neutron" );
-        TDirectory* d_HcalHit_ZbyR_Matched_Other        = d_HcalHit_ZbyR_Matched->mkdir( "Other" );
-        TDirectory* d_HcalHit_ZbyR_Matched_TdifLess15   = d_HcalHit_ZbyR_Matched->mkdir( "TdifLess15" );
-        TDirectory* d_HcalHit_ZbyR_Matched_TdifGreat40  = d_HcalHit_ZbyR_Matched->mkdir( "TdifGreat40" );
-        TDirectory* d_HcalHit_PE                        = d_HcalHit->mkdir( "PE" );
-        TDirectory* d_HcalHit_PE_All                    = d_HcalHit_PE->mkdir( "All" );
-        TDirectory* d_HcalHit_PE_TimeLess15             = d_HcalHit_PE->mkdir( "TimeLess15" );
-        TDirectory* d_HcalHit_PE_TimeGreat40            = d_HcalHit_PE->mkdir( "TimeGreat40" );
-        TDirectory* d_HcalHit_PE_Matched                = d_HcalHit_PE->mkdir( "Matched" );
-        TDirectory* d_HcalHit_PE_Matched_TdifLess15     = d_HcalHit_PE_Matched->mkdir( "TdifLess15" );
-        TDirectory* d_HcalHit_PE_Matched_TdifGreat40    = d_HcalHit_PE_Matched->mkdir( "TdifGreat40" );
-        TDirectory* d_HcalHit_Time                      = d_HcalHit->mkdir( "Time" );
-        TDirectory* d_HcalHit_Time_All                  = d_HcalHit_Time->mkdir( "All" );
-        TDirectory* d_HcalHit_Time_Matched              = d_HcalHit_Time->mkdir( "Matched" );
-        TDirectory* d_HcalHit_Time_Matched_All          = d_HcalHit_Time_Matched->mkdir( "All" );
-        TDirectory* d_HcalHit_Time_Matched_Nucleons     = d_HcalHit_Time_Matched->mkdir( "Nucleons" );
-        TDirectory* d_HcalHit_Time_Matched_Tdif         = d_HcalHit_Time_Matched->mkdir( "Tdif" );
-
-        d_Ecal_SummedEnergy->cd();
         h_Ecal_SummedEnergy = new TH1D(
                 "Ecal_SummedEnergy",
                 "Ecal Summed Energy;Energy [MeV] (10MeV bin width);Count",
                 800,0,8000);//10MeV bins
 
-        d_NumParticles->cd();
         h_NumParticles = new TH2D(
                 "NumParticles" ,
                 "Num Particles in Event;X;Number of SimParticles that Crossed the ECAL Scoring Plane;Count",
                 800,0,8000,
                 50,0,50);
 
-        d_EventMaxPE->cd();
         h_EventMaxPE = new TH2D(
                 "EventMaxPE",
                 "Maximum PE for all Hits in Event;X;Maximum PE for all HcalHits in Event;Count",
                 800,0,8000,
                 500,0,500);
 
-        d_Particle_PDGID_All->cd();
         h_Particle_PDGID_All = new TH2D(
                 "Particle_PDGID_All",
                 "PDG IDs;X;PDG ID of SimParticle Crossing ECAL Scoring Plane;Count",
                 800,0,8000,
                 10000,-5000,5000);
 
-        d_Particle_PDGID_Matched->cd();
         h_Particle_PDGID_Matched = new TH2D(
                 "Particle_PDGID_Matched",
                 "PDG IDs;X;PDG ID of SimParticle Matched to HcalHit;Count",
                 800,0,8000,
                 10000,-5000,5000);
 
-       d_Particle_HitDistance_All->cd();
        h_Particle_HitDistance_All = new TH2D(
                "Particle_HitDistance_All",
                "Any pair of HcalHit and SimParticle crossing ECAL Scoring Plane;X;Distance between SimParticle and HcalHit;Count",
                800,0,8000,
                400, 0, 2000);
        
-       d_Particle_HitDistance_Matched->cd();
        h_Particle_HitDistance_Matched = new TH2D(
                "Particle_HitDistance_Matched", 
                "Distance between SimParticle and HcalHit when matched (5mm bins)", 
                800,0,8000,
                400, 0, 2000);
        
-       d_Particle_Energy_All->cd();
        h_Particle_Energy_All = new TH2D(
                "Particle_Energy_All",
                "All Particle Energies;X;Energy(MeV)(5MeV bin width);Count",
                800,0,8000,
                800,0,4000);
 
-       d_Particle_Energy_Matched->cd();
        h_Particle_Energy_Matched = new TH2D(
                "Particle_Energy_Matched",
                "Matched Particle Energies;X;Energy(MeV)(5MeV bin width);Count",
                800,0,8000,
                800,0,4000);
 
-       d_HcalHit_Z->cd();
        h_HcalHit_Z = new TH2D(
                "HcalHit_Z",
                "Z depth of HCal hits (10mm bins)",
                800,0,8000,
                320, 0, 3200);
 
-       d_HcalHit_ZbyR_All->cd();
        h_HcalHit_ZbyR_All = new TH3D(
                "HcalHit_ZbyR_All", 
                "All HcalHit locations;X;Z depth (mm);radial distance from z-axis (mm)",
                800,0,8000,
                80,0,3200,112,0,4500);
 
-       d_HcalHit_ZbyR_Unmatched->cd();
        h_HcalHit_ZbyR_Unmatched = new TH3D(
                "HcalHit_ZbyR_Unmatched", 
                "Hcal unmatched hit locations;X;Z depth(mm);radial distance from z-axis(mm)",
                800,0,8000,
                80,0,3200,112,0,4500);
 
-       d_HcalHit_ZbyR_TimeLess15->cd();
        h_HcalHit_ZbyR_TimeLess15 = new TH3D(
                "HcalHit_ZbyR_TimeLess15",
                "HcalHits with Time < 15ns locations;X;Z depth(mm);radial distance from z-axis(mm)",
                800,0,8000,
                80,0,3200,112,0,4500);
 
-       d_HcalHit_ZbyR_TimeGreat40->cd();
        h_HcalHit_ZbyR_TimeGreat40 = new TH3D(
                "HcalHit_ZbyR_TimeGreat40",
                "HcalHits with Time > 40ns locations;X;Z depth(mm);radial distance from z-axis(mm)",
                800,0,8000,
                80,0,3200,112,0,4500);
 
-       d_HcalHit_ZbyR_Matched_Photon->cd();
        h_HcalHit_ZbyR_Matched_Photon = new TH3D(
                "HcalHit_ZbyR_Matched_Photon", 
                "Hcal photon hit locations;X;Z depth(mm);radial distance from z-axis(mm)",
                800,0,8000,
                80,0,3200,112,0,4500);
 
-       d_HcalHit_ZbyR_Matched_Electron->cd();
        h_HcalHit_ZbyR_Matched_Electron = new TH3D(
                "HcalHit_ZbyR_Matched_Electron", 
                "Hcal electron hit locations;X;Z depth(mm);radial distance from z-axis(mm)",
                800,0,8000,
                80,0,3200,112,0,4500);
 
-       d_HcalHit_ZbyR_Matched_Neutron->cd();
        h_HcalHit_ZbyR_Matched_Neutron = new TH3D(
                "HcalHit_ZbyR_Matched_Neutron", 
                "Hcal neutron hit locations;X;Z depth(mm);radial distance from z-axis(mm)",
                800,0,8000,
                80,0,3200,112,0,4500);
 
-       d_HcalHit_ZbyR_Matched_Other->cd();
        h_HcalHit_ZbyR_Matched_Other = new TH3D(
                "HcalHit_ZbyR_Matched_Other", 
                "Hcal other particle hit locations;X;Z depth(mm);radial distance from z-axis(mm)",
                800,0,8000,
                80,0,3200,112,0,4500);
 
-       d_HcalHit_ZbyR_Matched_TdifLess15->cd();
        h_HcalHit_ZbyR_Matched_TdifLess15 = new TH3D(
                "HcalHit_ZbyR_Matched_TdifLess15",
                "Matched HcalHit location with time dif < 15ns"
@@ -521,7 +455,6 @@ namespace ldmx {
                800,0,8000,
                80,0,3200,112,0,4500);
 
-       d_HcalHit_ZbyR_Matched_TdifGreat40->cd();
        h_HcalHit_ZbyR_Matched_TdifGreat40 = new TH3D(
                "HcalHit_ZbyR_Matched_TdifGreat40",
                "Matched HcalHit location with time dif > 40ns"
@@ -529,63 +462,54 @@ namespace ldmx {
                800,0,8000,
                80,0,3200,112,0,4500);
 
-       d_HcalHit_PE_All->cd();
        h_HcalHit_PE_All = new TH2D(
                "HcalHit_PE_All",
                "PEs of all HcalHits;X;Photoelectrons(PEs);Count",
                800,0,8000,
                200,0,200);
 
-       d_HcalHit_PE_TimeLess15->cd();
        h_HcalHit_PE_TimeLess15 = new TH2D(
                "HcalHit_PE_TimeLess15",
               "HcalHits with Time < 15ns;X;Photoelectrons(PEs);Count",
                800,0,8000,
                200,0,200);
 
-       d_HcalHit_PE_TimeGreat40->cd();
        h_HcalHit_PE_TimeGreat40 = new TH2D(
                "HcalHit_PE_TimeGreat40",
                "HcalHits with Time > 40ns;X;Photoelectrons(PEs);Count",
                800,0,8000,
                200,0,200);
 
-       d_HcalHit_PE_Matched_TdifLess15->cd();
        h_HcalHit_PE_Matched_TdifLess15 = new TH2D(
                "HcalHit_PE_Matched_TdifLess15",
                "Matched HcalHit with Time dif < 15ns;X;Photoelectrons(PEs);Count",
                800,0,8000,
                200,0,200);
 
-       d_HcalHit_PE_Matched_TdifGreat40->cd();
        h_HcalHit_PE_Matched_TdifGreat40 = new TH2D(
                "HcalHit_PE_Matched_TdifGreat40",
                "Matched HcalHit with Time dif > 40ns;X;Photoelectrons(PEs);Count",
                800,0,8000,
                200,0,200);
 
-       d_HcalHit_Time_All->cd();
        h_HcalHit_Time_All = new TH2D(
                "HcalHit_Time_All",
                "Time of All HcalHits;X;time(ns)(5ns bin width);Count",
                800,0,8000,
                100,0,500);
 
-       d_HcalHit_Time_Matched_All->cd();
        h_HcalHit_Time_Matched_All = new TH2D(
                "HcalHit_Time_Matched_All", 
                "Time of Matched HcalHits;X;Time(ns);Number of particles created", 
                800,0,8000,
                500, 0, 500);
 
-       d_HcalHit_Time_Matched_Nucleons->cd();
        h_HcalHit_Time_Matched_Nucleons = new TH2D(
                "HcalHit_Time_Matched_Nucleons",
                "Time of HcalHits Matched to Nucleons;X;Time(ns);Number of Nucleons created", 
                800,0,8000,
                500, 0, 500);
        
-       d_HcalHit_Time_Matched_Tdif->cd();
        h_HcalHit_Time_Matched_Tdif = new TH2D(
                "HcalHit_Time_Matched_Tdif",
                ";X;Time Difference Between SimParticle and matched HcalHit [ns] (2ns bin width);Count",
@@ -593,7 +517,6 @@ namespace ldmx {
                100,0,200);
 
         //go back to base histogram directory
-        d_base->cd();
     
         return;
     } //onProcessStart
