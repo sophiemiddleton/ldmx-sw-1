@@ -27,6 +27,9 @@ namespace ldmx {
 
         maxMatchDist_ = ps.getDouble( "MaximumMatchDistance" , 150.0 );
 
+        minR_EventMaxPE_ = ps.getDouble( "MinRadial_IncludeEventMaxPE" , 500.0 );
+        minZ_EventMaxPE_ = ps.getDouble( "MinZDepth_IncludeEventMaxPE" , 1000.0 );
+
         return;
     }
 
@@ -75,7 +78,7 @@ namespace ldmx {
 
             if ( isLeavingECAL ) {
                 simTrackerHits_ScorePlane.push_back(ecalSPH);
-                ecalSPH->Print();
+//                ecalSPH->Print();
             }
         }
 
@@ -91,14 +94,14 @@ namespace ldmx {
             ldmx::SimParticle* sP = (*it_simVec)->getSimParticle();
             if ( sP != lastP ) {
                 //make sure there aren't any repeats
-                sP->Print();
+//                sP->Print();
                 lastP = sP;
                 simParticleCrossEcalSP.push_back( sP );
             }
 
         }
 
-        std::cout << "Number of SimParticles: " << simParticleCrossEcalSP.size() << std::endl;
+//        std::cout << "Number of SimParticles: " << simParticleCrossEcalSP.size() << std::endl;
 
         //---------- This section obtains a list of sim particles that cross the hcal scoring plane -------->
         //Currently it is NOT being used to obtain any information
@@ -161,12 +164,15 @@ namespace ldmx {
         const TClonesArray* hcalHitColl = event.getCollection( HcalHitColl_ );
 
         float max_PE_of_event=0;
+        float max_PE_of_event_excluded=0;
+        int nHcalHits = 0;
         for(int i=0; i < hcalHitColl->GetEntriesFast(); i++) { //Begin loop over hcalhits array
             ldmx::HcalHit* hcalhit = (ldmx::HcalHit*)(hcalHitColl->At(i));
             
             if ( ! hcalhit->getNoise() ) { //Only analyze non-noise hits
 
                 numNonNoiseHits_++;
+                nHcalHits++;
 
                 //---- Bin HcalHit information that does not depend on mathcin -------------------->
                 
@@ -191,8 +197,12 @@ namespace ldmx {
                     h_HcalHit_ZbyR_TimeGreat40->Fill( ecalTotalEnergy , hcalhit->getZ(), hcalhit_radialdist);
                 }
                 
-                if(hcalhit->getPE() > max_PE_of_event)
+                if(hcalhit->getPE() > max_PE_of_event) {
                     max_PE_of_event=hcalhit->getPE();
+                    if ( hcalhit->getZ() > minZ_EventMaxPE_ or hcalhit_radialdist > minR_EventMaxPE_ ) {
+                        max_PE_of_event_excluded = hcalhit->getPE();
+                    }
+                }
 
                 //---- Attempt to match this HcalHit to a SimParticle that cross the Ecal SP ----->
 
@@ -282,7 +292,9 @@ namespace ldmx {
         }//End loop over hcalhits array
 
         // maximum PE in hcal hits for the event
-        h_EventMaxPE->Fill( ecalTotalEnergy , max_PE_of_event );
+        h_EventMaxPE_All->Fill( ecalTotalEnergy , max_PE_of_event );
+        h_EventMaxPE_Excluded->Fill( ecalTotalEnergy , max_PE_of_event_excluded );
+        h_NumHcalHits->Fill( ecalTotalEnergy , nHcalHits );
 
         return;
     } //analyze
@@ -346,18 +358,32 @@ namespace ldmx {
                 "Ecal Summed Energy;Energy [MeV] (10MeV bin width);Count",
                 800,0,8000);//10MeV bins
 
+        h_NumHcalHits = new TH2D(
+                "NumHcalHits",
+                ";EcalSummedEnergy;Number of HcalHits per Event;Count",
+                800,0,8000,
+                30,0,30);
+
         h_NumParticles = new TH2D(
                 "NumParticles" ,
                 ";EcalSummedEnergy;Number of SimParticles that Crossed the ECAL Scoring Plane;Count",
                 800,0,8000,
                 10,0,10);
 
-        h_EventMaxPE = new TH2D(
-                "EventMaxPE",
+        h_EventMaxPE_All = new TH2D(
+                "EventMaxPE_All",
                 ";EcalSummedEnergy;Maximum PE for all HcalHits in Event;Count",
                 800,0,8000,
-                500,0,500);
+                100,0,500);
 
+        std::string title = ";EcalSummedEnergy;Maximum PE for all HcalHits in Event Excluding Hits with R < "
+            + std::to_string(minR_EventMaxPE_) + " mm and Z < " + std::to_string(minZ_EventMaxPE_) + " mm;Count";
+        h_EventMaxPE_Excluded = new TH2D(
+                "EventMaxPE_Excluded",
+                title.c_str(),
+                800,0,8000,
+                100,0,500);
+        
         h_Particle_PDGID_All = new TH2D(
                 "Particle_PDGID_All",
                 ";EcalSummedEnergy;PDG ID of SimParticle Crossing ECAL Scoring Plane;Count",
@@ -386,13 +412,13 @@ namespace ldmx {
                "Particle_Energy_All",
                ";EcalSummedEnergy;SimParticle Energy [MeV];Count",
                800,0,8000,
-               90,0,4500);
+               41,0,4100);
 
        h_Particle_Energy_Matched = new TH2D(
                "Particle_Energy_Matched",
                ";EcalSummedEnergy;Energy of SimParticles matched to HcalHit [MeV];Count",
                800,0,8000,
-               90,0,4000);
+               41,0,4100);
 
        h_HcalHit_Z = new TH2D(
                "HcalHit_Z",

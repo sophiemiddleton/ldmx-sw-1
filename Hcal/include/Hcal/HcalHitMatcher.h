@@ -101,6 +101,8 @@ namespace ldmx {
             std::string EcalScoringPlane_; //* Name of Ecal Scoring Plane Hits Collection
             std::string HcalScoringPlane_; //* Name of Hcal Scoring Plane Hits Collection
             double maxMatchDist_; //* Maximum distance (mm) between SimParticle and Hit to allow for a match
+            double minR_EventMaxPE_; //* Minimum radial distance to not be Excluded
+            double minZ_EventMaxPE_; //* Minimum z depth to not be Excluded
 
             long int numNonNoiseHits_; //* Number of Non-Noise Hcal Hits
             long int numMatchedHits_; //* Number of Hcal Hits matched to a sim particle
@@ -117,10 +119,10 @@ namespace ldmx {
 
             //Event information (i.e. One Entry per Event)
             TH1D* h_Ecal_SummedEnergy;
-            TH1D* h_NumHcalHits; //NOT IMPLEMENTED
+            TH2D* h_NumHcalHits;
             TH2D* h_NumParticles;
-            TH2D* h_EventMaxPE;
-            TH2D* h_EventMaxPE_Excluded; //NOT IMPLEMENTED
+            TH2D* h_EventMaxPE_All;
+            TH2D* h_EventMaxPE_Excluded; 
 
             //SimParticle
             TH2D* h_Particle_PDGID_All; //All PDG IDs
