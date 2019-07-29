@@ -122,8 +122,12 @@ namespace ldmx {
              */
             double readoutThreshold_{4.};
 
+            /** Layer Weights for Digitization */
+            std::vector<double> layerWeights_;
+
             /** Second Order Energy Correction */
             double secondOrderEnergyCorrection_;
+
     };
 }
 

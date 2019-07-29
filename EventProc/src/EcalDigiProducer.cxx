@@ -10,18 +10,10 @@
 namespace ldmx {
 
     const std::vector<double> LAYER_WEIGHTS 
-//        = {1.641, 3.526, 5.184, 6.841,
-//          8.222, 8.775, 8.775, 8.775, 8.775, 8.775, 8.775, 8.775, 8.775, 8.775,
-//          8.775, 8.775, 8.775, 8.775, 8.775, 8.775, 8.775, 8.775, 12.642, 16.51,
-//          16.51, 16.51, 16.51, 16.51, 16.51, 16.51, 16.51, 16.51, 16.51, 8.45}; //v3
-//        = { 0.931, 1.674, 3.348, 4.989, 6.646, 8.028, 8.580, 8.580, 8.580, 8.580,
-//            8.580, 8.580, 8.580, 8.580, 8.580, 8.580, 8.580, 8.580, 8.580, 8.580, 8.580,
-//            8.580, 8.580, 12.447, 16.314, 16.314, 16.314, 16.314, 16.314, 16.314, 16.314,
-//            16.314, 16.314, 8.246 }; //v12
-        = { 0.767, 1.346, 3.020, 4.661, 6.318, 7.699, 8.252, 8.252, 8.252, 8.25,
-            8.25, 8.25, 8.25, 8.25, 8.25, 8.25, 8.25, 8.25, 8.25, 8.25, 8.25, 8.25,
-            8.25, 12.11, 15.98, 15.98, 15.98, 15.98, 15.98, 15.98, 15.98, 15.98,
-            15.98, 8.082 }; //v9
+        = {1.641, 3.526, 5.184, 6.841,
+          8.222, 8.775, 8.775, 8.775, 8.775, 8.775, 8.775, 8.775, 8.775, 8.775,
+          8.775, 8.775, 8.775, 8.775, 8.775, 8.775, 8.775, 8.775, 12.642, 16.51,
+          16.51, 16.51, 16.51, 16.51, 16.51, 16.51, 16.51, 16.51, 16.51, 8.45}; //v3
 
    
     const double EcalDigiProducer::ELECTRONS_PER_MIP = 33000.0; // e-
@@ -54,6 +46,9 @@ namespace ldmx {
         //std::cout << "[ EcalDigiProducer ]: Readout threshold: " << readoutThreshold_ << " MeV" << std::endl;
 
         secondOrderEnergyCorrection_ = ps.getDouble( "secondOrderEnergyCorrection" );
+
+        layerWeights_ = ps.getVDouble( "layerWeights" , LAYER_WEIGHTS );
+
         noiseGenerator_->setNoise(noiseRMS_); 
         noiseGenerator_->setPedestal(0); 
         noiseGenerator_->setNoiseThreshold(ps.getDouble("readoutThreshold")*noiseRMS_); 
@@ -85,7 +80,7 @@ namespace ldmx {
             double energy = simHit->getEdep() + hitNoise;
             digiHit->setAmplitude(energy);
             if (energy > readoutThreshold_) {
-                digiHit->setEnergy(((energy/MIP_SI_RESPONSE)*LAYER_WEIGHTS[hit_pair.first]+energy)*secondOrderEnergyCorrection_);
+                digiHit->setEnergy(((energy/MIP_SI_RESPONSE)*layerWeights_.at(hit_pair.first)+energy)*secondOrderEnergyCorrection_);
                 digiHit->setTime(simHit->getTime());
             } else {
                 digiHit->setEnergy(0);
@@ -123,7 +118,7 @@ namespace ldmx {
             digiHit->setID(detID_.pack()); 
 
             // Set the calibrated energy of the hit
-            digiHit->setEnergy(((noiseHit/MIP_SI_RESPONSE)*LAYER_WEIGHTS[layerID]+noiseHit)*0.948);
+            digiHit->setEnergy(((noiseHit/MIP_SI_RESPONSE)*layerWeights_.at(layerID)+noiseHit)*secondOrderEnergyCorrection_);
             
             // Identify this hit as a noise hit.
             digiHit->setNoiseHit(true);
