@@ -10,10 +10,14 @@
 namespace ldmx {
 
     const std::vector<double> LAYER_WEIGHTS 
-        = {1.641, 3.526, 5.184, 6.841,
-        8.222, 8.775, 8.775, 8.775, 8.775, 8.775, 8.775, 8.775, 8.775, 8.775,
-        8.775, 8.775, 8.775, 8.775, 8.775, 8.775, 8.775, 8.775, 12.642, 16.51,
-        16.51, 16.51, 16.51, 16.51, 16.51, 16.51, 16.51, 16.51, 16.51, 8.45}; 
+//        = {1.641, 3.526, 5.184, 6.841,
+//          8.222, 8.775, 8.775, 8.775, 8.775, 8.775, 8.775, 8.775, 8.775, 8.775,
+//          8.775, 8.775, 8.775, 8.775, 8.775, 8.775, 8.775, 8.775, 12.642, 16.51,
+//          16.51, 16.51, 16.51, 16.51, 16.51, 16.51, 16.51, 16.51, 16.51, 8.45}; //v3
+        = { 0.571, 0.963, 2.621, 4.278, 5.936, 7.317, 7.869, 7.869, 7.869, 7.869, 
+          7.869, 7.869, 7.869, 7.869, 7.869, 7.869, 7.869, 7.869, 7.869, 7.869, 
+          7.869, 7.869, 7.869, 11.736, 15.604, 15.604, 15.604, 15.604, 15.604, 
+          15.604, 15.604, 15.604, 15.604, 7.869 }; //v9 and v12
    
     const double EcalDigiProducer::ELECTRONS_PER_MIP = 33000.0; // e-
 
@@ -44,6 +48,7 @@ namespace ldmx {
         readoutThreshold_ = ps.getDouble("readoutThreshold")*noiseRMS_;
         //std::cout << "[ EcalDigiProducer ]: Readout threshold: " << readoutThreshold_ << " MeV" << std::endl;
 
+        secondOrderEnergyCorrection_ = ps.getDouble( "secondOrderEnergyCorrection" );
         noiseGenerator_->setNoise(noiseRMS_); 
         noiseGenerator_->setPedestal(0); 
         noiseGenerator_->setNoiseThreshold(ps.getDouble("readoutThreshold")*noiseRMS_); 
@@ -75,7 +80,7 @@ namespace ldmx {
             double energy = simHit->getEdep() + hitNoise;
             digiHit->setAmplitude(energy);
             if (energy > readoutThreshold_) {
-                digiHit->setEnergy(((energy/MIP_SI_RESPONSE)*LAYER_WEIGHTS[hit_pair.first]+energy)*0.948);
+                digiHit->setEnergy(((energy/MIP_SI_RESPONSE)*LAYER_WEIGHTS[hit_pair.first]+energy)*secondOrderEnergyCorrection_);
                 digiHit->setTime(simHit->getTime());
             } else {
                 digiHit->setEnergy(0);

@@ -121,6 +121,9 @@ namespace ldmx {
              * multiples of RMS noise. 
              */
             double readoutThreshold_{4.};
+
+            /** Second Order Energy Correction */
+            double secondOrderEnergyCorrection_;
     };
 }
 

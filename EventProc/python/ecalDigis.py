@@ -15,3 +15,6 @@ ecalDigis.parameters["padCapacitance"] = 27.56
 
 # set the readout threshold in multiples of RMS noise
 ecalDigis.parameters["readoutThreshold"] = 4.
+
+# set the second order energy correction to the ecal digitization
+ecalDigis.parameters["secondOrderEnergyCorrection"] = 0.948
