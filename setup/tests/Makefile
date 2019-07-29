@@ -1,4 +1,6 @@
 # System independendent makefile.
+# To be called with:
+# 	make TARGET=[exec-name] [rule]
 # Since we want LDMX to work on any system, we can't be reliant on the native gcc.
 # So this provides a model into how LDMX code will be compiled to achieve this independence.
 # It builds $TARGET without relying on the system's glibc and using its own instead,
