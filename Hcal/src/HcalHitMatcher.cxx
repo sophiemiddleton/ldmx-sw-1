@@ -30,6 +30,8 @@ namespace ldmx {
         minR_EventMaxPE_ = ps.getDouble( "MinRadial_IncludeEventMaxPE" , 500.0 );
         minZ_EventMaxPE_ = ps.getDouble( "MinZDepth_IncludeEventMaxPE" , 1000.0 );
 
+        useAllSimParticles_ = static_cast<bool>( ps.getInteger( "UseAllSimParticles" , 0 ) );
+
         return;
     }
 
@@ -43,6 +45,7 @@ namespace ldmx {
 
         std::vector<ldmx::SimTrackerHit*> simTrackerHits_ScorePlane;
     
+//        printf( "%12i : %11s %7s %5s %20s\n" , simParticles->GetEntriesFast() , "SimParticle", "Energy" , "PDGID" , "Momentum" );
         for (int i = 0; i < ecalScoringPlaneHits->GetEntriesFast(); i++ ) {
             ldmx::SimTrackerHit* ecalSPH = (ldmx::SimTrackerHit*)(ecalScoringPlaneHits->At(i));
 
@@ -52,7 +55,7 @@ namespace ldmx {
             //skip particles that are entering the ECAL (mostly incoming electron)
             bool isLeavingECAL = false;
             switch( layerID ) {
-                case 1: //front - nothing - not going towards HCAL
+                case 1: //front - nothing - not near HCAL
                     isLeavingECAL = false;
                     break;
                 case 2: //back - z needs to be positive
@@ -78,7 +81,11 @@ namespace ldmx {
 
             if ( isLeavingECAL ) {
                 simTrackerHits_ScorePlane.push_back(ecalSPH);
-//                ecalSPH->Print();
+                std::vector<double> momentum = ecalSPH->getMomentum();
+//                printf( "SimTrackerHit: %11p %7.2f %5i (%5.1f,%5.1f,%5.1f)\n" , 
+//                        ecalSPH->getSimParticle(), ecalSPH->getEnergy() , ecalSPH->getPdgID(), 
+//                        momentum[0], momentum[1], momentum[2]
+//                        );
             }
         }
 
@@ -94,11 +101,39 @@ namespace ldmx {
             ldmx::SimParticle* sP = (*it_simVec)->getSimParticle();
             if ( sP != lastP ) {
                 //make sure there aren't any repeats
-//                sP->Print();
+                std::vector<double> momentum = sP->getMomentum();
+//                printf( "SimParticle  : %11p %7.2f %5i (%5.1f,%5.1f,%5.1f)\n" , 
+//                        sP, sP->getEnergy() , sP->getPdgID() , 
+//                        momentum[0], momentum[1], momentum[2]
+//                        );
+                for ( int iDaughter = 0; iDaughter < sP->getDaughterCount(); iDaughter++ ) {
+                    SimParticle* daughter = sP->getDaughter( iDaughter );
+                    momentum = daughter->getMomentum();
+//                    printf( " Daughter    : %11p %7.2f %5i (%5.1f,%5.1f,%5.1f)\n" , 
+//                            daughter, daughter->getEnergy() , daughter->getPdgID() , 
+//                            momentum[0], momentum[1], momentum[2]
+//                            );
+                }
+                for ( int iParent = 0; iParent < sP->getParentCount(); iParent++ ) {
+                    SimParticle* parent = sP->getParent( iParent );
+                    momentum = parent->getMomentum();
+//                    printf( " Parent      : %11p %7.2f %5i (%5.1f,%5.1f,%5.1f)\n" , 
+//                            parent, parent->getEnergy() , parent->getPdgID() , 
+//                            momentum[0], momentum[1], momentum[2]
+//                            );
+                }
                 lastP = sP;
                 simParticleCrossEcalSP.push_back( sP );
             }
 
+        }
+
+        // Use all SimParticles instead of Scoring Plane ones
+        if ( useAllSimParticles_ ) {
+            simParticleCrossEcalSP.clear();
+            for ( int i_SP = 0; i_SP < simParticles->GetEntriesFast(); i_SP++ ) {
+                simParticleCrossEcalSP.push_back( dynamic_cast<ldmx::SimParticle*>(simParticles->At( i_SP )) );
+            }
         }
 
 //        std::cout << "Number of SimParticles: " << simParticleCrossEcalSP.size() << std::endl;
@@ -170,6 +205,8 @@ namespace ldmx {
             ldmx::HcalHit* hcalhit = (ldmx::HcalHit*)(hcalHitColl->At(i));
             
             if ( ! hcalhit->getNoise() ) { //Only analyze non-noise hits
+                
+                hcalhit->Print();
 
                 numNonNoiseHits_++;
                 nHcalHits++;

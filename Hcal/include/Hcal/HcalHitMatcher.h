@@ -105,6 +105,7 @@ namespace ldmx {
             double maxMatchDist_; //* Maximum distance (mm) between SimParticle and Hit to allow for a match
             double minR_EventMaxPE_; //* Minimum radial distance to not be Excluded
             double minZ_EventMaxPE_; //* Minimum z depth to not be Excluded
+            bool useAllSimParticles_; //* Check if want to use all sim particlees or just scoring plane ones
 
             long int numNonNoiseHits_; //* Number of Non-Noise Hcal Hits
             long int numMatchedHits_; //* Number of Hcal Hits matched to a sim particle
