@@ -376,11 +376,12 @@ namespace ldmx {
                 800,0,8000,
                 100,0,500);
 
-        std::string title = ";EcalSummedEnergy;Maximum PE for all HcalHits in Event Excluding Hits with R < "
-            + std::to_string(minR_EventMaxPE_) + " mm and Z < " + std::to_string(minZ_EventMaxPE_) + " mm;Count";
+        char title[200];
+        sprintf( title , ";EcalSummedEnergy;Maximum PE for HcalHits with R > %.1f mm or Z > %.1f mm; Count" ,
+                minR_EventMaxPE_ , minZ_EventMaxPE_ );
         h_EventMaxPE_Excluded = new TH2D(
                 "EventMaxPE_Excluded",
-                title.c_str(),
+                title,
                 800,0,8000,
                 100,0,500);
         
@@ -567,10 +568,10 @@ namespace ldmx {
             matchRate = numerator / denominator;
         }
 
-        printf( "Number of Events:          %i\n" , numEvents_ );
-        printf( "Number of Non Noise Hits:  %i\n" , numNonNoiseHits_ );
-        printf( "Number of Matched Hits:    %i\n" , numMatchedHits_ );
-        printf( "Hit Rate (hits/events):    %f\n" , hitRate );
+        printf( "Number of Events         : %i\n" , numEvents_ );
+        printf( "Number of Non Noise Hits : %i\n" , numNonNoiseHits_ );
+        printf( "Number of Matched Hits   : %i\n" , numMatchedHits_ );
+        printf( "Hit Rate (hits/events)   : %f\n" , hitRate );
         printf( "Match Rate (matches/hits): %f\n" , matchRate );
 
         return;

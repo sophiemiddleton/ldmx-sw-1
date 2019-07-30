@@ -52,6 +52,8 @@ namespace ldmx {
              *      EcalScoringPlaneHitsName    EcalScoringPlaneHits    
              *      HcalScoringPlaneHitsName    HcalScoringPlaneHits
              *      MaximumMatchDistance        150.0 (Maximum distance allowed for a match in mm)
+             *      MinRadial_IncludeEventMaxPE 500.0 (Minimum Radial distance allowed for maximum PE calculation)
+             *      MinZDepth_IncludeEventMaxPE 1000.0 (Minimum Z Depth allowed for maximum PE calculation)
              */
             virtual void configure(const ldmx::ParameterSet& ps);
             
@@ -122,7 +124,7 @@ namespace ldmx {
             TH2D* h_NumHcalHits;
             TH2D* h_NumParticles;
             TH2D* h_EventMaxPE_All;
-            TH2D* h_EventMaxPE_Excluded; 
+            TH2D* h_EventMaxPE_Excluded;  //Excludes any HcalHit with r < minR AND z < minZ (front/center of side HCAL)
 
             //SimParticle
             TH2D* h_Particle_PDGID_All; //All PDG IDs
