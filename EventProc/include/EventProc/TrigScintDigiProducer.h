@@ -20,6 +20,7 @@
 #include "Event/TrigScintHit.h"
 #include "Event/SimCalorimeterHit.h"
 #include "Framework/EventProcessor.h"
+#include "Tools/NoiseGenerator.h"
 
 namespace ldmx {
 
@@ -59,6 +60,7 @@ namespace ldmx {
             DefaultDetectorID* detID_{nullptr};
 	    std::string input_collection_;
 	    std::string output_collection_;
+            NoiseGenerator* noiseGenerator_;
 
             /** Generator for simulating noise hits. */
             double meanNoise_{0};
