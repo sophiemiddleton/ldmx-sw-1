@@ -100,28 +100,6 @@ namespace ldmx {
 
             ldmx::SimParticle* sP = (*it_simVec)->getSimParticle();
             if ( sP != lastP ) {
-                //make sure there aren't any repeats
-                std::vector<double> momentum = sP->getMomentum();
-//                printf( "SimParticle  : %11p %7.2f %5i (%5.1f,%5.1f,%5.1f)\n" , 
-//                        sP, sP->getEnergy() , sP->getPdgID() , 
-//                        momentum[0], momentum[1], momentum[2]
-//                        );
-                for ( int iDaughter = 0; iDaughter < sP->getDaughterCount(); iDaughter++ ) {
-                    SimParticle* daughter = sP->getDaughter( iDaughter );
-                    momentum = daughter->getMomentum();
-//                    printf( " Daughter    : %11p %7.2f %5i (%5.1f,%5.1f,%5.1f)\n" , 
-//                            daughter, daughter->getEnergy() , daughter->getPdgID() , 
-//                            momentum[0], momentum[1], momentum[2]
-//                            );
-                }
-                for ( int iParent = 0; iParent < sP->getParentCount(); iParent++ ) {
-                    SimParticle* parent = sP->getParent( iParent );
-                    momentum = parent->getMomentum();
-//                    printf( " Parent      : %11p %7.2f %5i (%5.1f,%5.1f,%5.1f)\n" , 
-//                            parent, parent->getEnergy() , parent->getPdgID() , 
-//                            momentum[0], momentum[1], momentum[2]
-//                            );
-                }
                 lastP = sP;
                 simParticleCrossEcalSP.push_back( sP );
             }
@@ -136,37 +114,6 @@ namespace ldmx {
             }
         }
 
-//        std::cout << "Number of SimParticles: " << simParticleCrossEcalSP.size() << std::endl;
-
-        //---------- This section obtains a list of sim particles that cross the hcal scoring plane -------->
-        //Currently it is NOT being used to obtain any information
-//        
-//        const TClonesArray* scoringPlaneHits_h=event.getCollection(scoringPlane_h);
-//        const TClonesArray* simParticles_h=event.getCollection("SimParticles"); // side-effect is to make TRefs all valid
-//    
-//        ldmx::SimTrackerHit* hcalSPP;
-//        std::vector<SimTrackerHit*> simVec_h;
-//        std::vector<SimTrackerHit*> filteredSimVec_h;//Sim particles are organized from highest to lowest momentum
-//    
-//        if ( scoringPlaneHits_h->GetEntriesFast() > 0 ) {
-//            for (TIter next(scoringPlaneHits_h); hcalSPP = (ldmx::SimTrackerHit*)next();) {
-//                simVec_h.push_back(hcalSPP);
-//            }
-//        }
-//    
-//        std::sort(simVec_h.begin(), simVec_h.end(), compSims);
-//
-//        SimParticle* lastP_h = 0; // sometimes multiple SP hits from same particle
-//        for (int j = 0; j < simVec_h.size(); j++) {
-//            SimParticle* sP_h = simVec_h[j]->getSimParticle();
-//            if (sP_h == lastP_h) continue;
-//            lastP = sP_h;
-//            filteredSimVec_h.push_back(simVec_h[j]);
-//        }
-//        
-//        std::sort(filteredSimVec_h.begin(), filteredSimVec_h.end(), compSimsP);
-    
-    
         //---------- This section calculates the energy in the ECAL ---------------------------------------->
         //Then uses this energy to set standard deviation range
 
@@ -186,13 +133,17 @@ namespace ldmx {
         h_NumParticles->Fill( ecalTotalEnergy , simParticleCrossEcalSP.size() );
 
         //Go through all SimParticles that crossed ECAL Scoring Plane
-        for ( const ldmx::SimParticle* simPart : simParticleCrossEcalSP ) {
+        //for ( const ldmx::SimParticle* simPart : simParticleCrossEcalSP ) {
+        for ( const ldmx::SimTrackerHit* simPart : simTrackerHits_ScorePlane ) {
             int pdgID = simPart->getPdgID();
             double energy = simPart->getEnergy();
+            std::vector<double> momentum = simPart->getMomentum();
+            double kinetic_energy = 0.0;
+            for ( double pi : momentum ) { kinetic_energy += pi*pi; }
 
             h_Particle_PDGID_All->Fill( ecalTotalEnergy , pdgID );
 
-            h_Particle_Energy_All->Fill( ecalTotalEnergy , energy );
+            h_Particle_Energy_All->Fill( ecalTotalEnergy , kinetic_energy );
         }
 
         //----This section matches HCal hits to sim particles and records results----->
@@ -206,7 +157,7 @@ namespace ldmx {
             
             if ( ! hcalhit->getNoise() ) { //Only analyze non-noise hits
                 
-                hcalhit->Print();
+                //hcalhit->Print();
 
                 numNonNoiseHits_++;
                 nHcalHits++;
