@@ -8,8 +8,6 @@
 #define HCAL_HCALHITMATCHER_H
 
 #include "Event/SimTrackerHit.h"
-#include "Event/EcalCluster.h"
-#include "Event/SimParticle.h"
 #include "Framework/EventProcessor.h"
 #include "Framework/ParameterSet.h"
 #include "Event/CalorimeterHit.h"
@@ -62,18 +60,6 @@ namespace ldmx {
              * that caused them.
              */
             virtual void analyze(const ldmx::Event& event);
-            
-            /**
-             * Compares two SimTrackerHit based on the momentum of the SimParticles.
-             * Returns true if a has a higher momentum magnitude than b.
-             */
-            static bool compSimsP(const SimTrackerHit* a, const SimTrackerHit* b);
-            
-            /**
-             * Compares two SimTrackerHits based on the SimParticle.
-             * If SimParticles are the same, then compare momentum, otherwise sort by reference.
-             */
-            static bool compSims(const SimTrackerHit* a, const SimTrackerHit* b); 
     
             /**
              * Calculate the distance between the line segment from v to w and the point p.

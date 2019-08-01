@@ -11,8 +11,9 @@
  */
 
 #include "Hcal/HcalHitMatcher.h"
+
 #include "Event/HcalHit.h"
-#include "Event/SimParticle.h"
+#include "Event/EcalHit.h"
 
 #include "TDirectoryFile.h" //directories to organize histograms
 
@@ -39,13 +40,27 @@ namespace ldmx {
 
         numEvents_++;
 
+        //---------- This section calculates the energy in the ECAL ---------------------------------------->
+        //Then uses this energy to set standard deviation range
+
+        const TClonesArray* ecalHitColl = event.getCollection( EcalHitColl_ ); 
+
+        double ecalTotalEnergy = 0;
+        for(int i=0; i < ecalHitColl->GetEntriesFast(); i++) {
+            ldmx::EcalHit* ecalhit = (ldmx::EcalHit*)(ecalHitColl->At(i));
+            if ( ! ecalhit->isNoise() ) { //Only add non-noise hits
+                ecalTotalEnergy += ecalhit->getEnergy();
+            }
+        }
+
+        //Bin event information
+        h_Ecal_SummedEnergy->Fill( ecalTotalEnergy );
+    
         //---------- This section obtains a list of sim particles that cross the ecal scoring plane --------->
         const TClonesArray* ecalScoringPlaneHits = event.getCollection( EcalScoringPlane_ );
-        const TClonesArray* simParticles = event.getCollection("SimParticles"); // side-effect is to make TRefs all valid
 
-        std::vector<ldmx::SimTrackerHit*> simTrackerHits_ScorePlane;
+        std::vector<ldmx::SimTrackerHit*> simTrackerHits_LeavingScorePlane;
     
-//        printf( "%12i : %11s %7s %5s %20s\n" , simParticles->GetEntriesFast() , "SimParticle", "Energy" , "PDGID" , "Momentum" );
         for (int i = 0; i < ecalScoringPlaneHits->GetEntriesFast(); i++ ) {
             ldmx::SimTrackerHit* ecalSPH = (ldmx::SimTrackerHit*)(ecalScoringPlaneHits->At(i));
 
@@ -80,71 +95,15 @@ namespace ldmx {
             }
 
             if ( isLeavingECAL ) {
-                simTrackerHits_ScorePlane.push_back(ecalSPH);
-                std::vector<double> momentum = ecalSPH->getMomentum();
-//                printf( "SimTrackerHit: %11p %7.2f %5i (%5.1f,%5.1f,%5.1f)\n" , 
-//                        ecalSPH->getSimParticle(), ecalSPH->getEnergy() , ecalSPH->getPdgID(), 
-//                        momentum[0], momentum[1], momentum[2]
-//                        );
+                simTrackerHits_LeavingScorePlane.push_back(ecalSPH);
+
+                h_Particle_Energy_All->Fill( ecalTotalEnergy , ecalSPH->getEnergy() );
+                h_Particle_PDGID_All->Fill( ecalTotalEnergy , ecalSPH->getPdgID() );
+
             }
         }
 
-        std::sort(simTrackerHits_ScorePlane.begin(), simTrackerHits_ScorePlane.end(), compSims);
-
-        //SimParticles that cross Ecal Scoring Planes
-        std::vector< ldmx::SimParticle* > simParticleCrossEcalSP;
-
-        ldmx::SimParticle* lastP = 0; //sometimes multiple SP hits from same particle
-        for ( std::vector<ldmx::SimTrackerHit*>::iterator it_simVec = simTrackerHits_ScorePlane.begin();
-              it_simVec != simTrackerHits_ScorePlane.end(); ++it_simVec ) {
-
-            ldmx::SimParticle* sP = (*it_simVec)->getSimParticle();
-            if ( sP != lastP ) {
-                lastP = sP;
-                simParticleCrossEcalSP.push_back( sP );
-            }
-
-        }
-
-        // Use all SimParticles instead of Scoring Plane ones
-        if ( useAllSimParticles_ ) {
-            simParticleCrossEcalSP.clear();
-            for ( int i_SP = 0; i_SP < simParticles->GetEntriesFast(); i_SP++ ) {
-                simParticleCrossEcalSP.push_back( dynamic_cast<ldmx::SimParticle*>(simParticles->At( i_SP )) );
-            }
-        }
-
-        //---------- This section calculates the energy in the ECAL ---------------------------------------->
-        //Then uses this energy to set standard deviation range
-
-        const TClonesArray* ecalHitColl = event.getCollection( EcalHitColl_ ); 
-
-        double ecalTotalEnergy = 0;
-        for(int i=0; i < ecalHitColl->GetEntriesFast(); i++) {
-            ldmx::EcalHit* ecalhit = (ldmx::EcalHit*)(ecalHitColl->At(i));
-            if ( ! ecalhit->isNoise() ) { //Only add non-noise hits
-                ecalTotalEnergy += ecalhit->getEnergy();
-            }
-        }
-
-        //Bin event information
-        h_Ecal_SummedEnergy->Fill( ecalTotalEnergy );
-    
-        h_NumParticles->Fill( ecalTotalEnergy , simParticleCrossEcalSP.size() );
-
-        //Go through all SimParticles that crossed ECAL Scoring Plane
-        //for ( const ldmx::SimParticle* simPart : simParticleCrossEcalSP ) {
-        for ( const ldmx::SimTrackerHit* simPart : simTrackerHits_ScorePlane ) {
-            int pdgID = simPart->getPdgID();
-            double energy = simPart->getEnergy();
-            std::vector<double> momentum = simPart->getMomentum();
-            double kinetic_energy = 0.0;
-            for ( double pi : momentum ) { kinetic_energy += pi*pi; }
-
-            h_Particle_PDGID_All->Fill( ecalTotalEnergy , pdgID );
-
-            h_Particle_Energy_All->Fill( ecalTotalEnergy , kinetic_energy );
-        }
+        h_NumParticles->Fill( ecalTotalEnergy , simTrackerHits_LeavingScorePlane.size() );
 
         //----This section matches HCal hits to sim particles and records results----->
         const TClonesArray* hcalHitColl = event.getCollection( HcalHitColl_ );
@@ -157,8 +116,6 @@ namespace ldmx {
             
             if ( ! hcalhit->getNoise() ) { //Only analyze non-noise hits
                 
-                //hcalhit->Print();
-
                 numNonNoiseHits_++;
                 nHcalHits++;
 
@@ -198,26 +155,26 @@ namespace ldmx {
                 //  for this HcalHit
                 double new_dist=9999, dist=9998; //initializing distance variables
                 const ldmx::SimParticle* matchedParticle = nullptr;
-                for ( const ldmx::SimParticle* simPart : simParticleCrossEcalSP ) {
-
-                    std::vector<double> simStart = simPart->getVertex();
-                    std::vector<double> simEnd = simPart->getEndPoint();
-        
-                    TVector3 simStartT = TVector3(simStart[0], simStart[1], simStart[2]);
-                    TVector3 simEndT = TVector3(simEnd[0], simEnd[1], simEnd[2]);
-                    TVector3 hCalPoint = TVector3(hcalhit->getX(), hcalhit->getY(), hcalhit->getZ());
-                    
-                    new_dist = point_line_distance(simStartT, simEndT, hCalPoint);
-                    
-                    h_Particle_HitDistance_All->Fill( ecalTotalEnergy , new_dist);
-        
-                    if( false ) { //simStart[2]<10.0 and simPart->getEnergy()>3000.0) {
-                        //discarding original electron
-                        //DO NOTHING (skip this sim particle)
-                    } else if(new_dist < dist) {
-                        dist = new_dist; //Distance to matched particle
-                        matchedParticle = simPart;
-                    }
+                for ( const ldmx::SimTrackerHit * scorePlaneHit : simTrackerHits_LeavingScorePlane ) {
+//
+//                    std::vector<double> simStart = simPart->getVertex();
+//                    std::vector<double> simEnd = simPart->getEndPoint();
+//        
+//                    TVector3 simStartT = TVector3(simStart[0], simStart[1], simStart[2]);
+//                    TVector3 simEndT = TVector3(simEnd[0], simEnd[1], simEnd[2]);
+//                    TVector3 hCalPoint = TVector3(hcalhit->getX(), hcalhit->getY(), hcalhit->getZ());
+//                    
+//                    new_dist = point_line_distance(simStartT, simEndT, hCalPoint);
+//                    
+//                    h_Particle_HitDistance_All->Fill( ecalTotalEnergy , new_dist);
+//        
+//                    if( false ) { //simStart[2]<10.0 and simPart->getEnergy()>3000.0) {
+//                        //discarding original electron
+//                        //DO NOTHING (skip this sim particle)
+//                    } else if(new_dist < dist) {
+//                        dist = new_dist; //Distance to matched particle
+//                        matchedParticle = simPart;
+//                    }
                     
                 } //iterate over sim particles to match one to current hcal hit
 
@@ -286,26 +243,6 @@ namespace ldmx {
 
         return;
     } //analyze
-
-   
-    bool HcalHitMatcher::compSimsP(const SimTrackerHit* a, const SimTrackerHit* b) {
-        std::vector<double> paVec = a->getMomentum();
-        std::vector<double> pbVec = b->getMomentum();
-    
-        double pa2 = pow(paVec[0],2)+pow(paVec[1],2)+pow(paVec[2],2);
-        double pb2 = pow(pbVec[0],2)+pow(pbVec[1],2)+pow(pbVec[2],2);
-    
-        return pa2 > pb2;
-    }
-
-    bool HcalHitMatcher::compSims(const SimTrackerHit* a, const SimTrackerHit* b) {
-
-        if (a->getSimParticle() == b->getSimParticle()) {
-             return compSimsP(a,b);
-        } else {
-             return a->getSimParticle() < b->getSimParticle();
-        }
-    }
 
     //This function finds the minimum distance between a line segment and a point in 3D space
     double HcalHitMatcher::point_line_distance(TVector3 v, TVector3 w, TVector3 p)  {
