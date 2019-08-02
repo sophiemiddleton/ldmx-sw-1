@@ -17,12 +17,14 @@
 #include <algorithm>
 #include <vector>
 #include <string>
+#include <map>
 
 #include "TH1.h"
 #include "TH2.h"
 #include "TH3.h"
 #include "TClonesArray.h"
 #include "TVector3.h"
+#include "TDatabasePDG.h"
 
 //LDMX Framework
 #include "Event/Event.h"
@@ -89,13 +91,16 @@ namespace ldmx {
             std::string EcalScoringPlane_; //* Name of Ecal Scoring Plane Hits Collection
             std::string HcalScoringPlane_; //* Name of Hcal Scoring Plane Hits Collection
             double maxMatchDist_; //* Maximum distance (mm) between SimParticle and Hit to allow for a match
-            double minR_EventMaxPE_; //* Minimum radial distance to not be Excluded
-            double minZ_EventMaxPE_; //* Minimum z depth to not be Excluded
-            bool useAllSimParticles_; //* Check if want to use all sim particlees or just scoring plane ones
+            double minDepth_EventMaxPE_; //* Minimum depth of hit in HCAL section to include in Event Max PE
+            double backZeroLayer_; //* Location of Z-plane of Zero'th Layer of Back HCAL
+            double sideZeroLayer_; //* Location of plane of Zero'th Layer of Side HCAL
+            double ecalFront_; //* Location of Z-plane of front of ECAL
 
             long int numNonNoiseHits_; //* Number of Non-Noise Hcal Hits
             long int numMatchedHits_; //* Number of Hcal Hits matched to a sim particle
             long int numEvents_; //* Number of events analyzed
+            std::map< int , long int > numParticles_; //* Number of particles corresponding to each PDG ID
+            TDatabasePDG databasePDG_; //* ROOT database with PDG information
         
             /**
              * The first index/coordinate in all of these histograms is the total (non-noise)
@@ -109,20 +114,23 @@ namespace ldmx {
             //Event information (i.e. One Entry per Event)
             TH1D* h_Ecal_SummedEnergy;
             TH2D* h_NumHcalHits;
+            TH2D* h_NumHcalHits_Back;
+            TH2D* h_NumHcalHits_Side;
             TH2D* h_NumParticles;
             TH2D* h_EventMaxPE_All;
             TH2D* h_EventMaxPE_Excluded;  //Excludes any HcalHit with r < minR AND z < minZ (front/center of side HCAL)
 
             //SimParticle
-            TH2D* h_Particle_PDGID_All; //All PDG IDs
-            TH2D* h_Particle_PDGID_Matched; //Matched PDG IDs
-            TH2D* h_Particle_HitDistance_All; //Distance between SimParticles and HcalHits
-            TH2D* h_Particle_HitDistance_Matched; //Distance between SimParticles and HcalHits
-            TH2D* h_Particle_Energy_All; //All SimParticle energies
-            TH2D* h_Particle_Energy_Matched; //Matched SimParticle energies
+            TH2D* h_Particle_HitDistance_All; //Distance between Particles and HcalHits
+            TH2D* h_Particle_HitDistance_Matched; //Distance between Particles and HcalHits
+            TH2D* h_Particle_Energy_All; //All Particle energies
+            TH2D* h_Particle_Kinetic_All; //All Particle kinetic energies
+            TH2D* h_Particle_Energy_Matched; //Matched Particle energies
 
             //Position of HcalHits
-            TH2D* h_HcalHit_Z;
+            TH2D* h_HcalHit_Depth_Side;
+            TH2D* h_HcalHit_Z_Side;
+            TH2D* h_HcalHit_Z_Back;
             TH3D* h_HcalHit_ZbyR_All;
             TH3D* h_HcalHit_ZbyR_Unmatched;
             TH3D* h_HcalHit_ZbyR_TimeLess15;
