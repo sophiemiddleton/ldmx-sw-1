@@ -160,10 +160,10 @@ namespace ldmx {
                     depth = hcalhit->getZ() - backZeroLayer_;
                 } else if ( section == 1 or section == 2 ) {
                     //top or bottom - use y
-                    depth = abs(hcalhit->getY()) - sizeZeroLayer_;
+                    depth = abs(hcalhit->getY()) - sideZeroLayer_;
                 } else if ( section == 3 or section == 4 ) {
                     //left or right - use x
-                    depth = abs(hcalhit->getX()) - sizeZeroLayer_;
+                    depth = abs(hcalhit->getX()) - sideZeroLayer_;
                 } else {
                     std::cerr << "[ Warning ] : HcalHitMatcher::analyze - found HcalSection " << section
                         << " that is not in the correct range." << std::endl;
