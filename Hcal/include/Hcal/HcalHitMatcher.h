@@ -118,7 +118,7 @@ namespace ldmx {
             TH2D* h_NumHcalHits_Side;
             TH2D* h_NumParticles;
             TH2D* h_EventMaxPE_All;
-            TH2D* h_EventMaxPE_Excluded;  //Excludes any HcalHit with r < minR AND z < minZ (front/center of side HCAL)
+            TH2D* h_EventMaxPE_Excluded;  //Excludes any HcalHit with depth < minDepth
 
             //SimParticle
             TH2D* h_Particle_HitDistance_All; //Distance between Particles and HcalHits

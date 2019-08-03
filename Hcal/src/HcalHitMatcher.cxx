@@ -157,23 +157,18 @@ namespace ldmx {
 
                 int section = hcalhit->getSection();
                 double depth = 0;
-                switch( section ) {
-                    case 0:
-                        //back ==> use z
-                        depth = abs(hcalhit->getZ()) - backZeroLayer_;
-                        break;
-                    case 1:
-                    case 2:
-                        //top or bottom ==> use y
-                        depth = abs(hcalhit->getY()) - sideZeroLayer_;
-                        break;
-                    case 3:
-                    case 4:
-                        //left or right ==> use x
-                        depth = abs(hcalhit->getX()) - sideZeroLayer_;
-                        break;
-                    default:
-                        break;
+                if ( section == 0 ) {
+                    //back - use z
+                    depth = hcalhit->getZ() - backZeroLayer_;
+                } else if ( section == 1 or section == 2 ) {
+                    //top or bottom - use y
+                    depth = abs(hcalhit->getY()) - sizeZeroLayer_;
+                } else if ( section == 3 or section == 4 ) {
+                    //left or right - use x
+                    depth = abs(hcalhit->getX()) - sizeZeroLayer_;
+                } else {
+                    std::cerr << "[ Warning ] : HcalHitMatcher::analyze - found HcalSection " << section
+                        << " that is not in the correct range." << std::endl;
                 }
 
                 if ( section == 0 ) {
@@ -210,7 +205,7 @@ namespace ldmx {
                 //  for this HcalHit
                 double new_dist=9999, dist=9998; //initializing distance variables
                 const ldmx::SimParticle* matchedParticle = nullptr;
-                for ( const ldmx::SimTrackerHit * scorePlaneHit : simTrackerHits_LeavingScorePlane ) {
+//                for ( const ldmx::SimTrackerHit * scorePlaneHit : simTrackerHits_LeavingScorePlane ) {
 //
 //                    std::vector<double> simStart = simPart->getVertex();
 //                    std::vector<double> simEnd = simPart->getEndPoint();
@@ -230,8 +225,8 @@ namespace ldmx {
 //                        dist = new_dist; //Distance to matched particle
 //                        matchedParticle = simPart;
 //                    }
-                    
-                } //iterate over sim particles to match one to current hcal hit
+//
+//                } //iterate over sim particles to match one to current hcal hit
 
                 //---- Bin HcalHit/Particle information for successfully matched hits --------->
 
