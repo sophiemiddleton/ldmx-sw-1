@@ -113,6 +113,7 @@ namespace ldmx {
 
             //Event information (i.e. One Entry per Event)
             TH1D* h_Ecal_SummedEnergy;
+            TH1D* h_ParticleID; //defined and filled onProcessEnd
             TH2D* h_NumHcalHits;
             TH2D* h_NumHcalHits_Back;
             TH2D* h_NumHcalHits_Side;

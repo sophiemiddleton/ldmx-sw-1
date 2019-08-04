@@ -121,6 +121,8 @@ namespace ldmx {
                     numParticles_[ pdgID ] ++;
                 }
 
+                h_ParticleID->Fill( std::to_string( pdgID ).c_str() , 1. );
+
                 h_Particle_Energy_All->Fill( ecalTotalEnergy , energy );
                 h_Particle_Kinetic_All->Fill( ecalTotalEnergy , kinetic );
 
@@ -336,6 +338,12 @@ namespace ldmx {
                 "Ecal_SummedEnergy",
                 "Ecal Summed Energy;Energy [MeV] (10MeV bin width);Count",
                 800,0,8000);//10MeV bins
+
+        h_ParticleID = new TH1D(
+                "ParticleID",
+                ";PDG ID of Particle Crossing ECAL Scoring Plane;Count",
+                1,0,1 );
+        h_ParticleID->SetCanExtend( TH1::kAllAxes );
 
         h_NumHcalHits = new TH2D(
                 "NumHcalHits",
@@ -564,6 +572,7 @@ namespace ldmx {
             denominator = numNonNoiseHits_;
             matchRate = numerator / denominator;
         }
+        
 
         printf( "\n" );
         printf( "===================================\n" );
