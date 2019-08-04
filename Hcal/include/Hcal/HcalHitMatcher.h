@@ -113,7 +113,6 @@ namespace ldmx {
 
             //Event information (i.e. One Entry per Event)
             TH1D* h_Ecal_SummedEnergy;
-            TH1D* h_ParticleID; //defined and filled onProcessEnd
             TH2D* h_NumHcalHits;
             TH2D* h_NumHcalHits_Back;
             TH2D* h_NumHcalHits_Side;
@@ -122,8 +121,9 @@ namespace ldmx {
             TH2D* h_EventMaxPE_Excluded;  //Excludes any HcalHit with depth < minDepth
 
             //SimParticle
+            TH2D* h_Particle_ID;
             TH2D* h_Particle_HitDistance_All; //Distance between Particles and HcalHits
-            TH2D* h_Particle_HitDistance_Matched; //Distance between Particles and HcalHits
+//            TH2D* h_Particle_HitDistance_Matched; //Distance between Particles and HcalHits
             TH2D* h_Particle_Energy_All; //All Particle energies
             TH2D* h_Particle_Kinetic_All; //All Particle kinetic energies
 //            TH2D* h_Particle_Energy_Matched; //Matched Particle energies
