@@ -96,12 +96,17 @@ namespace ldmx {
             double sideZeroLayer_; //* Location of plane of Zero'th Layer of Side HCAL
             double ecalFront_; //* Location of Z-plane of front of ECAL
 
+            /////////////////////////////
+            // Persistent information
             long int numNonNoiseHits_; //* Number of Non-Noise Hcal Hits
             long int numMatchedHits_; //* Number of Hcal Hits matched to a sim particle
             long int numEvents_; //* Number of events analyzed
             std::map< int , long int > numParticles_; //* Number of particles corresponding to each PDG ID
             TDatabasePDG databasePDG_; //* ROOT database with PDG information
         
+            ///////////////////////////
+            // Histograms
+
             /**
              * The first index/coordinate in all of these histograms is the total (non-noise)
              * energy deposited in the ECAL.
@@ -122,7 +127,7 @@ namespace ldmx {
 
             //SimParticle
             TH2D* h_Particle_ID;
-            TH2D* h_Particle_HitDistance_All; //Distance between Particles and HcalHits
+//            TH2D* h_Particle_HitDistance_All; //Distance between Particles and HcalHits
 //            TH2D* h_Particle_HitDistance_Matched; //Distance between Particles and HcalHits
             TH2D* h_Particle_Energy_All; //All Particle energies
             TH2D* h_Particle_Kinetic_All; //All Particle kinetic energies
@@ -134,8 +139,8 @@ namespace ldmx {
             TH2D* h_HcalHit_Z_Back;
             TH3D* h_HcalHit_ZbyR_All;
 //            TH3D* h_HcalHit_ZbyR_Unmatched;
-            TH3D* h_HcalHit_ZbyR_TimeLess15;
-            TH3D* h_HcalHit_ZbyR_TimeGreat40;
+//            TH3D* h_HcalHit_ZbyR_TimeLess15;
+//            TH3D* h_HcalHit_ZbyR_TimeGreat40;
 //            TH3D* h_HcalHit_ZbyR_Matched_Photon;
 //            TH3D* h_HcalHit_ZbyR_Matched_Electron;
 //            TH3D* h_HcalHit_ZbyR_Matched_Neutron;
@@ -145,8 +150,8 @@ namespace ldmx {
             
             //PEs of HcalHit
             TH2D* h_HcalHit_PE_All;
-            TH2D* h_HcalHit_PE_TimeLess15;
-            TH2D* h_HcalHit_PE_TimeGreat40;
+//            TH2D* h_HcalHit_PE_TimeLess15;
+//            TH2D* h_HcalHit_PE_TimeGreat40;
 //            TH2D* h_HcalHit_PE_Matched_TdifLess15;
 //            TH2D* h_HcalHit_PE_Matched_TdifGreat40;
 
