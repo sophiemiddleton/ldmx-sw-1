@@ -125,35 +125,35 @@ namespace ldmx {
             TH2D* h_Particle_HitDistance_Matched; //Distance between Particles and HcalHits
             TH2D* h_Particle_Energy_All; //All Particle energies
             TH2D* h_Particle_Kinetic_All; //All Particle kinetic energies
-            TH2D* h_Particle_Energy_Matched; //Matched Particle energies
+//            TH2D* h_Particle_Energy_Matched; //Matched Particle energies
 
             //Position of HcalHits
             TH2D* h_HcalHit_Depth_Side;
             TH2D* h_HcalHit_Z_Side;
             TH2D* h_HcalHit_Z_Back;
             TH3D* h_HcalHit_ZbyR_All;
-            TH3D* h_HcalHit_ZbyR_Unmatched;
+//            TH3D* h_HcalHit_ZbyR_Unmatched;
             TH3D* h_HcalHit_ZbyR_TimeLess15;
             TH3D* h_HcalHit_ZbyR_TimeGreat40;
-            TH3D* h_HcalHit_ZbyR_Matched_Photon;
-            TH3D* h_HcalHit_ZbyR_Matched_Electron;
-            TH3D* h_HcalHit_ZbyR_Matched_Neutron;
-            TH3D* h_HcalHit_ZbyR_Matched_Other;
-            TH3D* h_HcalHit_ZbyR_Matched_TdifLess15;
-            TH3D* h_HcalHit_ZbyR_Matched_TdifGreat40;
+//            TH3D* h_HcalHit_ZbyR_Matched_Photon;
+//            TH3D* h_HcalHit_ZbyR_Matched_Electron;
+//            TH3D* h_HcalHit_ZbyR_Matched_Neutron;
+//            TH3D* h_HcalHit_ZbyR_Matched_Other;
+//            TH3D* h_HcalHit_ZbyR_Matched_TdifLess15;
+//            TH3D* h_HcalHit_ZbyR_Matched_TdifGreat40;
             
             //PEs of HcalHit
             TH2D* h_HcalHit_PE_All;
             TH2D* h_HcalHit_PE_TimeLess15;
             TH2D* h_HcalHit_PE_TimeGreat40;
-            TH2D* h_HcalHit_PE_Matched_TdifLess15;
-            TH2D* h_HcalHit_PE_Matched_TdifGreat40;
+//            TH2D* h_HcalHit_PE_Matched_TdifLess15;
+//            TH2D* h_HcalHit_PE_Matched_TdifGreat40;
 
             //Time of HcalHit
             TH2D* h_HcalHit_Time_All;
-            TH2D* h_HcalHit_Time_Matched_All;
-            TH2D* h_HcalHit_Time_Matched_Nucleons;
-            TH2D* h_HcalHit_Time_Matched_Tdif;
+//            TH2D* h_HcalHit_Time_Matched_All;
+//            TH2D* h_HcalHit_Time_Matched_Nucleons;
+//            TH2D* h_HcalHit_Time_Matched_Tdif;
 
     };
 }
