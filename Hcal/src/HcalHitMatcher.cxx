@@ -370,7 +370,7 @@ namespace ldmx {
                 500,0,500);
 
         char title[200];
-        sprintf( title , ";EcalSummedEnergy;Maximum PE for HcalHits with Penetration Depth > %.1f mm; Count" ,
+        sprintf( title , ";EcalSummedEnergy;Maximum PE for Hits with Depth > %.1f mm; Count" ,
                 minDepth_EventMaxPE_ );
         h_EventMaxPE_Excluded = new TH2D(
                 "EventMaxPE_Excluded",
@@ -384,6 +384,13 @@ namespace ldmx {
                 800,0,8000,
                 1,0,1 );
         h_Particle_ID->SetCanExtend( TH1::kYaxis );
+        //add in bins of known particles
+        std::vector<std::string> knownPDGs = { "22" , "11" , "-11" , "12", "-12", "13" , "-13", "14", "-14" ,
+            "2112" , "2212" , "211", "-211" , "130", "321" , "10000010020" };
+        for ( std::string &pdg : knownPDGs ) {
+            h_Particle_ID->GetYaxis()->FindBin( pdg.c_str() );
+        }
+        h_Particle_ID->LabelsDeflate( "Y" );
 
 //        h_Particle_HitDistance_All = new TH2D(
 //               "Particle_HitDistance_All",
@@ -407,7 +414,7 @@ namespace ldmx {
                "Particle_Kinetic_All",
                ";EcalSummedEnergy;Particle Kinetic Energy [MeV];Count",
                800,0,8000,
-               150,0,150);
+               400,0,4000);
 
 //        h_Particle_Energy_Matched = new TH2D(
 //               "Particle_Energy_Matched",
