@@ -52,8 +52,10 @@ namespace ldmx {
              *      EcalScoringPlaneHitsName    EcalScoringPlaneHits    
              *      HcalScoringPlaneHitsName    HcalScoringPlaneHits
              *      MaximumMatchDistance        150.0 (Maximum distance allowed for a match in mm)
-             *      MinRadial_IncludeEventMaxPE 500.0 (Minimum Radial distance allowed for maximum PE calculation)
-             *      MinZDepth_IncludeEventMaxPE 1000.0 (Minimum Z Depth allowed for maximum PE calculation)
+             *      MinDepth_IncludeEventMaxPE  NA
+             *      backZeroLayer               NA
+             *      sideZeroLayer               NA
+             *      ecalFrontZ                  NA
              */
             virtual void configure(const ldmx::ParameterSet& ps);
             
@@ -62,11 +64,6 @@ namespace ldmx {
              * that caused them.
              */
             virtual void analyze(const ldmx::Event& event);
-    
-            /**
-             * Calculate the distance between the line segment from v to w and the point p.
-             */
-            double point_line_distance(TVector3 v, TVector3 w, TVector3 p);
     
             virtual void onFileOpen() { }
 
@@ -84,6 +81,11 @@ namespace ldmx {
 
         private:
     
+            /**
+             * Calculate the distance between the line segment from v to w and the point p.
+             */
+            double pointRayDistance(TVector3 v, TVector3 w, TVector3 p);
+
             ///////////////////////////////
             // Python Config Options
             std::string EcalHitColl_; //* Name of Ecal Digis Collection
@@ -94,7 +96,7 @@ namespace ldmx {
             double minDepth_EventMaxPE_; //* Minimum depth of hit in HCAL section to include in Event Max PE
             double backZeroLayer_; //* Location of Z-plane of Zero'th Layer of Back HCAL
             double sideZeroLayer_; //* Location of plane of Zero'th Layer of Side HCAL
-            double ecalFront_; //* Location of Z-plane of front of ECAL
+            double ecalFrontZ_; //* Location of Z-plane of front of ECAL
 
             /////////////////////////////
             // Persistent information
@@ -127,24 +129,25 @@ namespace ldmx {
 
             //SimTrackerHit
             TH2D* h_Particle_ID;
-//            TH2D* h_Particle_HitDistance_All; //Distance between Particles and HcalHits
-//            TH2D* h_Particle_HitDistance_Matched; //Distance between Particles and HcalHits
+            TH2D* h_Particle_HitDistance_All; //Distance between Particles and HcalHits
+            TH2D* h_Particle_HitDistance_Matched; //Distance between Particles and HcalHits
             TH2D* h_Particle_Energy_All; //All Particle energies
             TH2D* h_Particle_Kinetic_All; //All Particle kinetic energies
-//            TH2D* h_Particle_Energy_Matched; //Matched Particle energies
+            TH2D* h_Particle_Energy_Matched; //Matched Particle energies
+            TH2D* h_Particle_Kinetic_Matched; //Matched Particle kinetic energies
 
             //Position of HcalHits
             TH2D* h_HcalHit_Depth_Side;
             TH2D* h_HcalHit_Z_Side;
             TH2D* h_HcalHit_Z_Back;
             TH3D* h_HcalHit_ZbyR_All;
-//            TH3D* h_HcalHit_ZbyR_Unmatched;
+            TH3D* h_HcalHit_ZbyR_Unmatched;
 //            TH3D* h_HcalHit_ZbyR_TimeLess15;
 //            TH3D* h_HcalHit_ZbyR_TimeGreat40;
-//            TH3D* h_HcalHit_ZbyR_Matched_Photon;
-//            TH3D* h_HcalHit_ZbyR_Matched_Electron;
-//            TH3D* h_HcalHit_ZbyR_Matched_Neutron;
-//            TH3D* h_HcalHit_ZbyR_Matched_Other;
+            TH3D* h_HcalHit_ZbyR_Matched_Photon;
+            TH3D* h_HcalHit_ZbyR_Matched_Electron;
+            TH3D* h_HcalHit_ZbyR_Matched_Neutron;
+            TH3D* h_HcalHit_ZbyR_Matched_Other;
 //            TH3D* h_HcalHit_ZbyR_Matched_TdifLess15;
 //            TH3D* h_HcalHit_ZbyR_Matched_TdifGreat40;
             

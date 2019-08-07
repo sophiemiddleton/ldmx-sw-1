@@ -32,7 +32,7 @@ namespace ldmx {
 
         backZeroLayer_ = ps.getDouble( "backZeroLayer" );
         sideZeroLayer_ = ps.getDouble( "sideZeroLayer" );
-        ecalFront_ = ps.getDouble( "ecalFrontZ" );
+        ecalFrontZ_ = ps.getDouble( "ecalFrontZ" );
 
         return;
     }
@@ -178,7 +178,7 @@ namespace ldmx {
                     h_HcalHit_Z_Back->Fill( ecalTotalEnergy , depth );
                     nBackHcalHits++;
                 } else {
-                    h_HcalHit_Z_Side->Fill( ecalTotalEnergy , hcalhit->getZ()-ecalFront_ );
+                    h_HcalHit_Z_Side->Fill( ecalTotalEnergy , hcalhit->getZ()-ecalFrontZ_ );
                     h_HcalHit_Depth_Side->Fill( ecalTotalEnergy , depth );
                     nSideHcalHits++;
                 }
@@ -202,47 +202,57 @@ namespace ldmx {
 //                    h_HcalHit_ZbyR_TimeGreat40->Fill( ecalTotalEnergy , hcalhit->getZ(), hcalhit_radialdist);
 //                }
 //
-//                //---- Attempt to match this HcalHit to a Particle that cross the Ecal SP ----->
-//
-//                //Iterate over all Particles that cross Ecal Scoring Plane to try to find a match
-//                //  for this HcalHit
-//                double new_dist=9999, dist=9998; //initializing distance variables
-//                const ldmx::SimParticle* matchedParticle = nullptr;
-//                for ( const ldmx::SimTrackerHit * scorePlaneHit : simTrackerHits_LeavingScorePlane ) {
-//
-//                    std::vector<double> simStart = simPart->getVertex();
-//                    std::vector<double> simEnd = simPart->getEndPoint();
-//        
-//                    TVector3 simStartT = TVector3(simStart[0], simStart[1], simStart[2]);
-//                    TVector3 simEndT = TVector3(simEnd[0], simEnd[1], simEnd[2]);
-//                    TVector3 hCalPoint = TVector3(hcalhit->getX(), hcalhit->getY(), hcalhit->getZ());
-//                    
-//                    new_dist = point_line_distance(simStartT, simEndT, hCalPoint);
-//                    
-//                    h_Particle_HitDistance_All->Fill( ecalTotalEnergy , new_dist);
-//        
-//                    if( false ) { //simStart[2]<10.0 and simPart->getEnergy()>3000.0) {
-//                        //discarding original electron
-//                        //DO NOTHING (skip this sim particle)
-//                    } else if(new_dist < dist) {
-//                        dist = new_dist; //Distance to matched particle
-//                        matchedParticle = simPart;
-//                    }
-//
-//                } //iterate over sim particles to match one to current hcal hit
-//
-//                //---- Bin HcalHit/Particle information for successfully matched hits --------->
-//
-//                if( matchedParticle and dist <= maxMatchDist_ ) {
-//                
-//                    numMatchedHits_++;
-//
-//                    h_Particle_HitDistance_Matched->Fill( ecalTotalEnergy ,  dist );
-//        
+                //---- Attempt to match this HcalHit to a Particle that cross the Ecal SP ----->
+
+                //Iterate over all Particles that cross Ecal Scoring Plane to try to find a match
+                //  for this HcalHit
+                double dist=9998; //initializing distance variable
+                const ldmx::SimTrackerHit* matchedParticle = nullptr;
+                for ( const ldmx::SimTrackerHit * scorePlaneHit : simTrackerHits_LeavingScorePlane ) {
+
+                    std::vector<float>  simPos      = scorePlaneHit->getPosition();
+                    std::vector<double> simMomentum = scorePlaneHit->getMomentum();
+        
+                    TVector3 rayStart  = TVector3( simPos[0] , simPos[1] , simPos[2] );
+                    TVector3 rayDir    = TVector3( simMomentum[0] , simMomentum[1] , simMomentum[2] );
+                    TVector3 hcalPoint = TVector3( hcalhit->getX(), hcalhit->getY(), hcalhit->getZ());
+                    
+                    double new_dist = pointRayDistance( rayStart , rayDir , hcalPoint );
+                    
+                    h_Particle_HitDistance_All->Fill( ecalTotalEnergy , new_dist );
+        
+                    if(new_dist < dist) {
+                        dist = new_dist; //Distance to matched particle
+                        matchedParticle = scorePlaneHit;
+                    }
+
+                } //iterate over sim particles to match one to current hcal hit
+
+                //---- Bin HcalHit/Particle information for successfully matched hits --------->
+
+                if( matchedParticle and dist <= maxMatchDist_ ) {
+                
+                    int pdgID = matchedParticle->getPdgID();
+                    double mass = 0;
+                    if ( databasePDG_.GetParticle( pdgID ) ) { 
+                        mass = databasePDG_.GetParticle( pdgID )->Mass() * 1000; //returns in GeV --> convert to MeV
+                    } else {
+                        //Geant4 uses non-PDG IDs for composite particles (like nuclei and ions)
+                        //  Need to look these up manually
+                        if ( pdgID == 1000010020 ) {
+                            //deuteron - proton and neutron
+                            mass = 938.272 + 939.565;
+                        }
+                    }
+    
+                    double energy = matchedParticle->getEnergy();
+                    double kinetic = energy - mass;
+
+                    numMatchedHits_++;
+
+                    h_Particle_HitDistance_Matched->Fill( ecalTotalEnergy ,  dist );
+        
 //                    h_HcalHit_Time_Matched_All->Fill( ecalTotalEnergy , hcalhit->getTime());
-//                    
-//                    int pdgID = matchedParticle->getPdgID();
-//
 //                    double part_hcalhit_timeDiff = (hcalhit->getTime()) - (matchedParticle->getTime());
 //                    
 //                    h_HcalHit_Time_Matched_Tdif->Fill( ecalTotalEnergy , part_hcalhit_timeDiff);
@@ -259,29 +269,30 @@ namespace ldmx {
 //                    if( pdgID==2112 or pdgID==2212 ) { 
 //                        h_HcalHit_Time_Matched_Nucleons->Fill( ecalTotalEnergy , matchedParticle->getTime());
 //                    }
-//                    
-//                    h_Particle_Energy_Matched->Fill( ecalTotalEnergy , matchedParticle->getEnergy());
-//        
-//                    switch(pdgID) {
-//                        case 11:
-//                            h_HcalHit_ZbyR_Matched_Electron->Fill( ecalTotalEnergy , hcalhit->getZ(), hcalhit_radialdist); 
-//                            break;
-//                        case 22:
-//                            h_HcalHit_ZbyR_Matched_Photon->Fill( ecalTotalEnergy , hcalhit->getZ(), hcalhit_radialdist); 
-//                            break;
-//                        case 2112:
-//                            h_HcalHit_ZbyR_Matched_Neutron->Fill( ecalTotalEnergy , hcalhit->getZ(), hcalhit_radialdist); 
-//                            break;
-//                        default:
-//                            h_HcalHit_ZbyR_Matched_Other->Fill( ecalTotalEnergy , hcalhit->getZ(), hcalhit_radialdist); 
-//                            break;
-//                    }
-//
-//                } else {
-//
-//                    h_HcalHit_ZbyR_Unmatched->Fill( ecalTotalEnergy , hcalhit->getZ(), hcalhit_radialdist);
-//
-//                } //matched or unmatched
+                    
+                    h_Particle_Energy_Matched ->Fill( ecalTotalEnergy , energy );
+                    h_Particle_Kinetic_Matched->Fill( ecalTotalEnergy , kinetic );
+        
+                    switch(pdgID) {
+                        case 11:
+                            h_HcalHit_ZbyR_Matched_Electron->Fill( ecalTotalEnergy , hcalhit->getZ(), hcalhit_radialdist); 
+                            break;
+                        case 22:
+                            h_HcalHit_ZbyR_Matched_Photon  ->Fill( ecalTotalEnergy , hcalhit->getZ(), hcalhit_radialdist); 
+                            break;
+                        case 2112:
+                            h_HcalHit_ZbyR_Matched_Neutron ->Fill( ecalTotalEnergy , hcalhit->getZ(), hcalhit_radialdist); 
+                            break;
+                        default:
+                            h_HcalHit_ZbyR_Matched_Other   ->Fill( ecalTotalEnergy , hcalhit->getZ(), hcalhit_radialdist); 
+                            break;
+                    }
+
+                } else {
+
+                    h_HcalHit_ZbyR_Unmatched->Fill( ecalTotalEnergy , hcalhit->getZ(), hcalhit_radialdist);
+
+                } //matched or unmatched
     
             } // if not a noise hit
 
@@ -298,32 +309,6 @@ namespace ldmx {
 
         return;
     } //analyze
-
-    //This function finds the minimum distance between a line segment and a point in 3D space
-    double HcalHitMatcher::point_line_distance(TVector3 v, TVector3 w, TVector3 p)  {
-        
-        //Define 2 line segments from point v to w and from point v to p
-        TVector3 vw = TVector3(w.x()-v.x(), w.y()-v.y(), w.z()-v.z());
-        TVector3 vp = TVector3(v.x()-p.x(), v.y()-p.y(), v.z()-p.z());
-    
-        //Define both line segment's magnitude squared
-        const double L2vw = pow(vw.Mag(), 2);
-        const double L2vp = pow(vp.Mag(), 2);
-    
-        //Define a parameter t clamped between 0 and 1 so that the distance is never measured from 
-        //beyond the endpoints of the line segment
-        const double t = std::max(0.0, std::min(1.0, -1*vp.Dot(vw)/L2vw));
-        //const double t = std::max(0.0, -1*vp.Dot(vw)/L2vw);//matt was using this
-    
-        //Calculate the minimum distance squared
-        double d2 = L2vp + 2.0*t*vp.Dot(vw) + pow(t,2)*L2vw;
-    
-        //Return minimum distance and catch floating point errors near zero
-        if(abs(d2) < 1e-5)
-            return 0;
-        else
-            return sqrt(d2);
-    }
 
     void HcalHitMatcher::onProcessStart() {
         
@@ -393,17 +378,17 @@ namespace ldmx {
             h_Particle_ID->GetYaxis()->SetBinLabel( ibin , knownPDGs.at(ibin-1).c_str() );
         }
 
-//        h_Particle_HitDistance_All = new TH2D(
-//               "Particle_HitDistance_All",
-//               ";EcalSummedEnergy;Distance between Particle and HcalHit (Any Pair) [mm];Count",
-//               800,0,8000,
-//               200, 0, 2000);
-//       
-//        h_Particle_HitDistance_Matched = new TH2D(
-//               "Particle_HitDistance_Matched", 
-//               ";EcalSummedEnergy;Distance between Particle and HcalHit when matched [mm];Count", 
-//               800,0,8000,
-//               int(maxMatchDist_/10), 0, maxMatchDist_+10.0 );
+        h_Particle_HitDistance_All = new TH2D(
+               "Particle_HitDistance_All",
+               ";EcalSummedEnergy;Distance between Particle and HcalHit (Any Pair) [mm];Count",
+               800,0,8000,
+               200, 0, 2000);
+       
+        h_Particle_HitDistance_Matched = new TH2D(
+               "Particle_HitDistance_Matched", 
+               ";EcalSummedEnergy;Distance between Particle and HcalHit when matched [mm];Count", 
+               800,0,8000,
+               int(maxMatchDist_/10), 0, maxMatchDist_+10.0 );
        
         h_Particle_Energy_All = new TH2D(
                "Particle_Energy_All",
@@ -417,11 +402,17 @@ namespace ldmx {
                800,0,8000,
                400,0,4000);
 
-//        h_Particle_Energy_Matched = new TH2D(
-//               "Particle_Energy_Matched",
-//               ";EcalSummedEnergy;Energy of Particles matched to HcalHit [MeV];Count",
-//               800,0,8000,
-//               400,0,4000);
+        h_Particle_Energy_Matched = new TH2D(
+               "Particle_Energy_Matched",
+               ";EcalSummedEnergy;Energy of Particles matched to HcalHit [MeV];Count",
+               800,0,8000,
+               400,0,4000);
+
+        h_Particle_Kinetic_Matched = new TH2D(
+               "Particle_Kinetic_Matched",
+               ";EcalSummedEnergy;Matched Particle Kinetic Energy [MeV];Count",
+               800,0,8000,
+               400,0,4000);
 
         h_HcalHit_Depth_Side = new TH2D(
                "HcalHit_Depth_Side",
@@ -448,13 +439,13 @@ namespace ldmx {
                500,0,5000,
                220,0,2200);
 
-//        h_HcalHit_ZbyR_Unmatched = new TH3D(
-//                "HcalHit_ZbyR_Unmatched",
-//               "Hcal unmatched hit locations;EcalSummedEnergy;Z depth [mm];radial distance from z-axis [mm]",
-//               800,0,8000,
-//               500,0,5000,
-//               220,0,2200);
-//
+        h_HcalHit_ZbyR_Unmatched = new TH3D(
+                "HcalHit_ZbyR_Unmatched",
+               "Hcal unmatched hit locations;EcalSummedEnergy;Z depth [mm];radial distance from z-axis [mm]",
+               800,0,8000,
+               500,0,5000,
+               220,0,2200);
+
 //        h_HcalHit_ZbyR_TimeLess15 = new TH3D(
 //               "HcalHit_ZbyR_TimeLess15",
 //               "HcalHits with Time < 15ns locations;EcalSummedEnergy;Z depth [mm];radial distance from z-axis [mm]",
@@ -469,34 +460,34 @@ namespace ldmx {
 //               100,0,5000,
 //               44,0,2200);
 //
-//        h_HcalHit_ZbyR_Matched_Photon = new TH3D(
-//               "HcalHit_ZbyR_Matched_Photon", 
-//               "Hcal photon hit locations;EcalSummedEnergy;Z depth [mm];radial distance from z-axis [mm]",
-//               800,0,8000,
-//               100,0,5000,
-//               44,0,2200);
-//
-//        h_HcalHit_ZbyR_Matched_Electron = new TH3D(
-//               "HcalHit_ZbyR_Matched_Electron", 
-//               "Hcal electron hit locations;EcalSummedEnergy;Z depth [mm];radial distance from z-axis [mm]",
-//               800,0,8000,
-//               100,0,5000,
-//               44,0,2200);
-//
-//        h_HcalHit_ZbyR_Matched_Neutron = new TH3D(
-//               "HcalHit_ZbyR_Matched_Neutron", 
-//               "Hcal neutron hit locations;EcalSummedEnergy;Z depth [mm];radial distance from z-axis [mm]",
-//               800,0,8000,
-//               100,0,5000,
-//               44,0,2200);
-//
-//        h_HcalHit_ZbyR_Matched_Other = new TH3D(
-//               "HcalHit_ZbyR_Matched_Other", 
-//               "Hcal other particle hit locations;EcalSummedEnergy;Z depth [mm];radial distance from z-axis [mm]",
-//               800,0,8000,
-//               100,0,5000,
-//               44,0,2200);
-//
+        h_HcalHit_ZbyR_Matched_Photon = new TH3D(
+               "HcalHit_ZbyR_Matched_Photon", 
+               "Hcal photon hit locations;EcalSummedEnergy;Z depth [mm];radial distance from z-axis [mm]",
+               800,0,8000,
+               100,0,5000,
+               44,0,2200);
+
+        h_HcalHit_ZbyR_Matched_Electron = new TH3D(
+               "HcalHit_ZbyR_Matched_Electron", 
+               "Hcal electron hit locations;EcalSummedEnergy;Z depth [mm];radial distance from z-axis [mm]",
+               800,0,8000,
+               100,0,5000,
+               44,0,2200);
+
+        h_HcalHit_ZbyR_Matched_Neutron = new TH3D(
+               "HcalHit_ZbyR_Matched_Neutron", 
+               "Hcal neutron hit locations;EcalSummedEnergy;Z depth [mm];radial distance from z-axis [mm]",
+               800,0,8000,
+               100,0,5000,
+               44,0,2200);
+
+        h_HcalHit_ZbyR_Matched_Other = new TH3D(
+               "HcalHit_ZbyR_Matched_Other", 
+               "Hcal other particle hit locations;EcalSummedEnergy;Z depth [mm];radial distance from z-axis [mm]",
+               800,0,8000,
+               100,0,5000,
+               44,0,2200);
+
 //        h_HcalHit_ZbyR_Matched_TdifLess15 = new TH3D(
 //               "HcalHit_ZbyR_Matched_TdifLess15",
 //               "Matched HcalHit location with time dif < 15ns;EcalSummedEnergy;Z depth [mm];radial distance from z-axis [mm]",
@@ -600,6 +591,24 @@ namespace ldmx {
         printf( "===================================\n" );
 
         return;
+    }
+
+    double HcalHitMatcher::pointRayDistance(TVector3 rayOrigin, TVector3 rayDirection, TVector3 point)  {
+    
+        TVector3 originToPoint( point.x() - rayOrigin.x() , point.y() - rayOrigin.y() , point.z() - rayOrigin.z() );
+
+        //Define a parameter t >= 0 that parameterizes the ray and whose value specifies
+        //the point on the ray closes to point
+        double t = std::max( 0.0 , rayDirection.Dot( originToPoint ) / rayDirection.Mag2() );
+    
+        //Define vector from ray to point
+        TVector3 distVec( 
+                        point.x() - (rayOrigin.x() + t*rayDirection.x()) ,
+                        point.y() - (rayOrigin.y() + t*rayDirection.y()) ,
+                        point.z() - (rayOrigin.z() + t*rayDirection.z()) 
+                    );
+    
+        return distVec.Mag();
     }
 
 } //ldmx namespace
