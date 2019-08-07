@@ -121,7 +121,10 @@ namespace ldmx {
                     numParticles_[ pdgID ] ++;
                 }
 
-                h_Particle_ID->Fill( ecalTotalEnergy , std::to_string( pdgID ).c_str() , 1. );
+                if ( abs(pdgID) != 12 and abs(pdgID) != 14 ) {
+                    //no neutrinos
+                    h_Particle_ID->Fill( ecalTotalEnergy , std::to_string( pdgID ).c_str() , 1. );
+                }
 
                 h_Particle_Energy_All->Fill( ecalTotalEnergy , energy );
                 h_Particle_Kinetic_All->Fill( ecalTotalEnergy , kinetic );
@@ -378,19 +381,17 @@ namespace ldmx {
                 800,0,8000,
                 500,0,500);
         
+        //add in bins of known particles
+        std::vector<std::string> knownPDGs = { "22" , "11" , "-11" , "13" , "-13", 
+            "2112" , "2212" , "211", "-211" , "130", "321" , "1000010020" };
         h_Particle_ID = new TH2D(
                 "Particle_ID",
                 ";EcalSummedEnergy;PDG ID of Particle Crossing ECAL Scoring Plane;Count",
                 800,0,8000,
-                1,0,1 );
-        h_Particle_ID->SetCanExtend( TH1::kYaxis );
-        //add in bins of known particles
-        std::vector<std::string> knownPDGs = { "22" , "11" , "-11" , "12", "-12", "13" , "-13", "14", "-14" ,
-            "2112" , "2212" , "211", "-211" , "130", "321" , "10000010020" };
-        for ( std::string &pdg : knownPDGs ) {
-            h_Particle_ID->GetYaxis()->FindBin( pdg.c_str() );
+                knownPDGs.size(),0, knownPDGs.size() );
+        for ( int ibin = 1; ibin < knownPDGs.size()+1; ibin++ ) {
+            h_Particle_ID->GetYaxis()->SetBinLabel( ibin , knownPDGs.at(ibin-1).c_str() );
         }
-        h_Particle_ID->LabelsDeflate( "Y" );
 
 //        h_Particle_HitDistance_All = new TH2D(
 //               "Particle_HitDistance_All",
