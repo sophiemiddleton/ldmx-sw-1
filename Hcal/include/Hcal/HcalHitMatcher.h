@@ -31,8 +31,6 @@
 #include "Framework/EventProcessor.h" //Needed to declare processor
 #include "Framework/ParameterSet.h" // Needed to import parameters from configuration file
 
-class SimTrackerHit;
-
 namespace ldmx {
     
     /**
@@ -51,10 +49,7 @@ namespace ldmx {
              *      HcalHitCollectionName       hcalDigis               
              *      EcalScoringPlaneHitsName    EcalScoringPlaneHits    
              *      HcalScoringPlaneHitsName    HcalScoringPlaneHits
-             *      MaximumMatchDistance        150.0 (Maximum distance allowed for a match in mm)
              *      MinDepth_IncludeEventMaxPE  NA
-             *      backZeroLayer               NA
-             *      sideZeroLayer               NA
              *      ecalFrontZ                  NA
              */
             virtual void configure(const ldmx::ParameterSet& ps);
@@ -64,11 +59,7 @@ namespace ldmx {
              * that caused them.
              */
             virtual void analyze(const ldmx::Event& event);
-    
-            virtual void onFileOpen() { }
 
-            virtual void onFileClose() { }
-        
             /**
              * Finds histogram directory and initializes all of the histograms.
              */
@@ -101,16 +92,13 @@ namespace ldmx {
             std::string HcalHitColl_; //* Name of Hcal Digis Collection
             std::string EcalScoringPlane_; //* Name of Ecal Scoring Plane Hits Collection
             std::string HcalScoringPlane_; //* Name of Hcal Scoring Plane Hits Collection
-            double maxMatchDist_; //* Maximum distance between particle ray and hit to allow for a match [mm]
             double minDepth_EventMaxPE_; //* Minimum depth of hit in HCAL section to include in Event Max PE [layer index]
-            double backZeroLayer_; //* Location of Z-plane of Zero'th Layer of Back HCAL [mm]
-            double sideZeroLayer_; //* Location of plane of Zero'th Layer of Side HCAL [mm]
             double ecalFrontZ_; //* Location of Z-plane of front of ECAL [mm]
 
             /////////////////////////////
             // Persistent information
             long int numNonNoiseHits_; //* Number of Non-Noise Hcal Hits
-            long int numMatchedHits_; //* Number of Hcal Hits matched to a sim particle
+            long int numUnMatchedHits_; //* Number of Hcal Hits not assigned at least one contributor
             long int numEvents_; //* Number of events analyzed
             std::map< int , long int > numParticles_; //* Number of particles corresponding to each PDG ID
             TDatabasePDG databasePDG_; //* ROOT database with PDG information

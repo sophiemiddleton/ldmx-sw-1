@@ -26,12 +26,8 @@ namespace ldmx {
         EcalScoringPlane_ = ps.getString( "EcalScoringPlaneHitsName" , "EcalScoringPlaneHits" ); 
         HcalScoringPlane_ = ps.getString( "HcalScoringPlaneHitsName" , "HcalScoringPlaneHits" );
 
-        maxMatchDist_ = ps.getDouble( "MaximumMatchDistance" , 150.0 );
-
         minDepth_EventMaxPE_ = ps.getInteger( "MinDepth_IncludeEventMaxPE" );
 
-        backZeroLayer_ = ps.getDouble( "backZeroLayer" );
-        sideZeroLayer_ = ps.getDouble( "sideZeroLayer" );
         ecalFrontZ_ = ps.getDouble( "ecalFrontZ" );
 
         return;
@@ -51,7 +47,7 @@ namespace ldmx {
             getParticlesLeavingEcalScoringPlane( ecalScoringPlaneHits , ecalTotalEnergy );
 
         //Map HcalHits to pdgIDs
-        std::map< int , std::vector<TString> > rawID_pdgs;
+        std::map< int , std::vector<SimCalorimeterHit *> > rawID_simHits;
         const TClonesArray* hcalSimHits = event.getCollection( EventConstants::HCAL_SIM_HITS , "sim" );
         for( int iHit = 0; iHit < hcalSimHits->GetEntriesFast(); iHit++ ) {
             SimCalorimeterHit* simHit = (SimCalorimeterHit *)(hcalSimHits->At(iHit));
@@ -68,14 +64,7 @@ namespace ldmx {
 
             int rawID = simHit->getID();
 
-            TString pdgStr;
-            if ( pdgID < 1000000000 ) {
-                pdgStr.Form( "%d" , pdgID );
-            } else {
-                pdgStr.Form( "Nuclei" );
-            }
-
-            rawID_pdgs[ rawID ].push_back( pdgStr );
+            rawID_simHits[ rawID ].push_back( simHit );
         }
 
         //HcalHit information
@@ -112,9 +101,8 @@ namespace ldmx {
                         << " that is not in the correct range." << std::endl;
                 }
 
-                h_HcalHit_PE_All->Fill( ecalTotalEnergy , hcalhit->getPE());
-                
                 float pe = hcalhit->getPE();
+                h_HcalHit_PE_All->Fill( ecalTotalEnergy , pe );
                 if( pe > max_PE_of_event ) {
                     max_PE_of_event = pe;
                     if ( layer > minDepth_EventMaxPE_ ) {
@@ -123,13 +111,23 @@ namespace ldmx {
                 }
 
                 int rawID = hcalhit->getID();
-                if ( rawID_pdgs.find( rawID ) != rawID_pdgs.end() ) {
-                    h_HcalHit_NContribs->Fill( ecalTotalEnergy , rawID_pdgs.at( rawID ).size() );
-                    for ( TString pdg : rawID_pdgs.at( rawID ) ) {
-                        h_HcalHit_IDs->Fill( ecalTotalEnergy , pdg , 1. );
-                    }
+                if ( rawID_simHits.find( rawID ) != rawID_simHits.end() ) {
+                    h_HcalHit_NContribs->Fill( ecalTotalEnergy , rawID_simHits.at( rawID ).size() );
+                    for ( SimCalorimeterHit *simHit : rawID_simHits.at( rawID ) ) {
+                        
+                        int pdgID = simHit->getContrib(0).pdgCode;
+                        TString pdgStr( "Nuclei" );
+                        if ( pdgID < 1000000000 ) {
+                            pdgStr.Form( "%d" , pdgID );
+                        }
+
+                        //weight by energy deposition
+                        h_HcalHit_IDs->Fill( ecalTotalEnergy , pdgStr , 
+                            simHit->getEdep()/hcalhit->getEnergy() );
+                    }//simHits contributing to this hcalhit
                 } else {
                     std::cout << "Yikes! Found an HcalHit that doesn't have a corresponding SimCalorimeterHit!" << std::endl;
+                    numUnMatchedHits_++;
                 }
     
             } // if not a noise hit
@@ -154,7 +152,7 @@ namespace ldmx {
         databasePDG_.ReadPDGTable();
 
         numNonNoiseHits_ = 0;
-        numMatchedHits_ = 0;
+        numUnMatchedHits_ = 0;
         numEvents_ = 0;
 
         // Make directory tree to organize histograms in
@@ -248,18 +246,18 @@ namespace ldmx {
 
         h_HcalHit_IDs = new TH2F(
                 "HcalHit_IDs",
-                ";EcalSummedEnergy;Particle Blamed by Simulation;Count",
+                ";EcalSummedEnergy;Particles Blamed by Simulation;Count",
                 800,0,8000,
                 knownPDGs.size(),0,knownPDGs.size() );
         for ( int ibin = 1; ibin < knownPDGs.size()+1; ibin++ ) {
-            h_Particle_ID->GetYaxis()->SetBinLabel( ibin , knownPDGs.at(ibin-1).c_str() );
+            h_HcalHit_IDs->GetYaxis()->SetBinLabel( ibin , knownPDGs.at(ibin-1).c_str() );
         }
 
         h_HcalHit_NContribs = new TH2F(
                 "HcalHit_NContribs",
                 ";EcalSummedEnergy;Number of Contributors to the Hit;Count",
                 800,0,8000,
-                10,0,10);
+                50,0.5,50.5);
 
         h_HcalHit_ZbyR_All = new TH3F(
                "HcalHit_ZbyR_All", 
@@ -285,12 +283,7 @@ namespace ldmx {
             double numerator = numNonNoiseHits_;
             double denominator = numEvents_;
             hitRate = numerator/denominator;
-
-            numerator = numMatchedHits_;
-            denominator = numNonNoiseHits_;
-            matchRate = numerator / denominator;
         }
-        
 
         printf( "\n" );
         printf( "===================================\n" );
@@ -298,9 +291,8 @@ namespace ldmx {
         printf( "===================================\n" );
         printf( "Number of Events         : %8i\n" , numEvents_ );
         printf( "Number of Non Noise Hits : %8i\n" , numNonNoiseHits_ );
-        printf( "Number of Matched Hits   : %8i\n" , numMatchedHits_ );
+        printf( "Number of Unmatched Hits : %8i\n" , numUnMatchedHits_ );
         printf( "Hit Rate (hits/events)   : %8.6f\n" , hitRate );
-        printf( "Match Rate (matches/hits): %8.6f\n" , matchRate );
         printf( "===================================\n" );
         printf( "      PDG ID |  Number : Event Rate\n" );
         for ( std::pair<const int,long int> &pdg_N : numParticles_ ) {
@@ -330,10 +322,10 @@ namespace ldmx {
     std::vector<SimTrackerHit*> HcalHitMatcher::getParticlesLeavingEcalScoringPlane(
             const TClonesArray* ecalScoringPlaneHits , double ecalTotalEnergy) { 
         
-        std::vector<ldmx::SimTrackerHit*> simTrackerHits_LeavingScorePlane;
+        std::vector<SimTrackerHit*> simTrackerHits_LeavingScorePlane;
     
         for (int i = 0; i < ecalScoringPlaneHits->GetEntriesFast(); i++ ) {
-            ldmx::SimTrackerHit* ecalSPH = (ldmx::SimTrackerHit*)(ecalScoringPlaneHits->At(i));
+            SimTrackerHit* ecalSPH = (SimTrackerHit*)(ecalScoringPlaneHits->At(i));
 
             int layerID = ecalSPH->getLayerID();
             std::vector<double> momentum = ecalSPH->getMomentum();
