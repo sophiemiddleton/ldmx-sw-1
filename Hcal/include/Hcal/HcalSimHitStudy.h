@@ -11,8 +11,13 @@
 #include "Event/EventDef.h"
 #include "Framework/EventProcessor.h" //Needed to declare processor
 #include "Framework/ParameterSet.h" // Needed to import parameters from configuration file
+#include "DetDescr/HcalID.h"
 
 #include <cmath> //pow
+
+#include "TH1.h"
+#include "TH2.h"
+#include "TH3.h"
 
 namespace ldmx {
     
@@ -41,17 +46,19 @@ namespace ldmx {
 
             ///////////////////////////////////////
             // Python Config Options
-            std::string hcalSimHitColl_; //* Name of Hcal Digis Collection
+            std::string hcalSimHitColl_; //* Name of Hcal Sim Hits Collection
+            std::string hcalSimHitPass_; //* Name of Hcal Sim Hits pass
             double backZeroLayer_; //* Location of Z-plane of Zero'th Layer of Back HCAL
             double sideZeroLayer_; //* Location of plane of Zero'th Layer of Side HCAL
             double ecalFrontZ_; //* Location of Z-plane of front of ECAL
+            std::vector<int> knownPDGs_; //* list of known pdg ids
 
             //The first coordinate of all these histograms is the pdgID of the particle that caused the HcalSimHit
-            TH2F* h_Side_Depth;
-            TH2F* h_Side_Z;
-            TH2F* h_Back_Z;
+            TH2I* h_Side_Depth; //* layer index of hit in Side HCAL
+            TH2I* h_Back_Depth; //* layer index of hit in Back HCAL
+            TH2F* h_Side_Z; //* Z-coordinate of hits in Sidecal [mm] relative to front of ecal
             TH2F* h_EnergyDep;
-            TH3F* h_ZbyR;
+            //TH3F* h_ZbyR;
     };
 }
 
