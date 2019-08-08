@@ -28,7 +28,7 @@ namespace ldmx {
 
         maxMatchDist_ = ps.getDouble( "MaximumMatchDistance" , 150.0 );
 
-        minDepth_EventMaxPE_ = ps.getDouble( "MinDepth_IncludeEventMaxPE" );
+        minDepth_EventMaxPE_ = ps.getInteger( "MinDepth_IncludeEventMaxPE" );
 
         backZeroLayer_ = ps.getDouble( "backZeroLayer" );
         sideZeroLayer_ = ps.getDouble( "sideZeroLayer" );
@@ -41,8 +41,7 @@ namespace ldmx {
 
         numEvents_++;
 
-        //---------- This section calculates the energy in the ECAL ---------------------------------------->
-        //Then uses this energy to set standard deviation range
+        //---------- Measure Total Energy in ECAL ---------------------------------------------------------->
 
         const TClonesArray* ecalHitColl = event.getCollection( EcalHitColl_ ); 
 
@@ -55,9 +54,10 @@ namespace ldmx {
         }
 
         //Bin event information
-        h_Ecal_SummedEnergy->Fill( ecalTotalEnergy );
+        h_EcalSummedEnergy->Fill( ecalTotalEnergy );
         
-        //---------- This section obtains a list of sim particles that cross the ecal scoring plane --------->
+        //---------- Scoring plane information -------------------------------------------------------------->
+        
         const TClonesArray* ecalScoringPlaneHits = event.getCollection( EcalScoringPlane_ );
         
         std::vector<ldmx::SimTrackerHit*> simTrackerHits_LeavingScorePlane;
@@ -134,6 +134,8 @@ namespace ldmx {
 
         h_NumParticles->Fill( ecalTotalEnergy , simTrackerHits_LeavingScorePlane.size() );
 
+        //---------- Scoring plane information -------------------------------------------------------------->
+
         //----This section matches HCal hits to sim particles and records results----->
         const TClonesArray* hcalHitColl = event.getCollection( HcalHitColl_ );
 
@@ -159,7 +161,7 @@ namespace ldmx {
                 if ( section == 0 ) {
                     h_HcalHit_Depth_Back->Fill( ecalTotalEnergy , layer );
                     nBackHcalHits++;
-                } else if ( seciton > 0 and section < 5 ) {
+                } else if ( section > 0 and section < 5 ) {
                     h_HcalHit_Z_Side->Fill( ecalTotalEnergy , hcalhit->getZ()-ecalFrontZ_ );
                     h_HcalHit_Depth_Side->Fill( ecalTotalEnergy , layer );
                     nSideHcalHits++;
@@ -173,7 +175,7 @@ namespace ldmx {
                 float pe = hcalhit->getPE();
                 if( pe > max_PE_of_event ) {
                     max_PE_of_event = pe;
-                    if ( depth > minDepth_EventMaxPE_ ) {
+                    if ( layer > minDepth_EventMaxPE_ ) {
                         max_PE_of_event_excluded = pe;
                     }
                 }
@@ -371,13 +373,13 @@ namespace ldmx {
                800,0,8000,
                400,0,4000);
 
-        h_HcalHit_Depth_Side = new TH2I(
+        h_HcalHit_Depth_Side = new TH2F(
                "HcalHit_Depth_Side",
                ";EcalSummedEnergy;Depth of Hits in Side HCAL [layer index];Count",
                800,0.,8000.,
                35, 0, 35);
 
-        h_HcalHit_Depth_Back = new TH2I(
+        h_HcalHit_Depth_Back = new TH2F(
                "HcalHit_Depth_Back",
                ";EcalSummedEnergy;Depth of Hits in Back HCAL [layer index];Count",
                800,0,8000,

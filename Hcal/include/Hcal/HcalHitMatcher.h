@@ -92,11 +92,11 @@ namespace ldmx {
             std::string HcalHitColl_; //* Name of Hcal Digis Collection
             std::string EcalScoringPlane_; //* Name of Ecal Scoring Plane Hits Collection
             std::string HcalScoringPlane_; //* Name of Hcal Scoring Plane Hits Collection
-            double maxMatchDist_; //* Maximum distance (mm) between SimParticle and Hit to allow for a match
-            double minDepth_EventMaxPE_; //* Minimum depth of hit in HCAL section to include in Event Max PE
-            double backZeroLayer_; //* Location of Z-plane of Zero'th Layer of Back HCAL
-            double sideZeroLayer_; //* Location of plane of Zero'th Layer of Side HCAL
-            double ecalFrontZ_; //* Location of Z-plane of front of ECAL
+            double maxMatchDist_; //* Maximum distance between particle ray and hit to allow for a match [mm]
+            double minDepth_EventMaxPE_; //* Minimum depth of hit in HCAL section to include in Event Max PE [layer index]
+            double backZeroLayer_; //* Location of Z-plane of Zero'th Layer of Back HCAL [mm]
+            double sideZeroLayer_; //* Location of plane of Zero'th Layer of Side HCAL [mm]
+            double ecalFrontZ_; //* Location of Z-plane of front of ECAL [mm]
 
             /////////////////////////////
             // Persistent information
@@ -129,25 +129,15 @@ namespace ldmx {
 
             //SimTrackerHit
             TH2F* h_Particle_ID;
-            TH2F* h_Particle_HitDistance_All; //Distance between Particles and HcalHits
-            TH2F* h_Particle_HitDistance_Matched; //Distance between Particles and HcalHits
-            TH2F* h_Particle_Energy_All; //All Particle energies
-            TH2F* h_Particle_Kinetic_All; //All Particle kinetic energies
-            TH2F* h_Particle_Energy_Matched; //Matched Particle energies
-            TH2F* h_Particle_Kinetic_Matched; //Matched Particle kinetic energies
+            TH2F* h_Particle_Energy; //All Particle energies
+            TH2F* h_Particle_Kinetic; //All Particle kinetic energies
 
-            //Position of HcalHits
-            TH2I* h_HcalHit_Depth_Side;
-            TH2I* h_HcalHit_Depth_Back;
+            //HcalHit
+            TH2F* h_HcalHit_Depth_Side;
+            TH2F* h_HcalHit_Depth_Back;
             TH2F* h_HcalHit_Z_Side;
+            TH2F* h_HcalHit_ID;
             TH3F* h_HcalHit_ZbyR_All;
-            TH3F* h_HcalHit_ZbyR_Unmatched;
-            TH3F* h_HcalHit_ZbyR_Matched_Photon;
-            TH3F* h_HcalHit_ZbyR_Matched_Electron;
-            TH3F* h_HcalHit_ZbyR_Matched_Neutron;
-            TH3F* h_HcalHit_ZbyR_Matched_Other;
-            
-            //PEs of HcalHit
             TH2F* h_HcalHit_PE_All;
 
     };
