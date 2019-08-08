@@ -115,7 +115,7 @@ namespace ldmx {
              * interested in change.
              */
 
-            //Event information (i.e. One Entry per Event)
+            //Event information - integrate to number of events
             TH1F* h_EcalSummedEnergy;
             TH2F* h_NumHcalHits;
             TH2F* h_NumHcalHits_Back;
@@ -124,12 +124,12 @@ namespace ldmx {
             TH2F* h_EventMaxPE_All;
             TH2F* h_EventMaxPE_Excluded;  //Excludes any HcalHit with depth < minDepth
 
-            //SimTrackerHit
+            //SimTrackerHit - integrate to number of SimTrackerHits
             TH2F* h_Particle_ID;
             TH2F* h_Particle_Energy; //All Particle energies
             TH2F* h_Particle_Kinetic; //All Particle kinetic energies
 
-            //HcalHit
+            //HcalHit - integrate to number of HcalHits
             TH2F* h_HcalHit_Depth_Side;
             TH2F* h_HcalHit_Depth_Back;
             TH2F* h_HcalHit_Z_Side;
