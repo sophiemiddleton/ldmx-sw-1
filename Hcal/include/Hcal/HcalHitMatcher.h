@@ -119,50 +119,36 @@ namespace ldmx {
              */
 
             //Event information (i.e. One Entry per Event)
-            TH1D* h_Ecal_SummedEnergy;
-            TH2D* h_NumHcalHits;
-            TH2D* h_NumHcalHits_Back;
-            TH2D* h_NumHcalHits_Side;
-            TH2D* h_NumParticles;
-            TH2D* h_EventMaxPE_All;
-            TH2D* h_EventMaxPE_Excluded;  //Excludes any HcalHit with depth < minDepth
+            TH1F* h_EcalSummedEnergy;
+            TH2F* h_NumHcalHits;
+            TH2F* h_NumHcalHits_Back;
+            TH2F* h_NumHcalHits_Side;
+            TH2F* h_NumParticles;
+            TH2F* h_EventMaxPE_All;
+            TH2F* h_EventMaxPE_Excluded;  //Excludes any HcalHit with depth < minDepth
 
             //SimTrackerHit
-            TH2D* h_Particle_ID;
-            TH2D* h_Particle_HitDistance_All; //Distance between Particles and HcalHits
-            TH2D* h_Particle_HitDistance_Matched; //Distance between Particles and HcalHits
-            TH2D* h_Particle_Energy_All; //All Particle energies
-            TH2D* h_Particle_Kinetic_All; //All Particle kinetic energies
-            TH2D* h_Particle_Energy_Matched; //Matched Particle energies
-            TH2D* h_Particle_Kinetic_Matched; //Matched Particle kinetic energies
+            TH2F* h_Particle_ID;
+            TH2F* h_Particle_HitDistance_All; //Distance between Particles and HcalHits
+            TH2F* h_Particle_HitDistance_Matched; //Distance between Particles and HcalHits
+            TH2F* h_Particle_Energy_All; //All Particle energies
+            TH2F* h_Particle_Kinetic_All; //All Particle kinetic energies
+            TH2F* h_Particle_Energy_Matched; //Matched Particle energies
+            TH2F* h_Particle_Kinetic_Matched; //Matched Particle kinetic energies
 
             //Position of HcalHits
-            TH2D* h_HcalHit_Depth_Side;
-            TH2D* h_HcalHit_Z_Side;
-            TH2D* h_HcalHit_Z_Back;
-            TH3D* h_HcalHit_ZbyR_All;
-            TH3D* h_HcalHit_ZbyR_Unmatched;
-//            TH3D* h_HcalHit_ZbyR_TimeLess15;
-//            TH3D* h_HcalHit_ZbyR_TimeGreat40;
-            TH3D* h_HcalHit_ZbyR_Matched_Photon;
-            TH3D* h_HcalHit_ZbyR_Matched_Electron;
-            TH3D* h_HcalHit_ZbyR_Matched_Neutron;
-            TH3D* h_HcalHit_ZbyR_Matched_Other;
-//            TH3D* h_HcalHit_ZbyR_Matched_TdifLess15;
-//            TH3D* h_HcalHit_ZbyR_Matched_TdifGreat40;
+            TH2I* h_HcalHit_Depth_Side;
+            TH2I* h_HcalHit_Depth_Back;
+            TH2F* h_HcalHit_Z_Side;
+            TH3F* h_HcalHit_ZbyR_All;
+            TH3F* h_HcalHit_ZbyR_Unmatched;
+            TH3F* h_HcalHit_ZbyR_Matched_Photon;
+            TH3F* h_HcalHit_ZbyR_Matched_Electron;
+            TH3F* h_HcalHit_ZbyR_Matched_Neutron;
+            TH3F* h_HcalHit_ZbyR_Matched_Other;
             
             //PEs of HcalHit
-            TH2D* h_HcalHit_PE_All;
-//            TH2D* h_HcalHit_PE_TimeLess15;
-//            TH2D* h_HcalHit_PE_TimeGreat40;
-//            TH2D* h_HcalHit_PE_Matched_TdifLess15;
-//            TH2D* h_HcalHit_PE_Matched_TdifGreat40;
-
-            //Time of HcalHit
-            TH2D* h_HcalHit_Time_All;
-//            TH2D* h_HcalHit_Time_Matched_All;
-//            TH2D* h_HcalHit_Time_Matched_Nucleons;
-//            TH2D* h_HcalHit_Time_Matched_Tdif;
+            TH2F* h_HcalHit_PE_All;
 
     };
 }
