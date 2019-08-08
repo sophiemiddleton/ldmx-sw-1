@@ -41,102 +41,44 @@ namespace ldmx {
 
         numEvents_++;
 
-        //---------- Measure Total Energy in ECAL ---------------------------------------------------------->
-
+        //Measure total energy in ECAL
         const TClonesArray* ecalHitColl = event.getCollection( EcalHitColl_ ); 
+        double ecalTotalEnergy = calculateEcalSummedEnergy( ecalHitColl );
 
-        double ecalTotalEnergy = 0;
-        for(int i=0; i < ecalHitColl->GetEntriesFast(); i++) {
-            ldmx::EcalHit* ecalhit = (ldmx::EcalHit*)(ecalHitColl->At(i));
-            if ( ! ecalhit->isNoise() ) { //Only add non-noise hits
-                ecalTotalEnergy += ecalhit->getEnergy();
-            }
-        }
-
-        //Bin event information
-        h_EcalSummedEnergy->Fill( ecalTotalEnergy );
-        
-        //---------- Scoring plane information -------------------------------------------------------------->
-        
+        //Scoring plane information
         const TClonesArray* ecalScoringPlaneHits = event.getCollection( EcalScoringPlane_ );
-        
-        std::vector<ldmx::SimTrackerHit*> simTrackerHits_LeavingScorePlane;
-    
-        for (int i = 0; i < ecalScoringPlaneHits->GetEntriesFast(); i++ ) {
-            ldmx::SimTrackerHit* ecalSPH = (ldmx::SimTrackerHit*)(ecalScoringPlaneHits->At(i));
+        std::vector<SimTrackerHit *> simTrackerHits_LeavingScorePlane = 
+            getParticlesLeavingEcalScoringPlane( ecalScoringPlaneHits , ecalTotalEnergy );
 
-            int layerID = ecalSPH->getLayerID();
-            std::vector<double> momentum = ecalSPH->getMomentum();
+        //Map HcalHits to pdgIDs
+        std::map< int , std::vector<TString> > rawID_pdgs;
+        const TClonesArray* hcalSimHits = event.getCollection( EventConstants::HCAL_SIM_HITS , "sim" );
+        for( int iHit = 0; iHit < hcalSimHits->GetEntriesFast(); iHit++ ) {
+            SimCalorimeterHit* simHit = (SimCalorimeterHit *)(hcalSimHits->At(iHit));
 
-            //skip particles that are entering the ECAL (mostly incoming electron)
-            bool isLeavingECAL = false;
-            switch( layerID ) {
-                case 1: //front - nothing - not near HCAL
-                    isLeavingECAL = false;
-                    break;
-                case 2: //back - z needs to be positive
-                    isLeavingECAL = (momentum[2] > 0);
-                    break;
-                case 3: //top - y needs to be postive
-                    isLeavingECAL = (momentum[1] > 0);
-                    break;
-                case 4: //bottom - y needs to be negative
-                    isLeavingECAL = (momentum[1] < 0);
-                    break;
-                case 5: //right - x needs to be negative
-                    isLeavingECAL = (momentum[0] < 0);
-                    break;
-                case 6: //left - x needs to be positive
-                    isLeavingECAL = (momentum[0] > 0);
-                    break;
-                default:
-                    isLeavingECAL = false;
-                    std::cerr << "[ Warning ] : HcalHitMatcher found a ECAL Scoring Plane Hit with layerID " << layerID << std::endl;
-                    std::cerr << "    which is not one of the options (1 - 6)." << std::endl;
+            if ( simHit->getNumberOfContribs() != 1 ) {
+                std::cout << "I didn't think this would happen! There are " << simHit->getNumberOfContribs()
+                    << " which isn't equal to 1!" << std::endl;
+                continue;
             }
 
-            if ( isLeavingECAL ) {
-                simTrackerHits_LeavingScorePlane.push_back(ecalSPH);
-                int pdgID = ecalSPH->getPdgID();
-                double mass = 0;
-                if ( databasePDG_.GetParticle( pdgID ) ) { 
-                    mass = databasePDG_.GetParticle( pdgID )->Mass() * 1000; //returns in GeV --> convert to MeV
-                } else {
-                    //Geant4 uses non-PDG IDs for composite particles (like nuclei and ions)
-                    //  Need to look these up manually
-                    if ( pdgID == 1000010020 ) {
-                        //deuteron - proton and neutron
-                        mass = 938.272 + 939.565;
-                    }
-                }
+            int pdgID = simHit->getContrib(0).pdgCode;
 
-                double energy = ecalSPH->getEnergy();
-                double kinetic = energy - mass;
+            if ( abs(pdgID) == 12 or abs(pdgID) == 14 ) continue; //skip neutrinos
 
-                if ( numParticles_.find( pdgID ) == numParticles_.end() ) {
-                    //no particles with this PDG found yet
-                    numParticles_[ pdgID ] = 1;
-                } else {
-                    //particles with this PDG have been found
-                    numParticles_[ pdgID ] ++;
-                }
+            int rawID = simHit->getID();
 
-                if ( abs(pdgID) != 12 and abs(pdgID) != 14 ) {
-                    //no neutrinos
-                    h_Particle_ID->Fill( ecalTotalEnergy , std::to_string( pdgID ).c_str() , 1. );
-                }
-
-                h_Particle_Energy_All->Fill( ecalTotalEnergy , energy );
-                h_Particle_Kinetic_All->Fill( ecalTotalEnergy , kinetic );
-
+            TString pdgStr;
+            if ( pdgID < 1000000000 ) {
+                pdgStr.Form( "%d" , pdgID );
+            } else {
+                pdgStr.Form( "Nuclei" );
             }
+
+            rawID_pdgs[ rawID ].push_back( pdgStr );
         }
 
-        h_NumParticles->Fill( ecalTotalEnergy , simTrackerHits_LeavingScorePlane.size() );
-
-        //---------- Scoring plane information -------------------------------------------------------------->
-
-        //----This section matches HCal hits to sim particles and records results----->
+        //HcalHit information
         const TClonesArray* hcalHitColl = event.getCollection( HcalHitColl_ );
 
         float max_PE_of_event=0;
@@ -180,78 +122,15 @@ namespace ldmx {
                     }
                 }
 
-                //---- Attempt to match this HcalHit to a Particle that cross the Ecal SP ----->
-
-                //Iterate over all Particles that cross Ecal Scoring Plane to try to find a match
-                //  for this HcalHit
-                double dist = maxMatchDist_ + 10.0; //initializing distance variable to be greater than matching distance
-                const ldmx::SimTrackerHit* matchedParticle = nullptr;
-                for ( const ldmx::SimTrackerHit * scorePlaneHit : simTrackerHits_LeavingScorePlane ) {
-
-                    std::vector<float>  simPos      = scorePlaneHit->getPosition();
-                    std::vector<double> simMomentum = scorePlaneHit->getMomentum();
-        
-                    TVector3 rayStart  = TVector3( simPos[0] , simPos[1] , simPos[2] );
-                    TVector3 rayDir    = TVector3( simMomentum[0] , simMomentum[1] , simMomentum[2] );
-                    TVector3 hcalPoint = TVector3( hcalhit->getX(), hcalhit->getY(), hcalhit->getZ());
-                    
-                    double new_dist = pointRayDistance( rayStart , rayDir , hcalPoint );
-                    
-                    h_Particle_HitDistance_All->Fill( ecalTotalEnergy , new_dist );
-        
-                    if(new_dist < dist) {
-                        dist = new_dist; //Distance to matched particle
-                        matchedParticle = scorePlaneHit;
+                int rawID = hcalhit->getID();
+                if ( rawID_pdgs.find( rawID ) != rawID_pdgs.end() ) {
+                    h_HcalHit_NContribs->Fill( ecalTotalEnergy , rawID_pdgs.at( rawID ).size() );
+                    for ( TString pdg : rawID_pdgs.at( rawID ) ) {
+                        h_HcalHit_IDs->Fill( ecalTotalEnergy , pdg , 1. );
                     }
-
-                } //iterate over sim particles to match one to current hcal hit
-
-                //---- Bin HcalHit/Particle information for successfully matched hits --------->
-
-                if( dist <= maxMatchDist_ ) {
-                
-                    int pdgID = matchedParticle->getPdgID();
-                    double mass = 0;
-                    if ( databasePDG_.GetParticle( pdgID ) ) { 
-                        mass = databasePDG_.GetParticle( pdgID )->Mass() * 1000; //returns in GeV --> convert to MeV
-                    } else {
-                        //Geant4 uses non-PDG IDs for composite particles (like nuclei and ions)
-                        //  Need to look these up manually
-                        if ( pdgID == 1000010020 ) {
-                            //deuteron - proton and neutron
-                            mass = 938.272 + 939.565;
-                        }
-                    }
-    
-                    double energy = matchedParticle->getEnergy();
-                    double kinetic = energy - mass;
-
-                    numMatchedHits_++;
-
-                    h_Particle_HitDistance_Matched->Fill( ecalTotalEnergy , dist    );
-                    h_Particle_Energy_Matched     ->Fill( ecalTotalEnergy , energy  );
-                    h_Particle_Kinetic_Matched    ->Fill( ecalTotalEnergy , kinetic );
-        
-                    switch(pdgID) {
-                        case 11:
-                            h_HcalHit_ZbyR_Matched_Electron->Fill( ecalTotalEnergy , hcalhit->getZ(), hcalhit_radialdist); 
-                            break;
-                        case 22:
-                            h_HcalHit_ZbyR_Matched_Photon  ->Fill( ecalTotalEnergy , hcalhit->getZ(), hcalhit_radialdist); 
-                            break;
-                        case 2112:
-                            h_HcalHit_ZbyR_Matched_Neutron ->Fill( ecalTotalEnergy , hcalhit->getZ(), hcalhit_radialdist); 
-                            break;
-                        default:
-                            h_HcalHit_ZbyR_Matched_Other   ->Fill( ecalTotalEnergy , hcalhit->getZ(), hcalhit_radialdist); 
-                            break;
-                    }
-
                 } else {
-
-                    h_HcalHit_ZbyR_Unmatched->Fill( ecalTotalEnergy , hcalhit->getZ(), hcalhit_radialdist);
-
-                } //matched or unmatched
+                    std::cout << "Yikes! Found an HcalHit that doesn't have a corresponding SimCalorimeterHit!" << std::endl;
+                }
     
             } // if not a noise hit
 
@@ -317,7 +196,7 @@ namespace ldmx {
                 500,0,500);
 
         char title[200];
-        sprintf( title , ";EcalSummedEnergy;Maximum PE for Hits with Depth > %.1f mm; Count" ,
+        sprintf( title , ";EcalSummedEnergy;Maximum PE for Hits with Layer Index > %d; Count" ,
                 minDepth_EventMaxPE_ );
         h_EventMaxPE_Excluded = new TH2F(
                 "EventMaxPE_Excluded",
@@ -327,7 +206,7 @@ namespace ldmx {
         
         //add in bins of known particles
         std::vector<std::string> knownPDGs = { "22" , "11" , "-11" , "13" , "-13", 
-            "2112" , "2212" , "211", "-211" , "130", "321" , "1000010020" };
+            "2112" , "2212" , "211", "-211" , "130", "321" , "Nuclei" };
         h_Particle_ID = new TH2F(
                 "Particle_ID",
                 ";EcalSummedEnergy;Particle Crossing ECAL Scoring Plane;Count",
@@ -337,39 +216,15 @@ namespace ldmx {
             h_Particle_ID->GetYaxis()->SetBinLabel( ibin , knownPDGs.at(ibin-1).c_str() );
         }
 
-        h_Particle_HitDistance_All = new TH2F(
-               "Particle_HitDistance_All",
-               ";EcalSummedEnergy;Distance between Particle and HcalHit (Any Pair) [mm];Count",
-               800,0,8000,
-               200, 0, 2000);
-       
-        h_Particle_HitDistance_Matched = new TH2F(
-               "Particle_HitDistance_Matched", 
-               ";EcalSummedEnergy;Distance between Particle and HcalHit when matched [mm];Count", 
-               800,0,8000,
-               int(maxMatchDist_/10), 0, maxMatchDist_+10.0 );
-       
-        h_Particle_Energy_All = new TH2F(
-               "Particle_Energy_All",
+        h_Particle_Energy = new TH2F(
+               "Particle_Energy",
                ";EcalSummedEnergy;Particle Energy [MeV];Count",
                800,0,8000,
                400,0,4000);
 
-        h_Particle_Kinetic_All = new TH2F(
-               "Particle_Kinetic_All",
+        h_Particle_Kinetic = new TH2F(
+               "Particle_Kinetic",
                ";EcalSummedEnergy;Particle Kinetic Energy [MeV];Count",
-               800,0,8000,
-               400,0,4000);
-
-        h_Particle_Energy_Matched = new TH2F(
-               "Particle_Energy_Matched",
-               ";EcalSummedEnergy;Energy of Particles matched to HcalHit [MeV];Count",
-               800,0,8000,
-               400,0,4000);
-
-        h_Particle_Kinetic_Matched = new TH2F(
-               "Particle_Kinetic_Matched",
-               ";EcalSummedEnergy;Matched Particle Kinetic Energy [MeV];Count",
                800,0,8000,
                400,0,4000);
 
@@ -391,47 +246,27 @@ namespace ldmx {
                800,0,8000,
                600,0,600);
 
+        h_HcalHit_IDs = new TH2F(
+                "HcalHit_IDs",
+                ";EcalSummedEnergy;Particle Blamed by Simulation;Count",
+                800,0,8000,
+                knownPDGs.size(),0,knownPDGs.size() );
+        for ( int ibin = 1; ibin < knownPDGs.size()+1; ibin++ ) {
+            h_Particle_ID->GetYaxis()->SetBinLabel( ibin , knownPDGs.at(ibin-1).c_str() );
+        }
+
+        h_HcalHit_NContribs = new TH2F(
+                "HcalHit_NContribs",
+                ";EcalSummedEnergy;Number of Contributors to the Hit;Count",
+                800,0,8000,
+                10,0,10);
+
         h_HcalHit_ZbyR_All = new TH3F(
                "HcalHit_ZbyR_All", 
                "All Hcal Hit Locations;EcalSummedEnergy;Z depth [mm];radial distance from z-axis [mm]",
                800,0,8000,
                500,0,5000,
                220,0,2200);
-
-        h_HcalHit_ZbyR_Unmatched = new TH3F(
-                "HcalHit_ZbyR_Unmatched",
-               "Hcal unmatched hit locations;EcalSummedEnergy;Z depth [mm];radial distance from z-axis [mm]",
-               800,0,8000,
-               500,0,5000,
-               220,0,2200);
-
-        h_HcalHit_ZbyR_Matched_Photon = new TH3F(
-               "HcalHit_ZbyR_Matched_Photon", 
-               "Hcal photon hit locations;EcalSummedEnergy;Z depth [mm];radial distance from z-axis [mm]",
-               800,0,8000,
-               100,0,5000,
-               44,0,2200);
-
-        h_HcalHit_ZbyR_Matched_Electron = new TH3F(
-               "HcalHit_ZbyR_Matched_Electron", 
-               "Hcal electron hit locations;EcalSummedEnergy;Z depth [mm];radial distance from z-axis [mm]",
-               800,0,8000,
-               100,0,5000,
-               44,0,2200);
-
-        h_HcalHit_ZbyR_Matched_Neutron = new TH3F(
-               "HcalHit_ZbyR_Matched_Neutron", 
-               "Hcal neutron hit locations;EcalSummedEnergy;Z depth [mm];radial distance from z-axis [mm]",
-               800,0,8000,
-               100,0,5000,
-               44,0,2200);
-
-        h_HcalHit_ZbyR_Matched_Other = new TH3F(
-               "HcalHit_ZbyR_Matched_Other", 
-               "Hcal other particle hit locations;EcalSummedEnergy;Z depth [mm];radial distance from z-axis [mm]",
-               800,0,8000,
-               100,0,5000,
-               44,0,2200);
 
         h_HcalHit_PE_All = new TH2F(
                "HcalHit_PE_All",
@@ -476,22 +311,107 @@ namespace ldmx {
         return;
     }
 
-    double HcalHitMatcher::pointRayDistance(TVector3 rayOrigin, TVector3 rayDirection, TVector3 point)  {
-    
-        TVector3 originToPoint( point.x() - rayOrigin.x() , point.y() - rayOrigin.y() , point.z() - rayOrigin.z() );
+    double HcalHitMatcher::calculateEcalSummedEnergy( const TClonesArray *ecalHitColl ) {
 
-        //Define a parameter t >= 0 that parameterizes the ray and whose value specifies
-        //the point on the ray closes to point
-        double t = std::max( 0.0 , rayDirection.Dot( originToPoint ) / rayDirection.Mag2() );
+        double ecalTotalEnergy = 0;
+        for(int i=0; i < ecalHitColl->GetEntriesFast(); i++) {
+            ldmx::EcalHit* ecalhit = (ldmx::EcalHit*)(ecalHitColl->At(i));
+            if ( ! ecalhit->isNoise() ) { //Only add non-noise hits
+                ecalTotalEnergy += ecalhit->getEnergy();
+            }
+        }
+
+        //Bin event information
+        h_EcalSummedEnergy->Fill( ecalTotalEnergy );
+
+        return ecalTotalEnergy;
+    }
+        
+    std::vector<SimTrackerHit*> HcalHitMatcher::getParticlesLeavingEcalScoringPlane(
+            const TClonesArray* ecalScoringPlaneHits , double ecalTotalEnergy) { 
+        
+        std::vector<ldmx::SimTrackerHit*> simTrackerHits_LeavingScorePlane;
     
-        //Define vector from ray to point
-        TVector3 distVec( 
-                        point.x() - (rayOrigin.x() + t*rayDirection.x()) ,
-                        point.y() - (rayOrigin.y() + t*rayDirection.y()) ,
-                        point.z() - (rayOrigin.z() + t*rayDirection.z()) 
-                    );
-    
-        return distVec.Mag();
+        for (int i = 0; i < ecalScoringPlaneHits->GetEntriesFast(); i++ ) {
+            ldmx::SimTrackerHit* ecalSPH = (ldmx::SimTrackerHit*)(ecalScoringPlaneHits->At(i));
+
+            int layerID = ecalSPH->getLayerID();
+            std::vector<double> momentum = ecalSPH->getMomentum();
+
+            //skip particles that are entering the ECAL (mostly incoming electron)
+            bool isLeavingECAL = false;
+            switch( layerID ) {
+                case 1: //front - nothing - not near HCAL
+                    isLeavingECAL = false;
+                    break;
+                case 2: //back - z needs to be positive
+                    isLeavingECAL = (momentum[2] > 0);
+                    break;
+                case 3: //top - y needs to be postive
+                    isLeavingECAL = (momentum[1] > 0);
+                    break;
+                case 4: //bottom - y needs to be negative
+                    isLeavingECAL = (momentum[1] < 0);
+                    break;
+                case 5: //right - x needs to be negative
+                    isLeavingECAL = (momentum[0] < 0);
+                    break;
+                case 6: //left - x needs to be positive
+                    isLeavingECAL = (momentum[0] > 0);
+                    break;
+                default:
+                    isLeavingECAL = false;
+                    std::cerr << "[ Warning ] : HcalHitMatcher found a ECAL Scoring Plane Hit with layerID " << layerID << std::endl;
+                    std::cerr << "    which is not one of the options (1 - 6)." << std::endl;
+            }
+
+            if ( isLeavingECAL ) {
+                simTrackerHits_LeavingScorePlane.push_back(ecalSPH);
+                int pdgID = ecalSPH->getPdgID();
+                double mass = 0;
+                if ( databasePDG_.GetParticle( pdgID ) ) { 
+                    mass = databasePDG_.GetParticle( pdgID )->Mass() * 1000; //returns in GeV --> convert to MeV
+                } else {
+                    //Geant4 uses non-PDG IDs for composite particles (like nuclei and ions)
+                    //  Need to look these up manually
+                    if ( pdgID == 1000010020 ) {
+                        //deuteron - proton and neutron
+                        mass = 938.272 + 939.565;
+                    }
+                }
+
+                double energy = ecalSPH->getEnergy();
+                double kinetic = energy - mass;
+
+                if ( numParticles_.find( pdgID ) == numParticles_.end() ) {
+                    //no particles with this PDG found yet
+                    numParticles_[ pdgID ] = 1;
+                } else {
+                    //particles with this PDG have been found
+                    numParticles_[ pdgID ] ++;
+                }
+
+                if ( abs(pdgID) != 12 and abs(pdgID) != 14 ) {
+                    //no neutrinos
+                    
+                    TString pdgStr;
+                    pdgStr.Form( "%d" , pdgID );
+                    if ( pdgID > 1000000000 ) {
+                        pdgStr = "Nuclei";
+                    }
+
+                    h_Particle_ID->Fill( ecalTotalEnergy , pdgStr , 1. );
+                }
+
+                h_Particle_Energy ->Fill( ecalTotalEnergy , energy );
+                h_Particle_Kinetic->Fill( ecalTotalEnergy , kinetic );
+
+            }
+        }
+
+        h_NumParticles->Fill( ecalTotalEnergy , simTrackerHits_LeavingScorePlane.size() );
+
+        return simTrackerHits_LeavingScorePlane;
     }
 
 } //ldmx namespace

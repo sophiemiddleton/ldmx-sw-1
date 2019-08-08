@@ -22,12 +22,12 @@
 #include "TH1.h"
 #include "TH2.h"
 #include "TH3.h"
+#include "TString.h"
 #include "TClonesArray.h"
-#include "TVector3.h"
 #include "TDatabasePDG.h"
 
 //LDMX Framework
-#include "Event/Event.h"
+#include "Event/EventDef.h"
 #include "Framework/EventProcessor.h" //Needed to declare processor
 #include "Framework/ParameterSet.h" // Needed to import parameters from configuration file
 
@@ -80,11 +80,20 @@ namespace ldmx {
             virtual void onProcessEnd();
 
         private:
-    
+
             /**
-             * Calculate the distance between the line segment from v to w and the point p.
+             * Calculate total measured energy in the ECAL.
+             * Fill histogram along the way.
              */
-            double pointRayDistance(TVector3 v, TVector3 w, TVector3 p);
+            double calculateEcalSummedEnergy( const TClonesArray* ecalHitCollection );
+
+            /**
+             * Filter ECAL Scoring Plane collection for particles leaving
+             * ECAL towards HCAL
+             * Fill histograms along the way.
+             */
+            std::vector<SimTrackerHit *> getParticlesLeavingEcalScoringPlane( const TClonesArray * ecalScoringPlaneHits , 
+                    double ecalTotalEnergy);
 
             ///////////////////////////////
             // Python Config Options
@@ -136,7 +145,8 @@ namespace ldmx {
             TH2F* h_HcalHit_Depth_Side;
             TH2F* h_HcalHit_Depth_Back;
             TH2F* h_HcalHit_Z_Side;
-            TH2F* h_HcalHit_ID;
+            TH2F* h_HcalHit_NContribs;
+            TH2F* h_HcalHit_IDs;
             TH3F* h_HcalHit_ZbyR_All;
             TH2F* h_HcalHit_PE_All;
 
