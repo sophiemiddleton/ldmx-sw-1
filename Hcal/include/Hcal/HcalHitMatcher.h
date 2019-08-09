@@ -83,8 +83,8 @@ namespace ldmx {
              * ECAL towards HCAL
              * Fill histograms along the way.
              */
-            std::vector<SimTrackerHit *> getParticlesLeavingEcalScoringPlane( const TClonesArray * ecalScoringPlaneHits , 
-                    double ecalTotalEnergy);
+            void getParticlesLeavingEcalScoringPlane( const TClonesArray * ecalScoringPlaneHits , 
+                    double ecalTotalEnergy , std::vector<SimTrackerHit *> hitsLeavingEcal );
 
             ///////////////////////////////
             // Python Config Options
@@ -92,7 +92,7 @@ namespace ldmx {
             std::string HcalHitColl_; //* Name of Hcal Digis Collection
             std::string EcalScoringPlane_; //* Name of Ecal Scoring Plane Hits Collection
             std::string HcalScoringPlane_; //* Name of Hcal Scoring Plane Hits Collection
-            double minDepth_EventMaxPE_; //* Minimum depth of hit in HCAL section to include in Event Max PE [layer index]
+            double minLayerEventMaxPE_; //* Minimum depth of hit in HCAL section to include in Event Max PE [layer index]
             double ecalFrontZ_; //* Location of Z-plane of front of ECAL [mm]
 
             /////////////////////////////

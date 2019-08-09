@@ -2,20 +2,10 @@
  * @file HcalHitMatcher.cxx
  * @brief The purpose of this analyzer is to study vetoes caused by activity in the Hcal using 
  *        Monte Carlo simulations.
- *        It extracts an array of sim particles and then matches each sim particle to a hit in the Hcal.
- *        Hcal hits and sim particles are matched spatially by finding the closest distance from a 
- *        sim particle's trajectory to a reconstructed Hcal hit.
- *        Plots and results are then tabulated in ROOT based on the sim particle and Hcal hit matches.
- *
  * @author Matthew Forsman , Tom Eichlersmith
  */
 
 #include "Hcal/HcalHitMatcher.h"
-
-#include "Event/HcalHit.h"
-#include "Event/EcalHit.h"
-
-#include "TDirectoryFile.h" //directories to organize histograms
 
 namespace ldmx {
 
@@ -26,7 +16,7 @@ namespace ldmx {
         EcalScoringPlane_ = ps.getString( "EcalScoringPlaneHitsName" , "EcalScoringPlaneHits" ); 
         HcalScoringPlane_ = ps.getString( "HcalScoringPlaneHitsName" , "HcalScoringPlaneHits" );
 
-        minDepth_EventMaxPE_ = ps.getInteger( "MinDepth_IncludeEventMaxPE" );
+        minLayerEventMaxPE_ = ps.getInteger( "minLayerEventMaxPE" );
 
         ecalFrontZ_ = ps.getDouble( "ecalFrontZ" );
 
@@ -43,8 +33,8 @@ namespace ldmx {
 
         //Scoring plane information
         const TClonesArray* ecalScoringPlaneHits = event.getCollection( EcalScoringPlane_ );
-        std::vector<SimTrackerHit *> simTrackerHits_LeavingScorePlane = 
-            getParticlesLeavingEcalScoringPlane( ecalScoringPlaneHits , ecalTotalEnergy );
+        std::vector<SimTrackerHit *> simTrackerHits_LeavingScorePlane;
+        getParticlesLeavingEcalScoringPlane( ecalScoringPlaneHits , ecalTotalEnergy , simTrackerHits_LeavingScoringPlane );
 
         //Map HcalHits to pdgIDs
         std::map< int , std::vector<SimCalorimeterHit *> > rawID_simHits;
@@ -105,7 +95,7 @@ namespace ldmx {
                 h_HcalHit_PE_All->Fill( ecalTotalEnergy , pe );
                 if( pe > max_PE_of_event ) {
                     max_PE_of_event = pe;
-                    if ( layer > minDepth_EventMaxPE_ ) {
+                    if ( layer > minLayerEventMaxPE_ ) {
                         max_PE_of_event_excluded = pe;
                     }
                 }
@@ -193,9 +183,9 @@ namespace ldmx {
                 800,0,8000,
                 500,0,500);
 
-        char title[200];
-        sprintf( title , ";EcalSummedEnergy;Maximum PE for Hits with Layer Index > %d; Count" ,
-                minDepth_EventMaxPE_ );
+        TString title;
+        title.Form( ";EcalSummedEnergy;Maximum PE for Hits with Layer Index > %d; Count" ,
+                minLayerEventMaxPE_ );
         h_EventMaxPE_Excluded = new TH2F(
                 "EventMaxPE_Excluded",
                 title,
@@ -277,7 +267,7 @@ namespace ldmx {
     
     void HcalHitMatcher::onProcessEnd() {
         
-        double hitRate, matchRate;
+        double hitRate;
         {
             //temporary variables for calculating rates
             double numerator = numNonNoiseHits_;
@@ -319,10 +309,10 @@ namespace ldmx {
         return ecalTotalEnergy;
     }
         
-    std::vector<SimTrackerHit*> HcalHitMatcher::getParticlesLeavingEcalScoringPlane(
-            const TClonesArray* ecalScoringPlaneHits , double ecalTotalEnergy) { 
+    void HcalHitMatcher::getParticlesLeavingEcalScoringPlane( const TClonesArray* ecalScoringPlaneHits , 
+            double ecalTotalEnergy, std::vector<SimTrackerHit *> leavingScoringPlane ) {
         
-        std::vector<SimTrackerHit*> simTrackerHits_LeavingScorePlane;
+        leavingScoringPlane.clear();
     
         for (int i = 0; i < ecalScoringPlaneHits->GetEntriesFast(); i++ ) {
             SimTrackerHit* ecalSPH = (SimTrackerHit*)(ecalScoringPlaneHits->At(i));
@@ -358,7 +348,7 @@ namespace ldmx {
             }
 
             if ( isLeavingECAL ) {
-                simTrackerHits_LeavingScorePlane.push_back(ecalSPH);
+                leavingScoringPlane.push_back(ecalSPH);
                 int pdgID = ecalSPH->getPdgID();
                 double mass = 0;
                 if ( databasePDG_.GetParticle( pdgID ) ) { 
@@ -401,9 +391,9 @@ namespace ldmx {
             }
         }
 
-        h_NumParticles->Fill( ecalTotalEnergy , simTrackerHits_LeavingScorePlane.size() );
+        h_NumParticles->Fill( ecalTotalEnergy , leavingScoringPlane.size() );
 
-        return simTrackerHits_LeavingScorePlane;
+        return;
     }
 
 } //ldmx namespace
