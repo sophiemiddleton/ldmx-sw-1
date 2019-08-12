@@ -16,8 +16,6 @@ namespace ldmx {
         EcalScoringPlane_ = ps.getString( "EcalScoringPlaneHitsName" , "EcalScoringPlaneHits" ); 
         HcalScoringPlane_ = ps.getString( "HcalScoringPlaneHitsName" , "HcalScoringPlaneHits" );
 
-        minLayerEventMaxPE_ = ps.getInteger( "minLayerEventMaxPE" );
-
         ecalFrontZ_ = ps.getDouble( "ecalFrontZ" );
 
         return;
@@ -60,8 +58,7 @@ namespace ldmx {
         //HcalHit information
         const TClonesArray* hcalHitColl = event.getCollection( HcalHitColl_ );
 
-        float max_PE_of_event=0;
-        float max_PE_of_event_excluded=0;
+        std::vector<float> maxPEbyLayer(100,-1.0);
         int nBackHcalHits = 0;
         int nSideHcalHits = 0;
         for(int i=0; i < hcalHitColl->GetEntriesFast(); i++) { //Begin loop over hcalhits array
@@ -93,12 +90,11 @@ namespace ldmx {
 
                 float pe = hcalhit->getPE();
                 h_HcalHit_PE_All->Fill( ecalTotalEnergy , pe );
-                if( pe > max_PE_of_event ) {
-                    max_PE_of_event = pe;
-                    if ( layer > minLayerEventMaxPE_ ) {
-                        max_PE_of_event_excluded = pe;
-                    }
-                }
+                for ( int i = 0; i < layer; i++ ) {
+                    if ( pe > maxPEbyLayer.at(i) ) {
+                        maxPEbyLayer[i] = pe;
+                    } //check if current pe is bigger
+                } // loop through earlier layers
 
                 int rawID = hcalhit->getID();
                 if ( rawID_simHits.find( rawID ) != rawID_simHits.end() ) {
@@ -130,8 +126,12 @@ namespace ldmx {
         }//End loop over hcalhits array
 
         // maximum PE in hcal hits for the event
-        h_EventMaxPE_All     ->Fill( ecalTotalEnergy , max_PE_of_event );
-        h_EventMaxPE_Excluded->Fill( ecalTotalEnergy , max_PE_of_event_excluded );
+        for ( int layer = 1; layer < 101; layer++ ) {
+            float layer_maxPE = maxPEbyLayer.at(layer-1);
+            if ( layer_maxPE > 0 ) {
+                h_EventMaxPE->Fill( ecalTotalEnergy , layer , layer_maxPE );
+            }
+        }
 
         // number of hcal hits for the event
         h_NumHcalHits     ->Fill( ecalTotalEnergy , nBackHcalHits+nSideHcalHits );
@@ -182,19 +182,12 @@ namespace ldmx {
                 800,0,8000,
                 10,0,10);
 
-        h_EventMaxPE_All = new TH2F(
-                "EventMaxPE_All",
-                ";EcalSummedEnergy;Maximum PE for all HcalHits in Event;Count",
+        h_EventMaxPE = new TH3F(
+                "EventMaxPE",
+                ";EcalSummedEnergy;Minimum Layer Index Included;Maximum PE",
                 800,0,8000,
-                500,0,500);
-
-        TString title;
-        title.Form( ";EcalSummedEnergy;Maximum PE for Hits with Layer Index > %d; Count" , minLayerEventMaxPE_ );
-        h_EventMaxPE_Excluded = new TH2F(
-                "EventMaxPE_Excluded",
-                title,
-                800,0,8000,
-                500,0,500);
+                100,0,100,
+                100,0,500);
         
         //add in bins of known particles
         std::vector<std::string> knownPDGs = { "22" , "11" , "-11" , "13" , "-13", 
@@ -257,8 +250,8 @@ namespace ldmx {
                "HcalHit_ZbyR_All", 
                "All Hcal Hit Locations;EcalSummedEnergy;Z depth [mm];radial distance from z-axis [mm]",
                800,0,8000,
-               500,0,5000,
-               220,0,2200);
+               100,0,5000,
+               44 ,0,2200);
 
         h_HcalHit_PE_All = new TH2F(
                "HcalHit_PE_All",

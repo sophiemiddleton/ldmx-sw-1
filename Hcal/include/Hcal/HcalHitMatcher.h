@@ -92,7 +92,6 @@ namespace ldmx {
             std::string HcalHitColl_; //* Name of Hcal Digis Collection
             std::string EcalScoringPlane_; //* Name of Ecal Scoring Plane Hits Collection
             std::string HcalScoringPlane_; //* Name of Hcal Scoring Plane Hits Collection
-            double minLayerEventMaxPE_; //* Minimum depth of hit in HCAL section to include in Event Max PE [layer index]
             double ecalFrontZ_; //* Location of Z-plane of front of ECAL [mm]
 
             /////////////////////////////
@@ -121,8 +120,7 @@ namespace ldmx {
             TH2F* h_NumHcalHits_Back;
             TH2F* h_NumHcalHits_Side;
             TH2F* h_NumParticles;
-            TH2F* h_EventMaxPE_All;
-            TH2F* h_EventMaxPE_Excluded;  //Excludes any HcalHit with layer < minLayer
+            TH3F* h_EventMaxPE;
 
             //SimTrackerHit - integrate to number of SimTrackerHits
             TH2F* h_Particle_ID; //ID particles crossing scoring plane
