@@ -122,15 +122,16 @@ namespace ldmx {
             TH2F* h_NumHcalHits_Side;
             TH2F* h_NumParticles;
             TH2F* h_EventMaxPE_All;
-            TH2F* h_EventMaxPE_Excluded;  //Excludes any HcalHit with depth < minDepth
+            TH2F* h_EventMaxPE_Excluded;  //Excludes any HcalHit with layer < minLayer
 
             //SimTrackerHit - integrate to number of SimTrackerHits
-            TH2F* h_Particle_ID;
-            TH2F* h_Particle_Energy; //All Particle energies
-            TH2F* h_Particle_Kinetic; //All Particle kinetic energies
+            TH2F* h_Particle_ID; //ID particles crossing scoring plane
+            TH2F* h_Particle_Energy; //Energy of particles crossing scoring plane
+            TH2F* h_Particle_Kinetic; //Kinetic energy of particles crossing scoring plane
 
             //HcalHit - integrate to number of HcalHits
             TH2F* h_HcalHit_Depth_Side;
+            TH2F* h_HcalHit_Depth_Side_byID;
             TH2F* h_HcalHit_Depth_Back;
             TH2F* h_HcalHit_Z_Side;
             TH2F* h_HcalHit_NContribs;

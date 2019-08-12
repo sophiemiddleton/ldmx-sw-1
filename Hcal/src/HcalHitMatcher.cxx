@@ -33,7 +33,7 @@ namespace ldmx {
 
         //Scoring plane information
         const TClonesArray* ecalScoringPlaneHits = event.getCollection( EcalScoringPlane_ );
-        std::vector<SimTrackerHit *> simTrackerHits_LeavingScorePlane;
+        std::vector<SimTrackerHit *> simTrackerHits_LeavingScoringPlane;
         getParticlesLeavingEcalScoringPlane( ecalScoringPlaneHits , ecalTotalEnergy , simTrackerHits_LeavingScoringPlane );
 
         //Map HcalHits to pdgIDs
@@ -114,6 +114,11 @@ namespace ldmx {
                         //weight by energy deposition
                         h_HcalHit_IDs->Fill( ecalTotalEnergy , pdgStr , 
                             simHit->getEdep()/hcalhit->getEnergy() );
+
+                        if ( section > 0 and section < 5 ) {
+                            h_HcalHit_Depth_Side_byID->Fill( pdgStr , layer ,
+                                    simHit->getEdep() / hcalhit->getEnergy() );
+                        }
                     }//simHits contributing to this hcalhit
                 } else {
                     std::cout << "Yikes! Found an HcalHit that doesn't have a corresponding SimCalorimeterHit!" << std::endl;
@@ -184,8 +189,7 @@ namespace ldmx {
                 500,0,500);
 
         TString title;
-        title.Form( ";EcalSummedEnergy;Maximum PE for Hits with Layer Index > %d; Count" ,
-                minLayerEventMaxPE_ );
+        title.Form( ";EcalSummedEnergy;Maximum PE for Hits with Layer Index > %d; Count" , minLayerEventMaxPE_ );
         h_EventMaxPE_Excluded = new TH2F(
                 "EventMaxPE_Excluded",
                 title,
@@ -200,9 +204,6 @@ namespace ldmx {
                 ";EcalSummedEnergy;Particle Crossing ECAL Scoring Plane;Count",
                 800,0,8000,
                 knownPDGs.size(),0, knownPDGs.size() );
-        for ( int ibin = 1; ibin < knownPDGs.size()+1; ibin++ ) {
-            h_Particle_ID->GetYaxis()->SetBinLabel( ibin , knownPDGs.at(ibin-1).c_str() );
-        }
 
         h_Particle_Energy = new TH2F(
                "Particle_Energy",
@@ -222,6 +223,12 @@ namespace ldmx {
                800,0.,8000.,
                35, 0, 35);
 
+        h_HcalHit_Depth_Side_byID = new TH2F(
+               "HcalHit_Depth_Side_byID",
+               ";Particle Contributing to Hit;Depth of Hit in Side HCAL [layer index];Count",
+               knownPDGs.size(),0,knownPDGs.size(),
+               35, 0, 35);
+
         h_HcalHit_Depth_Back = new TH2F(
                "HcalHit_Depth_Back",
                ";EcalSummedEnergy;Depth of Hits in Back HCAL [layer index];Count",
@@ -239,9 +246,6 @@ namespace ldmx {
                 ";EcalSummedEnergy;Particles Blamed by Simulation;Count",
                 800,0,8000,
                 knownPDGs.size(),0,knownPDGs.size() );
-        for ( int ibin = 1; ibin < knownPDGs.size()+1; ibin++ ) {
-            h_HcalHit_IDs->GetYaxis()->SetBinLabel( ibin , knownPDGs.at(ibin-1).c_str() );
-        }
 
         h_HcalHit_NContribs = new TH2F(
                 "HcalHit_NContribs",
@@ -261,6 +265,13 @@ namespace ldmx {
                ";EcalSummedEnergy;PEs of all HcalHits;Count",
                800,0,8000,
                500,0,500);
+
+        //label PDG bins
+        for ( int ibin = 1; ibin < knownPDGs.size()+1; ibin++ ) {
+            h_Particle_ID            ->GetYaxis()->SetBinLabel( ibin , knownPDGs.at(ibin-1).c_str() );
+            h_HcalHit_IDs            ->GetYaxis()->SetBinLabel( ibin , knownPDGs.at(ibin-1).c_str() );
+            h_HcalHit_Depth_Side_byID->GetXaxis()->SetBinLabel( ibin , knownPDGs.at(ibin-1).c_str() );
+        }
 
         return;
     } //onProcessStart
@@ -383,13 +394,14 @@ namespace ldmx {
                     }
 
                     h_Particle_ID->Fill( ecalTotalEnergy , pdgStr , 1. );
-                }
+
+                }//is not a neutrino
 
                 h_Particle_Energy ->Fill( ecalTotalEnergy , energy );
                 h_Particle_Kinetic->Fill( ecalTotalEnergy , kinetic );
 
-            }
-        }
+            }//isLeavingECAL
+        }//loop through all scoring plane hits
 
         h_NumParticles->Fill( ecalTotalEnergy , leavingScoringPlane.size() );
 
