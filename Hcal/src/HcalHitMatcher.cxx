@@ -186,8 +186,8 @@ namespace ldmx {
                 "EventMaxPE",
                 ";EcalSummedEnergy;Minimum Layer Index Included;Maximum PE",
                 800,0,8000,
-                100,0,100,
-                100,0,500);
+                100,1,101,
+                100,0,1000);
         
         //add in bins of known particles
         std::vector<std::string> knownPDGs = { "22" , "11" , "-11" , "13" , "-13", 
@@ -257,7 +257,7 @@ namespace ldmx {
                "HcalHit_PE_All",
                ";EcalSummedEnergy;PEs of all HcalHits;Count",
                800,0,8000,
-               500,0,500);
+               100,0,1000);
 
         //label PDG bins
         for ( int ibin = 1; ibin < knownPDGs.size()+1; ibin++ ) {
