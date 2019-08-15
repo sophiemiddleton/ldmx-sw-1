@@ -76,6 +76,7 @@ namespace ldmx {
 
                 int section = hcalhit->getSection();
                 int layer = hcalhit->getLayer();
+                int bar = hcalhit->getStrip();
                 if ( section == 0 ) {
                     h_HcalHit_Depth_Back->Fill( ecalTotalEnergy , layer );
                     nBackHcalHits++;
@@ -99,21 +100,37 @@ namespace ldmx {
                 int rawID = hcalhit->getID();
                 if ( rawID_simHits.find( rawID ) != rawID_simHits.end() ) {
                     h_HcalHit_NContribs->Fill( ecalTotalEnergy , rawID_simHits.at( rawID ).size() );
-                    for ( SimCalorimeterHit *simHit : rawID_simHits.at( rawID ) ) {
+
+                    std::vector<SimCalorimeterHit *>::iterator firstSimHit, secondSimHit;
+                    for ( firstSimHit = rawID_simHits.at( rawID ).begin(); 
+                          firstSimHit != rawID_simHits.at( rawID ).end(); ++firstSimHit ) {
                         
-                        int pdgID = simHit->getContrib(0).pdgCode;
+                        int pdgID = (*firstSimHit)->getContrib(0).pdgCode;
                         TString pdgStr( "Nuclei" );
                         if ( pdgID < 1000000000 ) {
                             pdgStr.Form( "%d" , pdgID );
                         }
 
                         //weight by energy deposition
+                        double eDep = (*firstSimHit)->getEdep();
                         h_HcalHit_IDs->Fill( ecalTotalEnergy , pdgStr , 
-                            simHit->getEdep()/hcalhit->getEnergy() );
+                            eDep/hcalhit->getEnergy() );
 
                         if ( section > 0 and section < 5 ) {
                             h_HcalHit_Depth_Side_byID->Fill( pdgStr , layer ,
-                                    simHit->getEdep() / hcalhit->getEnergy() );
+                                    eDep / hcalhit->getEnergy() );
+                        }
+
+                        //loop a second time to get time differences
+                        //only care about Backal
+                        if ( section == 0 ) {
+                            for ( secondSimHit = firstSimHit + 1;
+                                  secondSimHit != rawID_simHits.at( rawID ).end(); ++secondSimHit ) {
+                                
+                                float tDif = abs( (*firstSimHit)->getContrib(0).time - (*secondSimHit)->getContrib(0).time );
+    
+                                h_HcalHit_TDif_byBar->Fill( ecalTotalEnergy , bar , tDif );
+                            }
                         }
                     }//simHits contributing to this hcalhit
                 } else {
@@ -158,23 +175,25 @@ namespace ldmx {
                 "Ecal Summed Energy;Total Measured Energy in ECAL [MeV];Count",
                 800,0,8000); //10 MeV Bins
 
+        int nNumHitBins = 12;
+        double numHitBins[13] = { 0 , 1, 2, 3, 4, 5, 10, 15, 20, 30, 40, 50, 100 };
         h_NumHcalHits = new TH2F(
                 "NumHcalHits",
                 ";EcalSummedEnergy;Number of HcalHits per Event;Count",
                 800,0,8000,
-                50,0,50);
+                nNumHitBins , numHitBins );
 
         h_NumHcalHits_Back = new TH2F(
                 "NumHcalHits_Back",
                 ";EcalSummedEnergy;Number of Hits in Back HCAL per Event;Count",
                 800,0,8000,
-                50,0,50);
+                nNumHitBins , numHitBins );
 
         h_NumHcalHits_Side = new TH2F(
                 "NumHcalHits_Side",
                 ";EcalSummedEnergy;Number of Hits in Side HCAL per Event;Count",
                 800,0,8000,
-                50,0,50);
+                nNumHitBins , numHitBins );
 
         h_NumParticles = new TH2F(
                 "NumParticles" ,
@@ -192,9 +211,15 @@ namespace ldmx {
         //add in bins of known particles
         std::vector<std::string> knownPDGs = { "22" , "11" , "-11" , "13" , "-13", 
             "2112" , "2212" , "211", "-211" , "130", "321" , "Nuclei" };
-        h_Particle_ID = new TH2F(
-                "Particle_ID",
-                ";EcalSummedEnergy;Particle Crossing ECAL Scoring Plane;Count",
+        h_Particle_ID_Back = new TH2F(
+                "Particle_ID_Back",
+                ";EcalSummedEnergy;Particle Crossing Back ECAL Scoring Plane;Count",
+                800,0,8000,
+                knownPDGs.size(),0, knownPDGs.size() );
+
+        h_Particle_ID_Side = new TH2F(
+                "Particle_ID_Side",
+                ";EcalSummedEnergy;Particle Crossing Side ECAL Scoring Planes;Count",
                 800,0,8000,
                 knownPDGs.size(),0, knownPDGs.size() );
 
@@ -208,25 +233,27 @@ namespace ldmx {
                "Particle_Kinetic",
                ";EcalSummedEnergy;Particle Kinetic Energy [MeV];Count",
                800,0,8000,
-               400,0,4000);
+               150,0,1500);
 
         h_HcalHit_Depth_Side = new TH2F(
                "HcalHit_Depth_Side",
                ";EcalSummedEnergy;Depth of Hits in Side HCAL [layer index];Count",
                800,0.,8000.,
-               35, 0, 35);
+               34, 1, 35);
 
         h_HcalHit_Depth_Side_byID = new TH2F(
                "HcalHit_Depth_Side_byID",
                ";Particle Contributing to Hit;Depth of Hit in Side HCAL [layer index];Count",
                knownPDGs.size(),0,knownPDGs.size(),
-               35, 0, 35);
+               34, 1, 35);
 
+        int nDepthBackBins = 14;
+        double depthBackBins[15] = { 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 20, 30, 40, 50, 100 };
         h_HcalHit_Depth_Back = new TH2F(
                "HcalHit_Depth_Back",
                ";EcalSummedEnergy;Depth of Hits in Back HCAL [layer index];Count",
                800,0,8000,
-               100,0,100);
+               nDepthBackBins, depthBackBins );
 
         h_HcalHit_Z_Side = new TH2F(
                "HcalHit_Z_Side",
@@ -246,6 +273,19 @@ namespace ldmx {
                 800,0,8000,
                 50,0.5,50.5);
 
+        h_HcalHit_PE_All = new TH2F(
+               "HcalHit_PE_All",
+               ";EcalSummedEnergy;PEs of all HcalHits;Count",
+               800,0,8000,
+               100,0,1000);
+
+        h_HcalHit_TDif_byBar = new TH3F(
+                "HcalHit_TDif_byBar",
+                "Time Difference between Sim Hits in Back HCAL in Same Bar;EcalSummedEnergy;Bar Index;Time Difference [ns]",
+                800,0,8000,
+                62,0,62,
+                500,0,5000);
+
         h_HcalHit_ZbyR_All = new TH3F(
                "HcalHit_ZbyR_All", 
                "All Hcal Hit Locations;EcalSummedEnergy;Z depth [mm];radial distance from z-axis [mm]",
@@ -253,15 +293,10 @@ namespace ldmx {
                100,0,5000,
                44 ,0,2200);
 
-        h_HcalHit_PE_All = new TH2F(
-               "HcalHit_PE_All",
-               ";EcalSummedEnergy;PEs of all HcalHits;Count",
-               800,0,8000,
-               100,0,1000);
-
         //label PDG bins
         for ( int ibin = 1; ibin < knownPDGs.size()+1; ibin++ ) {
-            h_Particle_ID            ->GetYaxis()->SetBinLabel( ibin , knownPDGs.at(ibin-1).c_str() );
+            h_Particle_ID_Back       ->GetYaxis()->SetBinLabel( ibin , knownPDGs.at(ibin-1).c_str() );
+            h_Particle_ID_Side       ->GetYaxis()->SetBinLabel( ibin , knownPDGs.at(ibin-1).c_str() );
             h_HcalHit_IDs            ->GetYaxis()->SetBinLabel( ibin , knownPDGs.at(ibin-1).c_str() );
             h_HcalHit_Depth_Side_byID->GetXaxis()->SetBinLabel( ibin , knownPDGs.at(ibin-1).c_str() );
         }
@@ -325,33 +360,32 @@ namespace ldmx {
             std::vector<double> momentum = ecalSPH->getMomentum();
 
             //skip particles that are entering the ECAL (mostly incoming electron)
-            bool isLeavingECAL = false;
+            bool isLeavingSide = false;
+            bool isLeavingBack = false;
             switch( layerID ) {
                 case 1: //front - nothing - not near HCAL
-                    isLeavingECAL = false;
                     break;
                 case 2: //back - z needs to be positive
-                    isLeavingECAL = (momentum[2] > 0);
+                    isLeavingBack = (momentum[2] > 0);
                     break;
                 case 3: //top - y needs to be postive
-                    isLeavingECAL = (momentum[1] > 0);
+                    isLeavingSide = (momentum[1] > 0);
                     break;
                 case 4: //bottom - y needs to be negative
-                    isLeavingECAL = (momentum[1] < 0);
+                    isLeavingSide = (momentum[1] < 0);
                     break;
                 case 5: //right - x needs to be negative
-                    isLeavingECAL = (momentum[0] < 0);
+                    isLeavingSide = (momentum[0] < 0);
                     break;
                 case 6: //left - x needs to be positive
-                    isLeavingECAL = (momentum[0] > 0);
+                    isLeavingSide = (momentum[0] > 0);
                     break;
                 default:
-                    isLeavingECAL = false;
                     std::cerr << "[ Warning ] : HcalHitMatcher found a ECAL Scoring Plane Hit with layerID " << layerID << std::endl;
                     std::cerr << "    which is not one of the options (1 - 6)." << std::endl;
             }
 
-            if ( isLeavingECAL ) {
+            if ( isLeavingBack or isLeavingSide ) {
                 leavingScoringPlane.push_back(ecalSPH);
                 int pdgID = ecalSPH->getPdgID();
                 double mass = 0;
@@ -386,7 +420,11 @@ namespace ldmx {
                         pdgStr = "Nuclei";
                     }
 
-                    h_Particle_ID->Fill( ecalTotalEnergy , pdgStr , 1. );
+                    if ( isLeavingBack ) {
+                        h_Particle_ID_Back->Fill( ecalTotalEnergy , pdgStr , 1. );
+                    } else if ( isLeavingSide ) {
+                        h_Particle_ID_Side->Fill( ecalTotalEnergy , pdgStr , 1. );
+                    }
 
                 }//is not a neutrino
 
