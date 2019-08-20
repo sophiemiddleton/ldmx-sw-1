@@ -123,8 +123,8 @@ namespace ldmx {
             TH3F* h_EventMaxPE;
 
             //SimTrackerHit - integrate to number of SimTrackerHits
-            TH2F* h_Particle_ID_Back; //ID particles crossing back scoring plane
-            TH2F* h_Particle_ID_Side; //ID particles crossing side scoring plane
+            TH3F* h_Particle_ID_Back; //ID particles crossing back scoring plane
+            TH3F* h_Particle_ID_Side; //ID particles crossing side scoring plane
             TH2F* h_Particle_Energy; //Energy of particles crossing scoring plane
             TH2F* h_Particle_Kinetic; //Kinetic energy of particles crossing scoring plane
 

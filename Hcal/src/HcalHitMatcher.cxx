@@ -211,17 +211,19 @@ namespace ldmx {
         //add in bins of known particles
         std::vector<std::string> knownPDGs = { "22" , "11" , "-11" , "13" , "-13", 
             "2112" , "2212" , "211", "-211" , "130", "321" , "Nuclei" };
-        h_Particle_ID_Back = new TH2F(
+        h_Particle_ID_Back = new TH3F(
                 "Particle_ID_Back",
-                ";EcalSummedEnergy;Particle Crossing Back ECAL Scoring Plane;Count",
+                ";EcalSummedEnergy;Particle Crossing Back ECAL Scoring Plane;Kinetic Energy [MeV]",
                 800,0,8000,
-                knownPDGs.size(),0, knownPDGs.size() );
+                knownPDGs.size(),0, knownPDGs.size(),
+                200,0,200);
 
-        h_Particle_ID_Side = new TH2F(
+        h_Particle_ID_Side = new TH3F(
                 "Particle_ID_Side",
-                ";EcalSummedEnergy;Particle Crossing Side ECAL Scoring Planes;Count",
+                ";EcalSummedEnergy;Particle Crossing Side ECAL Scoring Planes;Kinetic Energy [MeV]",
                 800,0,8000,
-                knownPDGs.size(),0, knownPDGs.size() );
+                knownPDGs.size(),0, knownPDGs.size(),
+                200,0,200);
 
         h_Particle_Energy = new TH2F(
                "Particle_Energy",
@@ -421,9 +423,9 @@ namespace ldmx {
                     }
 
                     if ( isLeavingBack ) {
-                        h_Particle_ID_Back->Fill( ecalTotalEnergy , pdgStr , 1. );
+                        h_Particle_ID_Back->Fill( ecalTotalEnergy , pdgStr , kinetic , 1. );
                     } else if ( isLeavingSide ) {
-                        h_Particle_ID_Side->Fill( ecalTotalEnergy , pdgStr , 1. );
+                        h_Particle_ID_Side->Fill( ecalTotalEnergy , pdgStr , kinetic , 1. );
                     }
 
                 }//is not a neutrino
