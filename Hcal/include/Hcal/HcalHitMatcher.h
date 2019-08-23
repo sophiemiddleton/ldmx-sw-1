@@ -51,6 +51,10 @@ namespace ldmx {
              *      HcalScoringPlaneHitsName    HcalScoringPlaneHits
              *      MinDepth_IncludeEventMaxPE  NA
              *      ecalFrontZ                  NA
+             *      timeThreshold               50
+             *      totalPEThresholdSide        5
+             *      totalPEThresholdBack        5
+             *      absolutePEThreshold         1
              */
             virtual void configure(const ldmx::ParameterSet& ps);
             
@@ -86,6 +90,13 @@ namespace ldmx {
             void getParticlesLeavingEcalScoringPlane( const TClonesArray * ecalScoringPlaneHits , 
                     double ecalTotalEnergy , std::vector<SimTrackerHit *> hitsLeavingEcal );
 
+            /**
+             * Checks if HcalHit is "valid"
+             *
+             * @param hit HcalHit to consider
+             */
+            bool isValidHit( HcalHit *hit ) const;
+
             ///////////////////////////////
             // Python Config Options
             std::string EcalHitColl_; //* Name of Ecal Digis Collection
@@ -93,10 +104,14 @@ namespace ldmx {
             std::string EcalScoringPlane_; //* Name of Ecal Scoring Plane Hits Collection
             std::string HcalScoringPlane_; //* Name of Hcal Scoring Plane Hits Collection
             double ecalFrontZ_; //* Location of Z-plane of front of ECAL [mm]
+            double totalPEThresholdSide_; //* minimum PE for a hit in the SideCal to be considered valid
+            double totalPEThresholdBack_; //* minimum *total* PE for a hit in the BackCal to be considered valid
+            double absolutePEThreshold_; //* minimum PE for any hit to be considered valid (compared to getMinPE instead of getPE)
+            double timeThreshold_; //* maximum time for a hit to be considered valid [ns]
 
             /////////////////////////////
             // Persistent information
-            long int numNonNoiseHits_; //* Number of Non-Noise Hcal Hits
+            long int numValidHits_; //* Number of Non-Noise Hcal Hits
             long int numUnMatchedHits_; //* Number of Hcal Hits not assigned at least one contributor
             long int numEvents_; //* Number of events analyzed
             std::map< int , long int > numParticles_; //* Number of particles corresponding to each PDG ID
@@ -123,10 +138,8 @@ namespace ldmx {
             TH3F* h_EventMaxPE;
 
             //SimTrackerHit - integrate to number of SimTrackerHits
-            TH3F* h_Particle_ID_Back; //ID particles crossing back scoring plane
-            TH3F* h_Particle_ID_Side; //ID particles crossing side scoring plane
-            TH2F* h_Particle_Energy; //Energy of particles crossing scoring plane
-            TH2F* h_Particle_Kinetic; //Kinetic energy of particles crossing scoring plane
+            TH3F* h_Particle_ID_Back; //EcalSummedEnergy , ID , Kinetic Energy for particles entering backcal
+            TH3F* h_Particle_ID_Side; //EcalSummedEnergy , ID , Kinetic Energy for particles entering sidecal
 
             //HcalHit - integrate to number of HcalHits
             TH2F* h_HcalHit_Depth_Side;
@@ -135,7 +148,8 @@ namespace ldmx {
             TH2F* h_HcalHit_Z_Side;
             TH2F* h_HcalHit_NContribs;
             TH2F* h_HcalHit_IDs;
-            TH2F* h_HcalHit_PE_All;
+            TH2F* h_HcalHit_PE_Side;
+            TH2F* h_HcalHit_PE_Back;
             TH3F* h_HcalHit_TDif_byBar;
             TH3F* h_HcalHit_ZbyR_All;
 

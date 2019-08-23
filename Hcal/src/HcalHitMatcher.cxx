@@ -18,6 +18,11 @@ namespace ldmx {
 
         ecalFrontZ_ = ps.getDouble( "ecalFrontZ" );
 
+        totalPEThresholdSide_ = ps.getDouble( "totalPEThresholdSide" , 5. );
+        totalPEThresholdBack_ = ps.getDouble( "totalPEThresholdBack" , 5. );
+        absolutePEThreshold_  = ps.getDouble( "absolutePEThreshold"  , 1. );
+        timeThreshold_        = ps.getDouble( "timeThreshold"        , 50.);
+
         return;
     }
 
@@ -64,9 +69,9 @@ namespace ldmx {
         for(int i=0; i < hcalHitColl->GetEntriesFast(); i++) { //Begin loop over hcalhits array
             ldmx::HcalHit* hcalhit = (ldmx::HcalHit*)(hcalHitColl->At(i));
             
-            if ( ! hcalhit->getNoise() ) { //Only analyze non-noise hits
+            if ( isValidHit( hcalhit ) ) {
                 
-                numNonNoiseHits_++;
+                numValidHits_++;
 
                 //---- Bin HcalHit information that does not depend on mathcin -------------------->
                 
@@ -75,22 +80,23 @@ namespace ldmx {
                 h_HcalHit_ZbyR_All->Fill( ecalTotalEnergy , hcalhit->getZ(), hcalhit_radialdist);
 
                 int section = hcalhit->getSection();
-                int layer = hcalhit->getLayer();
-                int bar = hcalhit->getStrip();
+                int layer   = hcalhit->getLayer();
+                int bar     = hcalhit->getStrip();
+                float pe    = hcalhit->getPE();
                 if ( section == 0 ) {
                     h_HcalHit_Depth_Back->Fill( ecalTotalEnergy , layer );
+                    h_HcalHit_PE_Back->Fill( ecalTotalEnergy , pe );
                     nBackHcalHits++;
                 } else if ( section > 0 and section < 5 ) {
                     h_HcalHit_Z_Side->Fill( ecalTotalEnergy , hcalhit->getZ()-ecalFrontZ_ );
                     h_HcalHit_Depth_Side->Fill( ecalTotalEnergy , layer );
+                    h_HcalHit_PE_Side->Fill( ecalTotalEnergy , pe );
                     nSideHcalHits++;
                 } else {
                     std::cerr << "[ Warning ] : HcalHitMatcher::analyze - found HcalSection " << section
                         << " that is not in the correct range." << std::endl;
                 }
 
-                float pe = hcalhit->getPE();
-                h_HcalHit_PE_All->Fill( ecalTotalEnergy , pe );
                 for ( int i = 0; i < layer; i++ ) {
                     if ( pe > maxPEbyLayer.at(i) ) {
                         maxPEbyLayer[i] = pe;
@@ -138,7 +144,7 @@ namespace ldmx {
                     numUnMatchedHits_++;
                 }
     
-            } // if not a noise hit
+            } // if a valid hit
 
         }//End loop over hcalhits array
 
@@ -163,7 +169,7 @@ namespace ldmx {
         //Readin default database installed with ROOTSYS
         databasePDG_.ReadPDGTable();
 
-        numNonNoiseHits_ = 0;
+        numValidHits_ = 0;
         numUnMatchedHits_ = 0;
         numEvents_ = 0;
 
@@ -225,18 +231,6 @@ namespace ldmx {
                 knownPDGs.size(),0, knownPDGs.size(),
                 200,0,200);
 
-        h_Particle_Energy = new TH2F(
-               "Particle_Energy",
-               ";EcalSummedEnergy;Particle Energy [MeV];Count",
-               800,0,8000,
-               400,0,4000);
-
-        h_Particle_Kinetic = new TH2F(
-               "Particle_Kinetic",
-               ";EcalSummedEnergy;Particle Kinetic Energy [MeV];Count",
-               800,0,8000,
-               150,0,1500);
-
         h_HcalHit_Depth_Side = new TH2F(
                "HcalHit_Depth_Side",
                ";EcalSummedEnergy;Depth of Hits in Side HCAL [layer index];Count",
@@ -275,11 +269,19 @@ namespace ldmx {
                 800,0,8000,
                 50,0.5,50.5);
 
-        h_HcalHit_PE_All = new TH2F(
-               "HcalHit_PE_All",
-               ";EcalSummedEnergy;PEs of all HcalHits;Count",
+        int nPEBins = 20;
+        double peBins[21] = { 0 , 1 , 2 , 3 , 4 , 5 , 6, 7, 8, 9, 10, 20, 30, 40, 50, 100, 200, 300, 400, 500, 1000};
+        h_HcalHit_PE_Back = new TH2F(
+               "HcalHit_PE_Back",
+               ";EcalSummedEnergy;PEs of Hits in Back Hcal;Count",
                800,0,8000,
-               100,0,1000);
+               nPEBins , peBins );
+
+        h_HcalHit_PE_Side = new TH2F(
+               "HcalHit_PE_Side",
+               ";EcalSummedEnergy;PEs of Hits in Side Hcal;Count",
+               800,0,8000,
+               nPEBins , peBins );
 
         h_HcalHit_TDif_byBar = new TH3F(
                 "HcalHit_TDif_byBar",
@@ -311,7 +313,7 @@ namespace ldmx {
         double hitRate;
         {
             //temporary variables for calculating rates
-            double numerator = numNonNoiseHits_;
+            double numerator = numValidHits_;
             double denominator = numEvents_;
             hitRate = numerator/denominator;
         }
@@ -321,7 +323,7 @@ namespace ldmx {
         printf( "=           HcalHitMatcher        =\n" );
         printf( "===================================\n" );
         printf( "Number of Events         : %8i\n" , numEvents_ );
-        printf( "Number of Non Noise Hits : %8i\n" , numNonNoiseHits_ );
+        printf( "Number of Non Noise Hits : %8i\n" , numValidHits_ );
         printf( "Number of Unmatched Hits : %8i\n" , numUnMatchedHits_ );
         printf( "Hit Rate (hits/events)   : %8.6f\n" , hitRate );
         printf( "===================================\n" );
@@ -430,15 +432,38 @@ namespace ldmx {
 
                 }//is not a neutrino
 
-                h_Particle_Energy ->Fill( ecalTotalEnergy , energy );
-                h_Particle_Kinetic->Fill( ecalTotalEnergy , kinetic );
-
             }//isLeavingECAL
         }//loop through all scoring plane hits
 
         h_NumParticles->Fill( ecalTotalEnergy , leavingScoringPlane.size() );
 
         return;
+    }
+
+    bool HcalHitMatcher::isValidHit( HcalHit *hit ) const {
+        
+        float totalPEThresh = totalPEThresholdSide_;
+        if ( hit->getSection() == 0 ) {
+            totalPEThresh = totalPEThresholdBack_;
+        }
+
+        //readout timing check
+        if ( hit->getTime() > timeThreshold_ )
+            return false;
+
+        //getPE returns the total pe in the bar
+        //  BACK - sum of both readouts
+        //  SIDE - just the one readout
+        if ( hit->getPE() < totalPEThresh )
+            return false;
+
+        //getMinPE returns the minimum pe in the bar
+        //  BACK - minimum of two readouts
+        //  SIDE - just the one readout
+        if ( hit->getMinPE() < absolutePEThreshold_ ) 
+            return false;
+        
+        return true;
     }
 
 } //ldmx namespace

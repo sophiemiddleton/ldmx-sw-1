@@ -280,49 +280,49 @@ namespace ldmx {
         } 
         
 
-//        // ------------------------------- Noise simulation -------------------------------
-//        // simulate noise hits in back hcal
-//        int total_super_strips_back      = STRIPS_BACK_PER_LAYER_/SUPER_STRIP_SIZE_;
-//        int total_empty_channels         = 2*(total_super_strips_back*NUM_BACK_HCAL_LAYERS_-numSigHits_back);
-//        std::vector<double> noiseHits_PE = noiseGenerator_->generateNoiseHits( total_empty_channels ); // 2-sided readout
-//        int total_zero_channels          = total_empty_channels - noiseHits_PE.size();
-//
-//        std::vector<double> zeroNoiseHits_PE(total_zero_channels, 0.0);
-//        noiseHits_PE.insert( noiseHits_PE.end(), zeroNoiseHits_PE.begin(), zeroNoiseHits_PE.end() );
-//        std::random_shuffle ( noiseHits_PE.begin(), noiseHits_PE.end() );
-//
-//        int ctr_back_noise = 0;
-//        for (unsigned i = 0; i < noiseHits_PE.size()/2 ; ++i)
-//        {
-//            double cur_noise_pe_1 = noiseHits_PE[i*2];
-//            double cur_noise_pe_2 = noiseHits_PE[i*2+1];
-//            double total_noise    = cur_noise_pe_1 + cur_noise_pe_2;
-//            if (total_noise < readoutThreshold_) continue; 
-//
-//            double min_noise = std::min(cur_noise_pe_1,cur_noise_pe_2);
-//            constructNoiseHit(ihit,HcalSection::BACK,total_noise,min_noise,hcaldetIDEdep,noiseHitIDs);
-//            ihit++;
-//            ctr_back_noise++;
-//        }
-//        if (verbose_) std::cout << "numSigHits_back = " << numSigHits_back << ", ihit = " << ihit << ", ctr_back_noise = " << ctr_back_noise << std::endl;
-//
-//        // simulate noise hits in side, top / bottom hcal
-//        noiseHits_PE = noiseGenerator_->generateNoiseHits((STRIPS_SIDE_TB_PER_LAYER_*NUM_SIDE_TB_HCAL_LAYERS_)*2-numSigHits_side_tb);
-//        for (auto noise : noiseHits_PE )
-//        {
-//            constructNoiseHit(ihit,HcalSection::TOP,noise,noise,hcaldetIDEdep,noiseHitIDs);
-//            constructNoiseHit(ihit,HcalSection::BOTTOM,noise,noise,hcaldetIDEdep,noiseHitIDs);
-//            ihit++;
-//        }
-//
-//        // simulate noise hits in side, left / right hcal
-//        noiseHits_PE = noiseGenerator_->generateNoiseHits((STRIPS_SIDE_LR_PER_LAYER_*NUM_SIDE_LR_HCAL_LAYERS_)*2-numSigHits_side_lr);
-//        for (auto noise : noiseHits_PE )
-//        {
-//            constructNoiseHit(ihit,HcalSection::LEFT,noise,noise,hcaldetIDEdep,noiseHitIDs);
-//            constructNoiseHit(ihit,HcalSection::RIGHT,noise,noise,hcaldetIDEdep,noiseHitIDs);
-//            ihit++;
-//        }
+        // ------------------------------- Noise simulation -------------------------------
+        // simulate noise hits in back hcal
+        int total_super_strips_back      = STRIPS_BACK_PER_LAYER_/SUPER_STRIP_SIZE_;
+        int total_empty_channels         = 2*(total_super_strips_back*NUM_BACK_HCAL_LAYERS_-numSigHits_back);
+        std::vector<double> noiseHits_PE = noiseGenerator_->generateNoiseHits( total_empty_channels ); // 2-sided readout
+        int total_zero_channels          = total_empty_channels - noiseHits_PE.size();
+
+        std::vector<double> zeroNoiseHits_PE(total_zero_channels, 0.0);
+        noiseHits_PE.insert( noiseHits_PE.end(), zeroNoiseHits_PE.begin(), zeroNoiseHits_PE.end() );
+        std::random_shuffle ( noiseHits_PE.begin(), noiseHits_PE.end() );
+
+        int ctr_back_noise = 0;
+        for (unsigned i = 0; i < noiseHits_PE.size()/2 ; ++i)
+        {
+            double cur_noise_pe_1 = noiseHits_PE[i*2];
+            double cur_noise_pe_2 = noiseHits_PE[i*2+1];
+            double total_noise    = cur_noise_pe_1 + cur_noise_pe_2;
+            if (total_noise < readoutThreshold_) continue; 
+
+            double min_noise = std::min(cur_noise_pe_1,cur_noise_pe_2);
+            constructNoiseHit(ihit,HcalSection::BACK,total_noise,min_noise,hcaldetIDEdep,noiseHitIDs);
+            ihit++;
+            ctr_back_noise++;
+        }
+        if (verbose_) std::cout << "numSigHits_back = " << numSigHits_back << ", ihit = " << ihit << ", ctr_back_noise = " << ctr_back_noise << std::endl;
+
+        // simulate noise hits in side, top / bottom hcal
+        noiseHits_PE = noiseGenerator_->generateNoiseHits((STRIPS_SIDE_TB_PER_LAYER_*NUM_SIDE_TB_HCAL_LAYERS_)*2-numSigHits_side_tb);
+        for (auto noise : noiseHits_PE )
+        {
+            constructNoiseHit(ihit,HcalSection::TOP,noise,noise,hcaldetIDEdep,noiseHitIDs);
+            constructNoiseHit(ihit,HcalSection::BOTTOM,noise,noise,hcaldetIDEdep,noiseHitIDs);
+            ihit++;
+        }
+
+        // simulate noise hits in side, left / right hcal
+        noiseHits_PE = noiseGenerator_->generateNoiseHits((STRIPS_SIDE_LR_PER_LAYER_*NUM_SIDE_LR_HCAL_LAYERS_)*2-numSigHits_side_lr);
+        for (auto noise : noiseHits_PE )
+        {
+            constructNoiseHit(ihit,HcalSection::LEFT,noise,noise,hcaldetIDEdep,noiseHitIDs);
+            constructNoiseHit(ihit,HcalSection::RIGHT,noise,noise,hcaldetIDEdep,noiseHitIDs);
+            ihit++;
+        }
 
         event.add("hcalDigis", hits_);
     }
