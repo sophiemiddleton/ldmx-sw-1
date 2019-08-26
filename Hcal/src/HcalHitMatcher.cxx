@@ -231,6 +231,25 @@ namespace ldmx {
                 knownPDGs.size(),0, knownPDGs.size(),
                 200,0,200);
 
+        int nKineticBins = 32;
+        double kineticBins[33] = {1e-4, //lowest bin, non-zero to allow for logy
+            1e-3, 1e-2, 1e-1,
+            1, 2, 3, 4, 5, 6, 7, 8, 9,
+            1e1, 2e1, 3e1, 4e1, 5e1, 6e1, 7e1, 8e1, 9e1,
+            1e2, 2e2, 3e2, 4e2, 5e2, 6e2, 7e2, 8e2, 9e2,
+            1e3, 1e4};
+        h_Particle_Kinetic_Back = new TH2F(
+                "Particle_Kinetic_Back",
+                ";EcalSummedEnergy;Kinetic Energy of Particle Entering Back HCAL [MeV]",
+                800,0,8000,
+                nKineticBins, kineticBins );
+
+        h_Particle_Kinetic_Side = new TH2F(
+                "Particle_Kinetic_Side",
+                ";EcalSummedEnergy;Kinetic Energy of Particle Entering Side HCAL [MeV]",
+                800,0,8000,
+                nKineticBins, kineticBins );
+
         h_HcalHit_Depth_Side = new TH2F(
                "HcalHit_Depth_Side",
                ";EcalSummedEnergy;Depth of Hits in Side HCAL [layer index];Count",
@@ -425,9 +444,11 @@ namespace ldmx {
                     }
 
                     if ( isLeavingBack ) {
-                        h_Particle_ID_Back->Fill( ecalTotalEnergy , pdgStr , kinetic , 1. );
+                        h_Particle_ID_Back     ->Fill( ecalTotalEnergy , pdgStr , kinetic , 1. );
+                        h_Particle_Kinetic_Back->Fill( ecalTotalEnergy , kinetic );
                     } else if ( isLeavingSide ) {
-                        h_Particle_ID_Side->Fill( ecalTotalEnergy , pdgStr , kinetic , 1. );
+                        h_Particle_ID_Side     ->Fill( ecalTotalEnergy , pdgStr , kinetic , 1. );
+                        h_Particle_Kinetic_Side->Fill( ecalTotalEnergy , kinetic );
                     }
 
                 }//is not a neutrino

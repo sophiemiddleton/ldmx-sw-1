@@ -140,6 +140,8 @@ namespace ldmx {
             //SimTrackerHit - integrate to number of SimTrackerHits
             TH3F* h_Particle_ID_Back; //EcalSummedEnergy , ID , Kinetic Energy for particles entering backcal
             TH3F* h_Particle_ID_Side; //EcalSummedEnergy , ID , Kinetic Energy for particles entering sidecal
+            TH2F* h_Particle_Kinetic_Back; //EcalSummedEnergy , Kinetic Energy
+            TH2F* h_Particle_Kinetic_Side; //EcalSummedEnergy , Kinetic Energy
 
             //HcalHit - integrate to number of HcalHits
             TH2F* h_HcalHit_Depth_Side;
