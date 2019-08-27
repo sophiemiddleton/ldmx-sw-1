@@ -13,6 +13,9 @@ namespace ldmx {
         simParticlesCollName_ = ps.getString( "simParticlesCollName" , "SimParticles" );
         simParticlesPassName_ = ps.getString( "simParticlesPassName" , "sim" );
 
+        ecalDigiCollName_ = ps.getString( "ecalDigiCollName" , "ecalDigis" );
+        ecalDigiPassName_ = ps.getString( "ecalDigiPassName" , "" );
+
         ecalXYWidth_ = ps.getDouble( "ecalXYWidth" );
         ecalFrontZ_  = ps.getDouble( "ecalFrontZ" );
         ecalDepth_   = ps.getDouble( "ecalDepth" );
@@ -22,70 +25,78 @@ namespace ldmx {
 
     void AnalyzePN::analyze(const ldmx::Event& event) {
 
+        const TClonesArray *ecalDigiHits = event.getCollection( ecalDigiCollName_ , ecalDigiPassName_ );
+        double ecalReconEnergy = calculateReconEnergy( ecalDigiHits );
+
         const TClonesArray *allSimParticles = event.getCollection( simParticlesCollName_ , simParticlesPassName_ );
 
         int nSimParticles = allSimParticles->GetEntriesFast();
+        double energyHardestPN = -5.0; //start with negative so if there are no PNs, it goes in the pure EM bin
         for ( int iSP = 0; iSP < nSimParticles; iSP++ ) {
             SimParticle *simParticle = static_cast<SimParticle *>(allSimParticles->At( iSP ));
 
-            std::cout << "Parent: ";
-            simParticle->Print();
-
-            if ( simParticle->getProcessType() == SimParticle::ProcessType::photonNuclear ) {
-                numPN_++;
-                std::cout << "this processType PN" << std::endl;
+            if ( !simParticle ) {
+                std::cout << "OOPS! Loaded a nullptr as the sim particle!" << std::endl;
+                continue;
             }
 
+            double energy = simParticle->getEnergy();
             std::vector<double> startPoint = simParticle->getVertex();
-            if ( isInEcal( startPoint ) ) {
-                numStartInEcal_++;
-            }
+            if ( isMidShowerPN( simParticle ) and energy > energyHardestPN ) {
+                energyHardestPN = energy;
+            } //particle goes PN and is inside ECAL region
 
-            std::cout << "Children:\n" << std::flush;
-            int nChildren = simParticle->getDaughterCount();
-            bool foundPNChild = false;
-            for ( int iChild = 0; iChild < nChildren; iChild++ ) {
-                SimParticle *child = simParticle->getDaughter( iChild );
-                if ( !child ) continue;
+        } //loop through all sim particles
 
-                child->Print();
-
-                if ( child->getProcessType() == SimParticle::ProcessType::photonNuclear ) {
-                    if ( !foundPNChild ) {
-                        foundPNChild = true;
-                        numChildPN_++;
-                        std::cout << "child processType PN" << std::endl;
-                    }
-                } else if ( foundPNChild ) {
-                   //child has processType NOT equal to PN AND there is another child from PN
-                   numChildnoPN_++;
-                } 
-            }
-        }
-
+        h_ReconE_HardestPN->Fill( ecalReconEnergy , energyHardestPN );
         return;
     }
 
     void AnalyzePN::onProcessStart() {
 
-        numStartInEcal_ = 0;
-        numChildPN_ = 0;
-        numChildnoPN_ = 0;
-        numPN_ = 0;
+        TDirectory* baseDirectory = getHistoDirectory();
+
+        int nHardestPNBins = 22;
+        double hardestPNBins[23] = {
+            -10.0 , 0.0 , //negative bin for pure em showers
+            5.0 , 
+            1e1 , 2e1 , 3e1 , 4e1 , 5e1 , 6e1 , 7e1 , 8e1 , 9e1 ,
+            1e2 , 2e2 , 3e2 , 4e2 , 5e2 , 6e2 , 7e2 , 8e2 , 9e2 ,
+            1e3 , 4e3 };
+
+        h_ReconE_HardestPN = new TH2F(
+                "ReconE_HardestPN",
+                ";Reconstructed Energy in ECAL [MeV];Energy of Hardest Photon Going PN [MeV] (Negative Means Pure EM)",
+                800,0,8000,
+                nHardestPNBins , hardestPNBins );
 
         return;
     }
 
     void AnalyzePN::onProcessEnd() {
 
-        printf( " N Starting in ECAL      : %d\n" , numStartInEcal_ );
-        printf( " N Child is PN           : %d\n" , numChildPN_ );
-        printf( " N One Child PN, One Not : %d\n" , numChildnoPN_ );
-        printf( " N from PN               : %d\n" , numPN_ );
-
         return;
     }
 
+    double AnalyzePN::calculateReconEnergy( const TClonesArray *ecalHitColl ) const {
+
+        double ecalTotalEnergy = 0;
+        for(int i=0; i < ecalHitColl->GetEntriesFast(); i++) {
+            EcalHit* ecalhit = (EcalHit*)(ecalHitColl->At(i));
+            if ( ! ecalhit->isNoise() ) { //Only add non-noise hits
+                ecalTotalEnergy += ecalhit->getEnergy();
+            }
+        }
+        
+        return ecalTotalEnergy;
+    }
+
+    bool AnalyzePN::isMidShowerPN( const SimParticle *particle ) const {
+
+        std::vector<double> startPoint = particle->getVertex();
+        return ( isInEcal( startPoint) and goesPN( particle ) );
+    }
+        
     bool AnalyzePN::isInEcal( const std::vector<double> &point ) const {
         
         return ( 
@@ -102,6 +113,8 @@ namespace ldmx {
         for ( int iChild = 0; iChild < nChildren; iChild++ ) {
             SimParticle *child = particle->getDaughter( iChild );
 
+            //need to check if child pointer is not NULL
+            //  pointer to child is a TRef so it will be NULL unless the child was also saved and loaded in
             if ( child and child->getProcessType() == SimParticle::ProcessType::photonNuclear ) {
                 return true;
             }

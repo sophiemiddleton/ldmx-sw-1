@@ -12,6 +12,9 @@
 #include "Framework/EventProcessor.h" //Needed to declare processor
 #include "Framework/ParameterSet.h" // Needed to import parameters from configuration file
 
+//ROOT
+#include "TH2.h"
+
 namespace ldmx {
     
     /**
@@ -37,6 +40,13 @@ namespace ldmx {
 
         private:
 
+            //totals the non-noise reconstructed energy in ECAL
+            double calculateReconEnergy( const TClonesArray *ecalHitColl ) const;
+
+            //returns true if particle is classified as mid-shower PN
+            //  checks if particle's starting point is in ecal and if it "goes PN"
+            bool isMidShowerPN( const SimParticle *particle ) const;
+
             //returns true if point is in ECAL box (doesn't check for hexagonal towers)
             //  assumes ECAL centered at (0,0) in xy plane
             bool isInEcal( const std::vector<double> &point ) const;
@@ -48,15 +58,16 @@ namespace ldmx {
             //Python Configuration Parameters
             std::string simParticlesCollName_; //name of collection for sim particles to analyze
             std::string simParticlesPassName_; //name of pass for sim particles
+            std::string ecalDigiCollName_; //name of collection to calculate ecal digis
+            std::string ecalDigiPassName_; //name of pass to get ecal digis collection
             double ecalXYWidth_; //width of ecal box in x and y directions
             double ecalFrontZ_; //starting z coordinate of ecal
             double ecalDepth_; //depth of ecal in z direction
 
             //Persistence Counters
-            int numStartInEcal_; //number of SimParticles that started in ECAL
-            int numChildPN_; //number of SimParticles who has one child with processType PN
-            int numChildnoPN_; //number of SimParticles with one child PN and another not PN
-            int numPN_; //number of SimParticles whose processType is PN
+            
+            //ROOT Histograms
+            TH2F *h_ReconE_HardestPN; //recon energy vs energy of hardest photon going PN
     };
 }
 
