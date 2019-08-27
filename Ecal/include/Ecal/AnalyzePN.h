@@ -65,7 +65,8 @@ namespace ldmx {
             double ecalDepth_; //depth of ecal in z direction
 
             //Persistence Counters
-            
+            double hardestOverAllEvents_;
+
             //ROOT Histograms
             TH2F *h_ReconE_HardestPN; //recon energy vs energy of hardest photon going PN
     };
