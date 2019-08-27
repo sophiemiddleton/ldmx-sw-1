@@ -49,20 +49,26 @@ namespace ldmx {
         } //loop through all sim particles
 
         h_ReconE_HardestPN->Fill( ecalReconEnergy , energyHardestPN );
+
+        if ( energyHardestPN > hardestOverAllEvents_ ) {
+            hardestOverAllEvents_ = energyHardestPN;
+        }
+
         return;
     }
 
     void AnalyzePN::onProcessStart() {
 
+        hardestOverAllEvents_ = 0.0;
+
         TDirectory* baseDirectory = getHistoDirectory();
 
-        int nHardestPNBins = 22;
-        double hardestPNBins[23] = {
+        int nHardestPNBins = 17;
+        double hardestPNBins[18] = {
             -10.0 , 0.0 , //negative bin for pure em showers
             5.0 , 
             1e1 , 2e1 , 3e1 , 4e1 , 5e1 , 6e1 , 7e1 , 8e1 , 9e1 ,
-            1e2 , 2e2 , 3e2 , 4e2 , 5e2 , 6e2 , 7e2 , 8e2 , 9e2 ,
-            1e3 , 4e3 };
+            1e2 , 2e2 , 3e2 , 4e2 , 5e2 , 1e3 };
 
         h_ReconE_HardestPN = new TH2F(
                 "ReconE_HardestPN",
@@ -74,6 +80,13 @@ namespace ldmx {
     }
 
     void AnalyzePN::onProcessEnd() {
+
+        printf( "================================================\n" );
+        printf( "| Mid-Shower PN Analyzer                       |\n" );
+        printf( "|----------------------------------------------|\n" );
+        printf( "| Energy of Hardest PN Photon (all events) :   |\n" );
+        printf( "|     %6.2f MeV                               |\n" , hardestOverAllEvents_ );
+        printf( "================================================\n" );
 
         return;
     }
