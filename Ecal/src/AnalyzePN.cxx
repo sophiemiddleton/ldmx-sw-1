@@ -35,6 +35,7 @@ namespace ldmx {
         double energyPrimaryPhoton = 0.0;
         double totalEnergyPN = 0.0;
         bool primaryWentPN = false;
+        int nPrimaryPhotons = 0;
         for ( int iSP = 0; iSP < nSimParticles; iSP++ ) {
             SimParticle *simParticle = static_cast<SimParticle *>(allSimParticles->At( iSP ));
 
@@ -48,6 +49,7 @@ namespace ldmx {
 
             if ( isPrimaryPho ) {
                 energyPrimaryPhoton = energy;
+                nPrimaryPhotons++;
             }
 
             std::vector<double> startPoint = simParticle->getVertex();
@@ -63,10 +65,25 @@ namespace ldmx {
 
         } //loop through all sim particles
 
-        h_ReconE_HardestPN->Fill( ecalReconEnergy , energyHardestPN );
+        if ( energyHardestPN < 0.0 ) {
+            //no PNs this event
+            h_ReconE_NoPN->Fill( ecalReconEnergy );
+            energyHardestPN = 0.0;
+        } else if ( primaryWentPN ) {
+            //primary photon went PN
+            h_ReconE_PrimPhoton->Fill( ecalReconEnergy );
+        } else {
+            //nothing interesting
+            h_ReconE_HardestPN_NotSpecial->Fill( ecalReconEnergy , energyHardestPN );
+            h_ReconE_TotalPN_NotSpecial  ->Fill( ecalReconEnergy , totalEnergyPN );
+        }
 
-        if ( energyHardestPN > hardestOverAllEvents_ ) {
-            hardestOverAllEvents_ = energyHardestPN;
+        h_ReconE_HardestPN_All->Fill( ecalReconEnergy , energyHardestPN );
+        h_ReconE_TotalPN_All  ->Fill( ecalReconEnergy , totalEnergyPN );
+
+        if ( nPrimaryPhotons != 1 ) {
+            numMiscountPrimary_++;
+            std::cout << "N Primary Photons: " << nPrimaryPhotons << std::endl;
         }
 
         return;
@@ -74,22 +91,43 @@ namespace ldmx {
 
     void AnalyzePN::onProcessStart() {
 
-        hardestOverAllEvents_ = 0.0;
+        numMiscountPrimary_ = 0;
 
         TDirectory* baseDirectory = getHistoDirectory();
 
-        int nHardestPNBins = 17;
-        double hardestPNBins[18] = {
-            -10.0 , 0.0 , //negative bin for pure em showers
-            5.0 , 
-            1e1 , 2e1 , 3e1 , 4e1 , 5e1 , 6e1 , 7e1 , 8e1 , 9e1 ,
-            1e2 , 2e2 , 3e2 , 4e2 , 5e2 , 1e3 };
-
-        h_ReconE_HardestPN = new TH2F(
-                "ReconE_HardestPN",
-                ";Reconstructed Energy in ECAL [MeV];Energy of Hardest Photon Going PN [MeV] (Negative Means Pure EM)",
+        h_ReconE_HardestPN_All = new TH2F(
+                "ReconE_HardestPN_All",
+                ";Reconstructed Energy in ECAL [MeV];Energy of Hardest Photon Going PN [MeV]",
                 800,0,8000,
-                nHardestPNBins , hardestPNBins );
+                400,0,4000);
+
+        h_ReconE_TotalPN_All = new TH2F(
+                "ReconE_TotalPN_All",
+                ";Reconstructed Energy in ECAL [MeV];Total Energy of Photons Going PN [MeV]",
+                800,0,8000,
+                400,0,4000);
+
+        h_ReconE_HardestPN_NotSpecial = new TH2F(
+                "ReconE_HardestPN_NotSpecial",
+                "Excluding NoPN and PrimaryPhoton Events;Reconstructed Energy in ECAL [MeV];Energy of Hardest Photon Going PN [MeV]",
+                800,0,8000,
+                400,0,4000);
+
+        h_ReconE_TotalPN_NotSpecial = new TH2F(
+                "ReconE_TotalPN_NotSpecial",
+                "Excluding NoPN and PrimaryPhoton Events;Reconstructed Energy in ECAL [MeV];Total Energy of Photons Going PN [MeV]",
+                800,0,8000,
+                400,0,4000);
+
+        h_ReconE_NoPN = new TH1F(
+                "ReconE_NoPN",
+                "Only Events without any PN interactions;Reconstructed Energy in ECAL [MeV]",
+                800,0,8000);
+
+        h_ReconE_PrimPhoton = new TH1F( 
+                "ReconE_PrimPhoton",
+                "Only Events with primary photon going PN;Reconstructed Energy in ECAL [MeV]",
+                800,0,8000);
 
         return;
     }
@@ -99,8 +137,7 @@ namespace ldmx {
         printf( "================================================\n" );
         printf( "| Mid-Shower PN Analyzer                       |\n" );
         printf( "|----------------------------------------------|\n" );
-        printf( "| Energy of Hardest PN Photon (all events) :   |\n" );
-        printf( "|     %7.2f MeV                               |\n" , hardestOverAllEvents_ );
+        printf( "| N Events Missing Primary Photon: %10d |\n" , numMiscountPrimary_ );
         printf( "================================================\n" );
 
         return;

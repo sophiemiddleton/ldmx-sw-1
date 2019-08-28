@@ -69,10 +69,17 @@ namespace ldmx {
             double ecalDepth_; //depth of ecal in z direction
 
             //Persistence Counters
-            double hardestOverAllEvents_;
+            int numMiscountPrimary_;
 
             //ROOT Histograms
-            TH2F *h_ReconE_HardestPN; //recon energy vs energy of hardest photon going PN
+            TH2F *h_ReconE_HardestPN_All; //recon energy vs energy of hardest photon going PN
+            TH2F *h_ReconE_TotalPN_All; //recon energy vs total energy of photons going PN
+            //recon energy vs energy of hardest photon going PN excluding NoPN and PrimaryPhoton events
+            TH2F *h_ReconE_HardestPN_NotSpecial;
+            //recon energy vs total energy of photons going PN excluding NoPN and PrimaryPhoton events
+            TH2F *h_ReconE_TotalPN_NotSpecial;
+            TH1F *h_ReconE_NoPN; //recon energy when there is no PN in event
+            TH1F *h_ReconE_PrimPhoton; //recon energy when primary photon went PN
     };
 }
 
