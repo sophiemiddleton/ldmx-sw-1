@@ -57,6 +57,7 @@ namespace ldmx {
 
             //returns true if particle is the primary photon
             //  checks if a parent has track ID 1 and if pdgID is 22
+            //  checks if vertex is near target
             bool isPrimaryPhoton( const SimParticle *particle ) const;
 
             //Python Configuration Parameters

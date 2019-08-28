@@ -83,7 +83,7 @@ namespace ldmx {
 
         if ( nPrimaryPhotons != 1 ) {
             numMiscountPrimary_++;
-            std::cout << "N Primary Photons: " << nPrimaryPhotons << std::endl;
+        //    std::cout << "N Primary Photons: " << nPrimaryPhotons << std::endl;
         }
 
         return;
@@ -137,7 +137,7 @@ namespace ldmx {
         printf( "================================================\n" );
         printf( "| Mid-Shower PN Analyzer                       |\n" );
         printf( "|----------------------------------------------|\n" );
-        printf( "| N Events Missing Primary Photon: %10d |\n" , numMiscountPrimary_ );
+        printf( "| N Events Missing Primary Photon: %11d |\n" , numMiscountPrimary_ );
         printf( "================================================\n" );
 
         return;
@@ -190,8 +190,14 @@ namespace ldmx {
 
     bool AnalyzePN::isPrimaryPhoton( const SimParticle *particle ) const {
         
+        //false if not a photon
         if ( particle->getPdgID() != 22 ) { return false; }
 
+        //false if not near target
+        std::vector<double> startPoint = particle->getVertex();
+        if ( abs(startPoint.at(2)) > 0.5 ) { return false; }
+
+        //look for parent with trackID 1
         int nParents = particle->getParentCount();
         for ( int iParent = 0; iParent < nParents; iParent++ ) {
             SimParticle *parent = particle->getParent( iParent );
