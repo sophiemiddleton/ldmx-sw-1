@@ -32,6 +32,9 @@ namespace ldmx {
 
         int nSimParticles = allSimParticles->GetEntriesFast();
         double energyHardestPN = -5.0; //start with negative so if there are no PNs, it goes in the pure EM bin
+        double energyPrimaryPhoton = 0.0;
+        double totalEnergyPN = 0.0;
+        bool primaryWentPN = false;
         for ( int iSP = 0; iSP < nSimParticles; iSP++ ) {
             SimParticle *simParticle = static_cast<SimParticle *>(allSimParticles->At( iSP ));
 
@@ -41,9 +44,21 @@ namespace ldmx {
             }
 
             double energy = simParticle->getEnergy();
+            bool isPrimaryPho = isPrimaryPhoton( simParticle );
+
+            if ( isPrimaryPho ) {
+                energyPrimaryPhoton = energy;
+            }
+
             std::vector<double> startPoint = simParticle->getVertex();
-            if ( isMidShowerPN( simParticle ) and energy > energyHardestPN ) {
-                energyHardestPN = energy;
+            if ( goesPN( simParticle ) ) {
+
+                totalEnergyPN += energy;
+
+                if ( isPrimaryPho ) { primaryWentPN = true; }
+
+                if ( energy > energyHardestPN ) { energyHardestPN = energy; }
+
             } //particle goes PN and is inside ECAL region
 
         } //loop through all sim particles
@@ -85,7 +100,7 @@ namespace ldmx {
         printf( "| Mid-Shower PN Analyzer                       |\n" );
         printf( "|----------------------------------------------|\n" );
         printf( "| Energy of Hardest PN Photon (all events) :   |\n" );
-        printf( "|     %6.2f MeV                               |\n" , hardestOverAllEvents_ );
+        printf( "|     %7.2f MeV                               |\n" , hardestOverAllEvents_ );
         printf( "================================================\n" );
 
         return;
@@ -131,6 +146,20 @@ namespace ldmx {
             if ( child and child->getProcessType() == SimParticle::ProcessType::photonNuclear ) {
                 return true;
             }
+        }
+
+        return false;
+    }
+
+    bool AnalyzePN::isPrimaryPhoton( const SimParticle *particle ) const {
+        
+        if ( particle->getPdgID() != 22 ) { return false; }
+
+        int nParents = particle->getParentCount();
+        for ( int iParent = 0; iParent < nParents; iParent++ ) {
+            SimParticle *parent = particle->getParent( iParent );
+
+            if ( parent and parent->getTrackID() == 1 ) { return true; }
         }
 
         return false;

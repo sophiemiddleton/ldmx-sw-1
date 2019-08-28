@@ -55,6 +55,10 @@ namespace ldmx {
             //  checks if any children of particle has processType photonNuclear
             bool goesPN( const SimParticle *particle ) const;
 
+            //returns true if particle is the primary photon
+            //  checks if a parent has track ID 1 and if pdgID is 22
+            bool isPrimaryPhoton( const SimParticle *particle ) const;
+
             //Python Configuration Parameters
             std::string simParticlesCollName_; //name of collection for sim particles to analyze
             std::string simParticlesPassName_; //name of pass for sim particles
