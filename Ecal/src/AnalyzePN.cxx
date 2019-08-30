@@ -32,10 +32,8 @@ namespace ldmx {
 
         int nSimParticles = allSimParticles->GetEntriesFast();
         double energyHardestPN = -5.0; //start with negative so if there are no PNs, it goes in the pure EM bin
-        double energyPrimaryPhoton = 0.0;
         double totalEnergyPN = 0.0;
-        bool primaryWentPN = false;
-        int nPrimaryPhotons = 0;
+        SimParticle *primaryPhoton = nullptr; //photon with highest energy
         for ( int iSP = 0; iSP < nSimParticles; iSP++ ) {
             SimParticle *simParticle = static_cast<SimParticle *>(allSimParticles->At( iSP ));
 
@@ -45,19 +43,18 @@ namespace ldmx {
             }
 
             double energy = simParticle->getEnergy();
-            bool isPrimaryPho = isPrimaryPhoton( simParticle );
 
-            if ( isPrimaryPho ) {
-                energyPrimaryPhoton = energy;
-                nPrimaryPhotons++;
+            if ( simParticle->getPdgID() == 22 and
+                 !primaryPhoton or 
+                 (primaryPhoton and energy > primaryPhoton->getEnergy())
+               ) {
+                primaryPhoton = simParticle;
             }
 
             std::vector<double> startPoint = simParticle->getVertex();
             if ( goesPN( simParticle ) ) {
 
                 totalEnergyPN += energy;
-
-                if ( isPrimaryPho ) { primaryWentPN = true; }
 
                 if ( energy > energyHardestPN ) { energyHardestPN = energy; }
 
@@ -69,7 +66,7 @@ namespace ldmx {
             //no PNs this event
             h_ReconE_NoPN->Fill( ecalReconEnergy );
             energyHardestPN = 0.0;
-        } else if ( primaryWentPN ) {
+        } else if ( primaryPhoton and goesPN( primaryPhoton ) ) {
             //primary photon went PN
             h_ReconE_PrimPhoton->Fill( ecalReconEnergy );
         } else {
@@ -81,9 +78,8 @@ namespace ldmx {
         h_ReconE_HardestPN_All->Fill( ecalReconEnergy , energyHardestPN );
         h_ReconE_TotalPN_All  ->Fill( ecalReconEnergy , totalEnergyPN );
 
-        if ( nPrimaryPhotons != 1 ) {
+        if ( !primaryPhoton ) {
             numMiscountPrimary_++;
-        //    std::cout << "N Primary Photons: " << nPrimaryPhotons << std::endl;
         }
 
         return;
