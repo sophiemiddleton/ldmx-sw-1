@@ -68,6 +68,7 @@ namespace ldmx {
             double ecalXYWidth_; //width of ecal box in x and y directions
             double ecalFrontZ_; //starting z coordinate of ecal
             double ecalDepth_; //depth of ecal in z direction
+            double minPrimaryPhotonEnergy_; //minimum energy to allow a photon to be labled the primary photon
 
             //Persistence Counters
             int numMiscountPrimary_;

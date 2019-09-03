@@ -20,6 +20,8 @@ namespace ldmx {
         ecalFrontZ_  = ps.getDouble( "ecalFrontZ" );
         ecalDepth_   = ps.getDouble( "ecalDepth" );
 
+        minPrimaryPhotonEnergy_ = ps.getDouble( "minPrimaryPhotonEnergy" );
+
         return;
     }
 
@@ -33,22 +35,25 @@ namespace ldmx {
         int nSimParticles = allSimParticles->GetEntriesFast();
         double energyHardestPN = -5.0; //start with negative so if there are no PNs, it goes in the pure EM bin
         double totalEnergyPN = 0.0;
+        bool isThereAPhoton = false;
         SimParticle *primaryPhoton = nullptr; //photon with highest energy
         for ( int iSP = 0; iSP < nSimParticles; iSP++ ) {
             SimParticle *simParticle = static_cast<SimParticle *>(allSimParticles->At( iSP ));
 
             if ( !simParticle ) {
-                std::cout << "OOPS! Loaded a nullptr as the sim particle!" << std::endl;
+                std::cerr << "OOPS! Loaded a nullptr as the sim particle!" << std::endl;
                 continue;
             }
 
             double energy = simParticle->getEnergy();
 
-            if ( simParticle->getPdgID() == 22 and
-                 !primaryPhoton or 
-                 (primaryPhoton and energy > primaryPhoton->getEnergy())
-               ) {
-                primaryPhoton = simParticle;
+            if ( simParticle->getPdgID() == 22 ) {
+                isThereAPhoton = true;
+                if ( (!primaryPhoton and energy > minPrimaryPhotonEnergy_ ) or
+                     (primaryPhoton and energy > primaryPhoton->getEnergy())
+                    ) {
+                    primaryPhoton = simParticle;
+                }
             }
 
             std::vector<double> startPoint = simParticle->getVertex();
@@ -65,12 +70,12 @@ namespace ldmx {
         if ( energyHardestPN < 0.0 ) {
             //no PNs this event
             h_ReconE_NoPN->Fill( ecalReconEnergy );
-            energyHardestPN = 0.0;
+            energyHardestPN = 0.0; //reset for the histograms will all events in them
         } else if ( primaryPhoton and goesPN( primaryPhoton ) ) {
             //primary photon went PN
             h_ReconE_PrimPhoton->Fill( ecalReconEnergy );
         } else {
-            //nothing interesting
+            //nothing interesting - primary photon did not go PN but something did go PN
             h_ReconE_HardestPN_NotSpecial->Fill( ecalReconEnergy , energyHardestPN );
             h_ReconE_TotalPN_NotSpecial  ->Fill( ecalReconEnergy , totalEnergyPN );
         }
@@ -80,6 +85,9 @@ namespace ldmx {
 
         if ( !primaryPhoton ) {
             numMiscountPrimary_++;
+            if ( isThereAPhoton ) {
+                //std::cerr << "There was a photon but no primary was set!" << std::endl;
+            }
         }
 
         return;
