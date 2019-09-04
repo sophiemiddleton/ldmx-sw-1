@@ -74,6 +74,7 @@ namespace ldmx {
                 std::cout << "Low Energy Pure EM Shower: ";
                 event.getEventHeader()->Print(); //prints event index to stdcout
                 setStorageHint( hint_shouldKeep );
+                lowReconPureEM_++;
             }
         } else if ( primaryPhoton and goesPN( primaryPhoton ) ) {
             //primary photon went PN
@@ -91,6 +92,8 @@ namespace ldmx {
     }
 
     void AnalyzePN::onProcessStart() {
+
+        lowReconPureEM_ = 0;
 
         TDirectory* baseDirectory = getHistoDirectory();
 
@@ -136,6 +139,7 @@ namespace ldmx {
         printf( "================================================\n" );
         printf( "| Mid-Shower PN Analyzer                       |\n" );
         printf( "|----------------------------------------------|\n" );
+        printf( "| Pure EM Events with Recon E < 1.5GeV : %5d |\n" , lowReconPureEM_ );
         printf( "================================================\n" );
 
         return;
