@@ -69,7 +69,7 @@ namespace ldmx {
             //no PNs this event
             h_ReconE_NoPN->Fill( ecalReconEnergy );
             energyHardestPN = 0.0; //reset for the histograms with all events in them
-            if ( ecalReconEnergy < 1500. ) {
+            if ( ecalReconEnergy < 2000. ) {
                 //signal region pure em shower - worrisome
                 std::cout << "Low Energy Pure EM Shower: ";
                 event.getEventHeader()->Print(); //prints event index to stdcout
@@ -139,7 +139,7 @@ namespace ldmx {
         printf( "================================================\n" );
         printf( "| Mid-Shower PN Analyzer                       |\n" );
         printf( "|----------------------------------------------|\n" );
-        printf( "| Pure EM Events with Recon E < 1.5GeV : %5d |\n" , lowReconPureEM_ );
+        printf( "| Pure EM Events with Recon E < 2.0GeV : %5d |\n" , lowReconPureEM_ );
         printf( "================================================\n" );
 
         return;
