@@ -35,7 +35,6 @@ namespace ldmx {
         int nSimParticles = allSimParticles->GetEntriesFast();
         double energyHardestPN = -5.0; //start with negative so if there are no PNs, it goes in the pure EM bin
         double totalEnergyPN = 0.0;
-        bool isThereAPhoton = false;
         SimParticle *primaryPhoton = nullptr; //photon with highest energy
         for ( int iSP = 0; iSP < nSimParticles; iSP++ ) {
             SimParticle *simParticle = static_cast<SimParticle *>(allSimParticles->At( iSP ));
@@ -48,7 +47,6 @@ namespace ldmx {
             double energy = simParticle->getEnergy();
 
             if ( simParticle->getPdgID() == 22 ) {
-                isThereAPhoton = true;
                 if ( (!primaryPhoton and energy > minPrimaryPhotonEnergy_ ) or
                      (primaryPhoton and energy > primaryPhoton->getEnergy())
                     ) {
@@ -70,7 +68,13 @@ namespace ldmx {
         if ( energyHardestPN < 0.0 ) {
             //no PNs this event
             h_ReconE_NoPN->Fill( ecalReconEnergy );
-            energyHardestPN = 0.0; //reset for the histograms will all events in them
+            energyHardestPN = 0.0; //reset for the histograms with all events in them
+            if ( ecalReconEnergy < 1500. ) {
+                //signal region pure em shower - worrisome
+                std::cout << "Low Energy Pure EM Shower: ";
+                event.getEventHeader()->Print(); //prints event index to stdcout
+                setStorageHint( hint_shouldKeep );
+            }
         } else if ( primaryPhoton and goesPN( primaryPhoton ) ) {
             //primary photon went PN
             h_ReconE_PrimPhoton->Fill( ecalReconEnergy );
@@ -83,19 +87,10 @@ namespace ldmx {
         h_ReconE_HardestPN_All->Fill( ecalReconEnergy , energyHardestPN );
         h_ReconE_TotalPN_All  ->Fill( ecalReconEnergy , totalEnergyPN );
 
-        if ( !primaryPhoton ) {
-            numMiscountPrimary_++;
-            if ( isThereAPhoton ) {
-                //std::cerr << "There was a photon but no primary was set!" << std::endl;
-            }
-        }
-
         return;
     }
 
     void AnalyzePN::onProcessStart() {
-
-        numMiscountPrimary_ = 0;
 
         TDirectory* baseDirectory = getHistoDirectory();
 
@@ -141,7 +136,6 @@ namespace ldmx {
         printf( "================================================\n" );
         printf( "| Mid-Shower PN Analyzer                       |\n" );
         printf( "|----------------------------------------------|\n" );
-        printf( "| N Events Missing Primary Photon: %11d |\n" , numMiscountPrimary_ );
         printf( "================================================\n" );
 
         return;

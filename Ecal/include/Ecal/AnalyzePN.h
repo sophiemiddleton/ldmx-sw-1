@@ -71,7 +71,6 @@ namespace ldmx {
             double minPrimaryPhotonEnergy_; //minimum energy to allow a photon to be labled the primary photon
 
             //Persistence Counters
-            int numMiscountPrimary_;
 
             //ROOT Histograms
             TH2F *h_ReconE_HardestPN_All; //recon energy vs energy of hardest photon going PN
