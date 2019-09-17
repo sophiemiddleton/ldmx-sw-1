@@ -42,6 +42,11 @@ namespace ldmx {
             if ( !simParticle ) {
                 std::cerr << "OOPS! Loaded a nullptr as the sim particle!" << std::endl;
                 continue;
+            } else if ( isUpstreamLoss( simParticle ) ) {
+                //particle upstream of target generated with too high of energy (200 MeV)
+                //==> tagger would veto easily, but ECAL would miss a lot of energy
+                // SKIP EVENT
+                return;
             }
 
             double energy = simParticle->getEnergy();
@@ -208,6 +213,14 @@ namespace ldmx {
         }
 
         return false;
+    }
+
+    bool AnalyzePN::isUpstreamLoss( const SimParticle *particle ) const {
+        
+        std::vector<double> startPoint = particle->getVertex();
+        double energy = particle->getEnergy();
+
+        return ( startPoint.at(2) < 0.0 and energy > 200.0 );
     }
 }
 

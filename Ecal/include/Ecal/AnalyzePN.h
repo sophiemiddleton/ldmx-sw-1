@@ -60,6 +60,10 @@ namespace ldmx {
             //  checks if vertex is near target
             bool isPrimaryPhoton( const SimParticle *particle ) const;
 
+            //returns true if particle has z-coordinate vertex below zero (upstream of target)
+            // and has energy greater than 200MeV
+            bool isUpstreamLoss( const SimParticle *particle ) const;
+
             //Python Configuration Parameters
             std::string simParticlesCollName_; //name of collection for sim particles to analyze
             std::string simParticlesPassName_; //name of pass for sim particles
