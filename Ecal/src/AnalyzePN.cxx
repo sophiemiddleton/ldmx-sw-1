@@ -42,9 +42,9 @@ namespace ldmx {
             if ( !simParticle ) {
                 std::cerr << "OOPS! Loaded a nullptr as the sim particle!" << std::endl;
                 continue;
-            } else if ( simParticle->getTrackID() == 1 and isUpstreamLoss( simParticle ) ) {
-                //particle upstream of target generated with too high of energy 
-                //==> tagger would veto easily, but ECAL would miss a lot of energy
+            } else if ( isUpstreamLoss( simParticle ) and ecalReconEnergy < 2000.0 ) {
+                //primary electron lost too much energy
+                //==> ECAL missed a lot of energy BUT tagger would veto easily
                 // SKIP EVENT
                 return;
             }
@@ -76,8 +76,6 @@ namespace ldmx {
             energyHardestPN = 0.0; //reset for the histograms with all events in them
             if ( ecalReconEnergy < 2000. ) {
                 //signal region pure em shower - worrisome
-                std::cout << "Low Energy Pure EM Shower: ";
-                event.getEventHeader()->Print(); //prints event index to stdcout
                 setStorageHint( hint_shouldKeep );
                 lowReconPureEM_++;
             }
@@ -216,7 +214,9 @@ namespace ldmx {
     }
 
     bool AnalyzePN::isUpstreamLoss( const SimParticle *particle ) const {
+
         //should only enter if primary electron
+        if ( particle->getTrackID() > 1 ) { return false; }
         
         //input primary electron is low energy
         if ( particle->getEnergy() < 3800.0 ) { return true; }

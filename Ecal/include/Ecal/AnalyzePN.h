@@ -60,8 +60,9 @@ namespace ldmx {
             //  checks if vertex is near target
             bool isPrimaryPhoton( const SimParticle *particle ) const;
 
-            //returns true if particle has z-coordinate vertex below zero (upstream of target)
-            // and has energy greater than 200MeV
+            //returns true if primary electron is lost upstream of target
+            //  checks if end point is upstream of target
+            //      if true ==> check daughters for electron to inherit title of "primary"
             bool isUpstreamLoss( const SimParticle *particle ) const;
 
             //Python Configuration Parameters
