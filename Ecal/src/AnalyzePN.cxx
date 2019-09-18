@@ -42,8 +42,8 @@ namespace ldmx {
             if ( !simParticle ) {
                 std::cerr << "OOPS! Loaded a nullptr as the sim particle!" << std::endl;
                 continue;
-            } else if ( isUpstreamLoss( simParticle ) ) {
-                //particle upstream of target generated with too high of energy (200 MeV)
+            } else if ( simParticle->getTrackID() == 1 and isUpstreamLoss( simParticle ) ) {
+                //particle upstream of target generated with too high of energy 
                 //==> tagger would veto easily, but ECAL would miss a lot of energy
                 // SKIP EVENT
                 return;
@@ -216,11 +216,38 @@ namespace ldmx {
     }
 
     bool AnalyzePN::isUpstreamLoss( const SimParticle *particle ) const {
+        //should only enter if primary electron
         
-        std::vector<double> startPoint = particle->getVertex();
-        double energy = particle->getEnergy();
+        //input primary electron is low energy
+        if ( particle->getEnergy() < 3800.0 ) { return true; }
 
-        return ( startPoint.at(2) < 0.0 and energy > 200.0 );
+        std::vector<double> endPoint = particle->getEndPoint();
+
+        if ( endPoint.at(2) < -10.0 and endPoint.at(2) > -4999.9 ) {
+            //primary electron "ends" before target
+            //check if there is an electron daughter with energy high enough
+            //    to take over title of primary
+            int nChildren = particle->getDaughterCount();
+            SimParticle *inheritPrimary = nullptr;
+            for ( int iChild = 0; iChild < nChildren; iChild++ ) {
+                SimParticle *child = particle->getDaughter( iChild );
+
+                if ( child and child->getPdgID() == 11 ) {
+                    //electron child
+                    if ( ! inheritPrimary or inheritPrimary->getEnergy() < child->getEnergy() ) {
+                        //electron child has larger energy than previous inheriter
+                        inheritPrimary = child;
+                    }
+                }
+            }//loop through children
+
+            if ( inheritPrimary ) { return inheritPrimary->getEnergy() < 3800.0; } //inheriting primary electron is low energy
+            else { return true; } //no inheriter but ended before target ==> upstream loss
+
+        }//ending before target
+
+        //high enough energy and ends after target ==> no upstream loss
+        return false;
     }
 }
 
