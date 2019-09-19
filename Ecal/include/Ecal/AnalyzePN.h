@@ -43,22 +43,9 @@ namespace ldmx {
             //totals the non-noise reconstructed energy in ECAL
             double calculateReconEnergy( const TClonesArray *ecalHitColl ) const;
 
-            //returns true if particle is classified as mid-shower PN
-            //  checks if particle's starting point is in ecal and if it "goes PN"
-            bool isMidShowerPN( const SimParticle *particle ) const;
-
-            //returns true if point is in ECAL box (doesn't check for hexagonal towers)
-            //  assumes ECAL centered at (0,0) in xy plane
-            bool isInEcal( const std::vector<double> &point ) const;
-
             //returns true if particle is considered as "going PN"
             //  checks if any children of particle has processType photonNuclear
             bool goesPN( const SimParticle *particle ) const;
-
-            //returns true if particle is the primary photon
-            //  checks if a parent has track ID 1 and if pdgID is 22
-            //  checks if vertex is near target
-            bool isPrimaryPhoton( const SimParticle *particle ) const;
 
             //returns true if primary electron is lost upstream of target
             //  checks if end point is upstream of target
@@ -70,9 +57,6 @@ namespace ldmx {
             std::string simParticlesPassName_; //name of pass for sim particles
             std::string ecalDigiCollName_; //name of collection to calculate ecal digis
             std::string ecalDigiPassName_; //name of pass to get ecal digis collection
-            double ecalXYWidth_; //width of ecal box in x and y directions
-            double ecalFrontZ_; //starting z coordinate of ecal
-            double ecalDepth_; //depth of ecal in z direction
             double minPrimaryPhotonEnergy_; //minimum energy to allow a photon to be labled the primary photon
             double upstreamLossThresh_; //minimum fraction of primary electron's energy to allow through to target
 

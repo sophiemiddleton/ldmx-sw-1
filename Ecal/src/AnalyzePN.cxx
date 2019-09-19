@@ -16,10 +16,6 @@ namespace ldmx {
         ecalDigiCollName_ = ps.getString( "ecalDigiCollName" , "ecalDigis" );
         ecalDigiPassName_ = ps.getString( "ecalDigiPassName" , "" );
 
-        ecalXYWidth_ = ps.getDouble( "ecalXYWidth" );
-        ecalFrontZ_  = ps.getDouble( "ecalFrontZ" );
-        ecalDepth_   = ps.getDouble( "ecalDepth" );
-
         minPrimaryPhotonEnergy_ = ps.getDouble( "minPrimaryPhotonEnergy" );
         upstreamLossThresh_ = ps.getDouble( "upstreamLossThresh" , 0.95 );
 
@@ -43,11 +39,10 @@ namespace ldmx {
             if ( !simParticle ) {
                 std::cerr << "OOPS! Loaded a nullptr as the sim particle!" << std::endl;
                 continue;
-            } else if ( isUpstreamLoss( simParticle ) ) { //and ecalReconEnergy < 2000.0 ) {
+            } else if ( isUpstreamLoss( simParticle ) ) { 
                 //primary electron lost too much energy
                 //==> ECAL missed a lot of energy BUT tagger would veto easily
                 // SKIP EVENT
-                setStorageHint( hint_shouldKeep );
                 return;
             }
 
@@ -163,22 +158,6 @@ namespace ldmx {
         return ecalTotalEnergy;
     }
 
-    bool AnalyzePN::isMidShowerPN( const SimParticle *particle ) const {
-
-        std::vector<double> startPoint = particle->getVertex();
-        return ( isInEcal( startPoint) and goesPN( particle ) );
-    }
-        
-    bool AnalyzePN::isInEcal( const std::vector<double> &point ) const {
-        
-        return ( 
-                (abs(point.at(0)) < ecalXYWidth_/2) //x axis
-                and (abs(point.at(1)) < ecalXYWidth_/2) //y axis
-                and (point.at(2) > ecalFrontZ_) //larger than front z
-                and (point.at(2) < ecalFrontZ_+ecalDepth_) //smaller than back z
-               );
-    }
-
     bool AnalyzePN::goesPN( const SimParticle *particle ) const {
         
         int nChildren = particle->getDaughterCount();
@@ -190,26 +169,6 @@ namespace ldmx {
             if ( child and child->getProcessType() == SimParticle::ProcessType::photonNuclear ) {
                 return true;
             }
-        }
-
-        return false;
-    }
-
-    bool AnalyzePN::isPrimaryPhoton( const SimParticle *particle ) const {
-        
-        //false if not a photon
-        if ( particle->getPdgID() != 22 ) { return false; }
-
-        //false if not near target
-        std::vector<double> startPoint = particle->getVertex();
-        if ( abs(startPoint.at(2)) > 0.5 ) { return false; }
-
-        //look for parent with trackID 1
-        int nParents = particle->getParentCount();
-        for ( int iParent = 0; iParent < nParents; iParent++ ) {
-            SimParticle *parent = particle->getParent( iParent );
-
-            if ( parent and parent->getTrackID() == 1 ) { return true; }
         }
 
         return false;
