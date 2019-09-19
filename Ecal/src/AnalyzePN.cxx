@@ -21,6 +21,7 @@ namespace ldmx {
         ecalDepth_   = ps.getDouble( "ecalDepth" );
 
         minPrimaryPhotonEnergy_ = ps.getDouble( "minPrimaryPhotonEnergy" );
+        upstreamLossThresh_ = ps.getDouble( "upstreamLossThresh" , 0.95 );
 
         return;
     }
@@ -42,10 +43,11 @@ namespace ldmx {
             if ( !simParticle ) {
                 std::cerr << "OOPS! Loaded a nullptr as the sim particle!" << std::endl;
                 continue;
-            } else if ( isUpstreamLoss( simParticle ) and ecalReconEnergy < 2000.0 ) {
+            } else if ( isUpstreamLoss( simParticle ) ) { //and ecalReconEnergy < 2000.0 ) {
                 //primary electron lost too much energy
                 //==> ECAL missed a lot of energy BUT tagger would veto easily
                 // SKIP EVENT
+                setStorageHint( hint_shouldKeep );
                 return;
             }
 
@@ -215,15 +217,16 @@ namespace ldmx {
 
     bool AnalyzePN::isUpstreamLoss( const SimParticle *particle ) const {
 
-        //should only enter if primary electron
+        //should only care about checking primary electron
         if ( particle->getTrackID() > 1 ) { return false; }
         
-        //input primary electron is low energy
-        if ( particle->getEnergy() < 3800.0 ) { return true; }
-
         std::vector<double> endPoint = particle->getEndPoint();
 
-        if ( endPoint.at(2) < -10.0 and endPoint.at(2) > -4999.9 ) {
+        //check that endPoint is BEFORE target
+        //  target is centered at z=0 and has thickness < 1mm
+        //  Geant4 also seems to have the point z=-5000 mean something special because it comes up a lot
+        //      I'm excluding that too because I don't understand it ==> maybe means escaped to edge of world volume?
+        if ( endPoint.at(2) < -1.0 and endPoint.at(2) > -4999.9 ) {
             //primary electron "ends" before target
             //check if there is an electron daughter with energy high enough
             //    to take over title of primary
@@ -241,8 +244,13 @@ namespace ldmx {
                 }
             }//loop through children
 
-            if ( inheritPrimary ) { return inheritPrimary->getEnergy() < 3800.0; } //inheriting primary electron is low energy
-            else { return true; } //no inheriter but ended before target ==> upstream loss
+            if ( inheritPrimary ) { 
+                //check if inheriting primary electron is below threshhold
+                return inheritPrimary->getEnergy() < upstreamLossThresh_*particle->getEnergy(); 
+            } else { 
+                //no inheriter but ended before target ==> upstream loss
+                return true; 
+            }
 
         }//ending before target
 

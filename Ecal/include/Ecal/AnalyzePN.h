@@ -74,6 +74,7 @@ namespace ldmx {
             double ecalFrontZ_; //starting z coordinate of ecal
             double ecalDepth_; //depth of ecal in z direction
             double minPrimaryPhotonEnergy_; //minimum energy to allow a photon to be labled the primary photon
+            double upstreamLossThresh_; //minimum fraction of primary electron's energy to allow through to target
 
             //Persistence Counters
             int lowReconPureEM_; //counter for low recon energy in a pure EM event
