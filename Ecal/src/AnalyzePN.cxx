@@ -16,7 +16,7 @@ namespace ldmx {
         ecalDigiCollName_ = ps.getString( "ecalDigiCollName" , "ecalDigis" );
         ecalDigiPassName_ = ps.getString( "ecalDigiPassName" , "" );
 
-        minPrimaryPhotonEnergy_ = ps.getDouble( "minPrimaryPhotonEnergy" );
+        minPrimaryPhotonEnergy_ = ps.getDouble( "minPrimaryPhotonEnergy" , 2800.0 );
         upstreamLossThresh_ = ps.getDouble( "upstreamLossThresh" , 0.95 );
 
         return;
