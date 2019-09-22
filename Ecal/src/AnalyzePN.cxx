@@ -19,6 +19,10 @@ namespace ldmx {
         minPrimaryPhotonEnergy_ = ps.getDouble( "minPrimaryPhotonEnergy" , 2800.0 );
         upstreamLossThresh_ = ps.getDouble( "upstreamLossThresh" , 0.95 );
 
+        //constants to determine if event is saved
+        lowReconEnergy_ = ps.getDouble( "lowReconEnergy" , 2000.0 );
+        lowPNEnergy_    = ps.getDouble( "lowPNEnergy" , 100.0 );
+
         return;
     }
 
@@ -43,6 +47,7 @@ namespace ldmx {
                 //primary electron lost too much energy
                 //==> ECAL missed a lot of energy BUT tagger would veto easily
                 // SKIP EVENT
+                skippedEvents_++;
                 return;
             }
 
@@ -71,11 +76,6 @@ namespace ldmx {
             //no PNs this event
             h_ReconE_NoPN->Fill( ecalReconEnergy );
             energyHardestPN = 0.0; //reset for the histograms with all events in them
-            if ( ecalReconEnergy < 2000. ) {
-                //signal region pure em shower - worrisome
-                setStorageHint( hint_shouldKeep );
-                lowReconPureEM_++;
-            }
         } else if ( primaryPhoton and goesPN( primaryPhoton ) ) {
             //primary photon went PN
             h_ReconE_PrimPhoton->Fill( ecalReconEnergy );
@@ -88,12 +88,19 @@ namespace ldmx {
         h_ReconE_HardestPN_All->Fill( ecalReconEnergy , energyHardestPN );
         h_ReconE_TotalPN_All  ->Fill( ecalReconEnergy , totalEnergyPN );
 
+        if ( totalEnergyPN < lowPNEnergy_ and ecalReconEnergy < lowReconEnergy_ ) {
+            //signal region low pn shower - worrisome
+            setStorageHint( hint_shouldKeep );
+            lowReconLowPN_++;
+        }
+
         return;
     }
 
     void AnalyzePN::onProcessStart() {
 
-        lowReconPureEM_ = 0;
+        lowReconLowPN_ = 0;
+        skippedEvents_ = 0;
 
         TDirectory* baseDirectory = getHistoDirectory();
 
@@ -139,7 +146,8 @@ namespace ldmx {
         printf( "================================================\n" );
         printf( "| Mid-Shower PN Analyzer                       |\n" );
         printf( "|----------------------------------------------|\n" );
-        printf( "| Pure EM Events with Recon E < 2.0GeV : %5d |\n" , lowReconPureEM_ );
+        printf( "| Low PN Events with Recon E < 2.0GeV : %6d |\n" , lowReconLowPN_ );
+        printf( "| N Events Skipped for Upstream Loss :  %6d |\n" , skippedEvents_ );
         printf( "================================================\n" );
 
         return;
@@ -181,11 +189,14 @@ namespace ldmx {
         
         std::vector<double> endPoint = particle->getEndPoint();
 
+        particle->Print();
+
         //check that endPoint is BEFORE target
         //  target is centered at z=0 and has thickness < 1mm
         //  Geant4 also seems to have the point z=-5000 mean something special because it comes up a lot
         //      I'm excluding that too because I don't understand it ==> maybe means escaped to edge of world volume?
         if ( endPoint.at(2) < -1.0 and endPoint.at(2) > -4999.9 ) {
+            std::cout << "Primary Electron ends before target!" << std::endl;
             //primary electron "ends" before target
             //check if there is an electron daughter with energy high enough
             //    to take over title of primary
@@ -205,6 +216,7 @@ namespace ldmx {
 
             if ( inheritPrimary ) { 
                 //check if inheriting primary electron is below threshhold
+                std::cout << "Found inheriter with energy: " << inheritPrimary->getEnergy() << std::endl;
                 return inheritPrimary->getEnergy() < upstreamLossThresh_*particle->getEnergy(); 
             } else { 
                 //no inheriter but ended before target ==> upstream loss

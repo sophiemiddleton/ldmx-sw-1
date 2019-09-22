@@ -59,9 +59,12 @@ namespace ldmx {
             std::string ecalDigiPassName_; //name of pass to get ecal digis collection
             double minPrimaryPhotonEnergy_; //minimum energy to allow a photon to be labled the primary photon
             double upstreamLossThresh_; //minimum fraction of primary electron's energy to allow through to target
+            double lowReconEnergy_; //definitive low Recon E for determining if event is saved
+            double lowPNEnergy_; //definitie low PN energy for determining if event is saved
 
             //Persistence Counters
-            int lowReconPureEM_; //counter for low recon energy in a pure EM event
+            int lowReconLowPN_; //counter for low recon energy in a low PN event
+            int skippedEvents_; //counter for number of events that were skipped
 
             //ROOT Histograms
             TH2F *h_ReconE_HardestPN_All; //recon energy vs energy of hardest photon going PN
