@@ -16,6 +16,9 @@ namespace ldmx {
         ecalDigiCollName_ = ps.getString( "ecalDigiCollName" , "ecalDigis" );
         ecalDigiPassName_ = ps.getString( "ecalDigiPassName" , "" );
 
+        taggerSimHitsCollName_ = ps.getString( "taggerSimHitsCollName" , "TaggerSimHits" );
+        taggerSimHitsPassName_ = ps.getString( "taggerSimHitsPassName" , "sim" );
+
         minPrimaryPhotonEnergy_ = ps.getDouble( "minPrimaryPhotonEnergy" , 2800.0 );
         upstreamLossThresh_ = ps.getDouble( "upstreamLossThresh" , 0.95 );
 
@@ -27,6 +30,15 @@ namespace ldmx {
     }
 
     void AnalyzePN::analyze(const ldmx::Event& event) {
+
+
+        const TClonesArray *taggerSimHits = event.getCollection( taggerSimHitsCollName_ , taggerSimHitsPassName_ );
+        if ( checkTagger( taggerSimHits ) ) {
+            //something funky happened upstream
+            // SKIP EVENT
+            skippedEvents_++;
+            return;
+        }
 
         const TClonesArray *ecalDigiHits = event.getCollection( ecalDigiCollName_ , ecalDigiPassName_ );
         double ecalReconEnergy = calculateReconEnergy( ecalDigiHits );
@@ -43,13 +55,7 @@ namespace ldmx {
             if ( !simParticle ) {
                 std::cerr << "OOPS! Loaded a nullptr as the sim particle!" << std::endl;
                 continue;
-            } else if ( isUpstreamLoss( simParticle ) ) { 
-                //primary electron lost too much energy
-                //==> ECAL missed a lot of energy BUT tagger would veto easily
-                // SKIP EVENT
-                skippedEvents_++;
-                return;
-            }
+            } 
 
             double energy = simParticle->getEnergy();
 
@@ -153,6 +159,27 @@ namespace ldmx {
         return;
     }
 
+    bool AnalyzePN::checkTagger( const TClonesArray *taggerSimHits ) const {
+
+        int nTaggerHits = taggerSimHits->GetEntriesFast();
+        for ( int iHit = 0; iHit < nTaggerHits; iHit++ ) {
+            
+            SimTrackerHit *taggerHit = (SimTrackerHit *)(taggerSimHits->At( iHit ));
+            std::vector<double> momentum = taggerHit->getMomentum();
+            double momentumMag = sqrt( momentum.at(0)*momentum.at(0) + momentum.at(1)*momentum.at(1) + momentum.at(2)*momentum.at(2) );
+
+            if ( taggerHit->getTrackID() > 1 and momentumMag > 200.0 ) { 
+                //something non-primary was created
+                //skip event if lost energy is greater than 200MeV
+                return true;
+            }
+          
+        } //loop through tagger hits
+
+        //didn't find anything weird
+        return false;        
+    }
+
     double AnalyzePN::calculateReconEnergy( const TClonesArray *ecalHitColl ) const {
 
         double ecalTotalEnergy = 0;
@@ -182,52 +209,6 @@ namespace ldmx {
         return false;
     }
 
-    bool AnalyzePN::isUpstreamLoss( const SimParticle *particle ) const {
-
-        //should only care about checking primary electron
-        if ( particle->getTrackID() > 1 ) { return false; }
-        
-        std::vector<double> endPoint = particle->getEndPoint();
-
-        particle->Print();
-
-        //check that endPoint is BEFORE target
-        //  target is centered at z=0 and has thickness < 1mm
-        //  Geant4 also seems to have the point z=-5000 mean something special because it comes up a lot
-        //      I'm excluding that too because I don't understand it ==> maybe means escaped to edge of world volume?
-        if ( endPoint.at(2) < -1.0 and endPoint.at(2) > -4999.9 ) {
-            std::cout << "Primary Electron ends before target!" << std::endl;
-            //primary electron "ends" before target
-            //check if there is an electron daughter with energy high enough
-            //    to take over title of primary
-            int nChildren = particle->getDaughterCount();
-            SimParticle *inheritPrimary = nullptr;
-            for ( int iChild = 0; iChild < nChildren; iChild++ ) {
-                SimParticle *child = particle->getDaughter( iChild );
-
-                if ( child and child->getPdgID() == 11 ) {
-                    //electron child
-                    if ( ! inheritPrimary or inheritPrimary->getEnergy() < child->getEnergy() ) {
-                        //electron child has larger energy than previous inheriter
-                        inheritPrimary = child;
-                    }
-                }
-            }//loop through children
-
-            if ( inheritPrimary ) { 
-                //check if inheriting primary electron is below threshhold
-                std::cout << "Found inheriter with energy: " << inheritPrimary->getEnergy() << std::endl;
-                return inheritPrimary->getEnergy() < upstreamLossThresh_*particle->getEnergy(); 
-            } else { 
-                //no inheriter but ended before target ==> upstream loss
-                return true; 
-            }
-
-        }//ending before target
-
-        //high enough energy and ends after target ==> no upstream loss
-        return false;
-    }
 }
 
 DECLARE_ANALYZER_NS(ldmx, AnalyzePN);

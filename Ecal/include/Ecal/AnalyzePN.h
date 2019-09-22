@@ -40,6 +40,10 @@ namespace ldmx {
 
         private:
 
+            //checks tagger sim hits for weird behavior
+            //  basically tries to veto tagger veto events
+            bool checkTagger( const TClonesArray *taggerSimHits ) const;
+
             //totals the non-noise reconstructed energy in ECAL
             double calculateReconEnergy( const TClonesArray *ecalHitColl ) const;
 
@@ -47,16 +51,13 @@ namespace ldmx {
             //  checks if any children of particle has processType photonNuclear
             bool goesPN( const SimParticle *particle ) const;
 
-            //returns true if primary electron is lost upstream of target
-            //  checks if end point is upstream of target
-            //      if true ==> check daughters for electron to inherit title of "primary"
-            bool isUpstreamLoss( const SimParticle *particle ) const;
-
             //Python Configuration Parameters
             std::string simParticlesCollName_; //name of collection for sim particles to analyze
             std::string simParticlesPassName_; //name of pass for sim particles
             std::string ecalDigiCollName_; //name of collection to calculate ecal digis
             std::string ecalDigiPassName_; //name of pass to get ecal digis collection
+            std::string taggerSimHitsCollName_; //name of collection to calculate tagger sim hits
+            std::string taggerSimHitsPassName_; //name of pass to get tagger sim hits collection
             double minPrimaryPhotonEnergy_; //minimum energy to allow a photon to be labled the primary photon
             double upstreamLossThresh_; //minimum fraction of primary electron's energy to allow through to target
             double lowReconEnergy_; //definitive low Recon E for determining if event is saved
