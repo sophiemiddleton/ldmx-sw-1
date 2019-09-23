@@ -51,7 +51,7 @@ namespace ldmx {
         SimParticle *primaryPhoton = nullptr; //photon with highest energy
         for ( int iSP = 0; iSP < nSimParticles; iSP++ ) {
             SimParticle *simParticle = static_cast<SimParticle *>(allSimParticles->At( iSP ));
-
+            
             if ( !simParticle ) {
                 std::cerr << "OOPS! Loaded a nullptr as the sim particle!" << std::endl;
                 continue;
@@ -107,6 +107,7 @@ namespace ldmx {
 
         lowReconLowPN_ = 0;
         skippedEvents_ = 0;
+        skippedBecausePrimaryLostEnergy_ = 0;
 
         TDirectory* baseDirectory = getHistoDirectory();
 
@@ -154,30 +155,56 @@ namespace ldmx {
         printf( "|----------------------------------------------|\n" );
         printf( "| Low PN Events with Recon E < 2.0GeV : %6d |\n" , lowReconLowPN_ );
         printf( "| N Events Skipped for Upstream Loss :  %6d |\n" , skippedEvents_ );
+        printf( "| N Events Skipped becasue Primary   :  %6d |\n" , skippedBecausePrimaryLostEnergy_ );
         printf( "================================================\n" );
 
         return;
     }
 
-    bool AnalyzePN::checkTagger( const TClonesArray *taggerSimHits ) const {
+    bool AnalyzePN::checkTagger( const TClonesArray *taggerSimHits ) {
 
         int nTaggerHits = taggerSimHits->GetEntriesFast();
+        std::map< int , SimParticle * > upstreamLosses;
         for ( int iHit = 0; iHit < nTaggerHits; iHit++ ) {
             
             SimTrackerHit *taggerHit = (SimTrackerHit *)(taggerSimHits->At( iHit ));
+            int trackID = taggerHit->getTrackID();
+            SimParticle *particle = taggerHit->getSimParticle();
             std::vector<double> momentum = taggerHit->getMomentum();
-            double momentumMag = sqrt( momentum.at(0)*momentum.at(0) + momentum.at(1)*momentum.at(1) + momentum.at(2)*momentum.at(2) );
+            double momentum2 = momentum.at(0)*momentum.at(0) + momentum.at(1)*momentum.at(1) + momentum.at(2)*momentum.at(2);
 
-            if ( taggerHit->getTrackID() > 1 and momentumMag > 200.0 ) { 
-                //something non-primary was created
-                //skip event if lost energy is greater than 200MeV
-                return true;
+            if ( particle ) {
+                //particle blamed for this hit exists
+                double energy = sqrt( momentum2 + particle->getMass()*particle->getMass() );
+                
+                //Particles except primary are allowed but only if total energy is less than loss threshold
+                if ( trackID == 1 and energy < upstreamLossThresh_*4000.0 ) { 
+                    //primary lost a lot of energy through non-secondary producing interactions
+                    //SKIP EVENT 
+                    skippedBecausePrimaryLostEnergy_++;
+                    return true;
+                } else if ( trackID > 1 and particle->getPdgID() == 11 and energy > upstreamLossThresh_*4000.0 ) {
+                    //particle is non-primary electron that could inherit primary electron status
+                    //KEEP EVENT
+                    return false;
+                } else if ( trackID > 1 ) {
+                    //particle is NOT primary electron ==> lost energy
+                    upstreamLosses[trackID] = particle;
+                }
+
+            } else {
+                std::cout << "Warning: Tagger Hits's blamed particle was not saved!" << std::endl;
             }
           
         } //loop through tagger hits
 
-        //didn't find anything weird
-        return false;        
+        double totalLostEnergy = 0.0;
+        for ( std::pair< int , SimParticle* > const& loss : upstreamLosses ) {
+            totalLostEnergy += loss.second->getEnergy();
+        }
+        //std::cout << totalLostEnergy << std::endl;
+        //skip event if lost energy is greater than tolerated threshhold
+        return (totalLostEnergy > 200.0 ); //(1.0 - upstreamLossThresh_)*4000.0 );
     }
 
     double AnalyzePN::calculateReconEnergy( const TClonesArray *ecalHitColl ) const {

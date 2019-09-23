@@ -42,7 +42,7 @@ namespace ldmx {
 
             //checks tagger sim hits for weird behavior
             //  basically tries to veto tagger veto events
-            bool checkTagger( const TClonesArray *taggerSimHits ) const;
+            bool checkTagger( const TClonesArray *taggerSimHits );
 
             //totals the non-noise reconstructed energy in ECAL
             double calculateReconEnergy( const TClonesArray *ecalHitColl ) const;
@@ -66,6 +66,7 @@ namespace ldmx {
             //Persistence Counters
             int lowReconLowPN_; //counter for low recon energy in a low PN event
             int skippedEvents_; //counter for number of events that were skipped
+            int skippedBecausePrimaryLostEnergy_; //counter for events where primary lost energy
 
             //ROOT Histograms
             TH2F *h_ReconE_HardestPN_All; //recon energy vs energy of hardest photon going PN
