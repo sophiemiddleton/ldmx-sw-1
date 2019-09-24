@@ -31,9 +31,8 @@ namespace ldmx {
 
     void AnalyzePN::analyze(const ldmx::Event& event) {
 
-
         const TClonesArray *taggerSimHits = event.getCollection( taggerSimHitsCollName_ , taggerSimHitsPassName_ );
-        if ( checkTagger( taggerSimHits ) ) {
+        if ( taggerVetoed( taggerSimHits ) ) {
             //something funky happened upstream
             // SKIP EVENT
             skippedEvents_++;
@@ -42,7 +41,7 @@ namespace ldmx {
 
         const TClonesArray *ecalDigiHits = event.getCollection( ecalDigiCollName_ , ecalDigiPassName_ );
         double ecalReconEnergy = calculateReconEnergy( ecalDigiHits );
-
+        
         const TClonesArray *allSimParticles = event.getCollection( simParticlesCollName_ , simParticlesPassName_ );
 
         int nSimParticles = allSimParticles->GetEntriesFast();
@@ -56,7 +55,7 @@ namespace ldmx {
                 std::cerr << "OOPS! Loaded a nullptr as the sim particle!" << std::endl;
                 continue;
             } 
-
+       
             double energy = simParticle->getEnergy();
 
             if ( simParticle->getPdgID() == 22 ) {
@@ -67,7 +66,6 @@ namespace ldmx {
                 }
             }
 
-            std::vector<double> startPoint = simParticle->getVertex();
             if ( goesPN( simParticle ) ) {
 
                 totalEnergyPN += energy;
@@ -161,50 +159,28 @@ namespace ldmx {
         return;
     }
 
-    bool AnalyzePN::checkTagger( const TClonesArray *taggerSimHits ) {
+    bool AnalyzePN::taggerVetoed( const TClonesArray *taggerSimHits ) {
 
         int nTaggerHits = taggerSimHits->GetEntriesFast();
-        std::map< int , SimParticle * > upstreamLosses;
         for ( int iHit = 0; iHit < nTaggerHits; iHit++ ) {
             
             SimTrackerHit *taggerHit = (SimTrackerHit *)(taggerSimHits->At( iHit ));
-            int trackID = taggerHit->getTrackID();
+
+            //skip hits that aren't in the last layer
+            if ( taggerHit->getLayerID() < 14 ) { continue; }
+
             SimParticle *particle = taggerHit->getSimParticle();
             std::vector<double> momentum = taggerHit->getMomentum();
             double momentum2 = momentum.at(0)*momentum.at(0) + momentum.at(1)*momentum.at(1) + momentum.at(2)*momentum.at(2);
+            double energy = sqrt( momentum2 + particle->getMass()*particle->getMass() );
 
-            if ( particle ) {
-                //particle blamed for this hit exists
-                double energy = sqrt( momentum2 + particle->getMass()*particle->getMass() );
-                
-                //Particles except primary are allowed but only if total energy is less than loss threshold
-                if ( trackID == 1 and energy < upstreamLossThresh_*4000.0 ) { 
-                    //primary lost a lot of energy through non-secondary producing interactions
-                    //SKIP EVENT 
-                    skippedBecausePrimaryLostEnergy_++;
-                    return true;
-                } else if ( trackID > 1 and particle->getPdgID() == 11 and energy > upstreamLossThresh_*4000.0 ) {
-                    //particle is non-primary electron that could inherit primary electron status
-                    //KEEP EVENT
-                    return false;
-                } else if ( trackID > 1 ) {
-                    //particle is NOT primary electron ==> lost energy
-                    upstreamLosses[trackID] = particle;
-                }
+            //check if found primary electron
+            if ( particle->getPdgID() == 11 and energy > upstreamLossThresh_*4000.0 ) { return false; }
 
-            } else {
-                std::cout << "Warning: Tagger Hits's blamed particle was not saved!" << std::endl;
-            }
-          
         } //loop through tagger hits
 
-        double totalLostEnergy = 0.0;
-        for ( std::pair< int , SimParticle* > const& loss : upstreamLosses ) {
-            totalLostEnergy += loss.second->getEnergy();
-        }
-        //std::cout << totalLostEnergy << std::endl;
-        //skip event if lost energy is greater than tolerated threshhold
-        return (totalLostEnergy > 200.0 ); //(1.0 - upstreamLossThresh_)*4000.0 );
+        //skip event since unable to find primary electron
+        return true;
     }
 
     double AnalyzePN::calculateReconEnergy( const TClonesArray *ecalHitColl ) const {

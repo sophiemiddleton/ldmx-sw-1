@@ -42,7 +42,7 @@ namespace ldmx {
 
             //checks tagger sim hits for weird behavior
             //  basically tries to veto tagger veto events
-            bool checkTagger( const TClonesArray *taggerSimHits );
+            bool taggerVetoed( const TClonesArray *taggerSimHits );
 
             //totals the non-noise reconstructed energy in ECAL
             double calculateReconEnergy( const TClonesArray *ecalHitColl ) const;
