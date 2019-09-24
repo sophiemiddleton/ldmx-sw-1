@@ -32,16 +32,18 @@ namespace ldmx {
     void AnalyzePN::analyze(const ldmx::Event& event) {
 
         const TClonesArray *taggerSimHits = event.getCollection( taggerSimHitsCollName_ , taggerSimHitsPassName_ );
+        double preTargetElectronEnergy = electronTaggerEnergy( taggerSimHits );
+
         if ( taggerVetoed( taggerSimHits ) ) {
             //something funky happened upstream
             // SKIP EVENT
             skippedEvents_++;
-            return;
+            //return;
         }
 
         const TClonesArray *ecalDigiHits = event.getCollection( ecalDigiCollName_ , ecalDigiPassName_ );
         double ecalReconEnergy = calculateReconEnergy( ecalDigiHits );
-        
+
         const TClonesArray *allSimParticles = event.getCollection( simParticlesCollName_ , simParticlesPassName_ );
 
         int nSimParticles = allSimParticles->GetEntriesFast();
@@ -92,10 +94,15 @@ namespace ldmx {
         h_ReconE_HardestPN_All->Fill( ecalReconEnergy , energyHardestPN );
         h_ReconE_TotalPN_All  ->Fill( ecalReconEnergy , totalEnergyPN );
 
-        if ( totalEnergyPN < lowPNEnergy_ and ecalReconEnergy < lowReconEnergy_ ) {
-            //signal region low pn shower - worrisome
-            setStorageHint( hint_shouldKeep );
-            lowReconLowPN_++;
+        if ( totalEnergyPN < lowPNEnergy_ ) {
+            
+            h_ReconE_TaggerElecE->Fill( ecalReconEnergy , preTargetElectronEnergy );
+
+            if ( ecalReconEnergy < lowReconEnergy_ ) {
+                //signal region low pn shower - worrisome
+                setStorageHint( hint_shouldKeep );
+                lowReconLowPN_++;
+            }
         }
 
         return;
@@ -108,6 +115,12 @@ namespace ldmx {
         skippedBecausePrimaryLostEnergy_ = 0;
 
         TDirectory* baseDirectory = getHistoDirectory();
+
+        h_ReconE_TaggerElecE = new TH2F(
+                "ReconE_TaggerElecE",
+                ";Reconstruced Energy in ECAL [MeV];Energy of Electron in Last Layer of Tagger [MeV]",
+                800,0,8000,
+                400,0,4000);
 
         h_ReconE_HardestPN_All = new TH2F(
                 "ReconE_HardestPN_All",
@@ -159,7 +172,7 @@ namespace ldmx {
         return;
     }
 
-    bool AnalyzePN::taggerVetoed( const TClonesArray *taggerSimHits ) {
+    bool AnalyzePN::taggerVetoed( const TClonesArray *taggerSimHits ) const {
 
         int nTaggerHits = taggerSimHits->GetEntriesFast();
         for ( int iHit = 0; iHit < nTaggerHits; iHit++ ) {
@@ -181,6 +194,35 @@ namespace ldmx {
 
         //skip event since unable to find primary electron
         return true;
+    }
+
+    double AnalyzePN::electronTaggerEnergy( const TClonesArray *taggerSimHits ) const {
+
+        int nTaggerHits = taggerSimHits->GetEntriesFast();
+        double electronEnergy = 0.0;
+        for ( int iHit = 0; iHit < nTaggerHits; iHit++ ) {
+            
+            SimTrackerHit *taggerHit = (SimTrackerHit *)(taggerSimHits->At( iHit ));
+
+            //skip hits that aren't in the last layer
+            if ( taggerHit->getLayerID() < 14 ) { continue; }
+
+            SimParticle *particle = taggerHit->getSimParticle();
+
+            //skip hits by not electrons
+            if ( particle->getPdgID() != 11 ) { continue; }
+
+            //calculate energy at this hit in the event
+            std::vector<double> momentum = taggerHit->getMomentum();
+            double momentum2 = momentum.at(0)*momentum.at(0) + momentum.at(1)*momentum.at(1) + momentum.at(2)*momentum.at(2);
+            double energy = sqrt( momentum2 + particle->getMass()*particle->getMass() );
+
+            //check if found primary electron
+            if ( energy > electronEnergy ) { electronEnergy = energy; }
+
+        } //loop through tagger hits
+
+        return electronEnergy;
     }
 
     double AnalyzePN::calculateReconEnergy( const TClonesArray *ecalHitColl ) const {
