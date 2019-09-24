@@ -12,6 +12,7 @@ namespace ldmx {
         ecalHits_           = new TEveElementList("ECAL RecHits");
         hcalHits_           = new TEveElementList("HCAL RecHits");
         recoilTrackerHits_  = new TEveElementList("Recoil Sim Hits");
+        simParticles_       = new TEveElementList("Sim Particles");
         ecalClusters_       = new TEveElementList("ECAL Clusters");
         ecalSimParticles_   = new TEveElementList("ECAL SP Sim Particles");
 
@@ -210,6 +211,58 @@ namespace ldmx {
         }
 
         hits_->AddElement(recoilTrackerHits_);
+    }
+
+    void EventObjects::drawSimParticles(TClonesArray* simParticles) {
+
+        int nSimParticles = simParticles->GetEntriesFast();
+        for (int iP = 0; iP < nSimParticles; iP++) {
+
+            SimParticle* sP = (SimParticle *)(simParticles->At( iP ));
+
+            //bad sim particles
+            if ( ! sP ) { continue; }
+
+            std::vector<double> simStart = sP->getVertex();
+            std::vector<double> simEnd = sP->getEndPoint();
+            double rCheck = pow(pow(simEnd[0],2)+pow(simEnd[1],2)+pow(simEnd[2],2),0.5);
+
+            double scale = 1;
+            double largest = 0;
+            if (abs(simEnd[0]) > 3500.0) {
+                 scale = 500.0/abs(simEnd[0]-simStart[0]);
+                 largest = simEnd[0];
+            }
+            if (abs(simEnd[1]) > 3500.0 && abs(simEnd[1]) > largest) {
+                 scale = 500.0/abs(simEnd[1]-simStart[1]);
+                 largest = simEnd[1];
+            }
+            if (abs(simEnd[2]) > 3500.0 && abs(simEnd[2]) > 3500) {
+                 scale = 500.0/abs(simEnd[2]-simStart[2]);
+            }
+
+            double r = pow(pow(scale*(simEnd[0]-simStart[0]),2) + pow(scale*(simEnd[1]-simStart[1]),2) + pow(scale*(simEnd[2]-simStart[2]),2),0.5);
+
+            TEveArrow* simArr = new TEveArrow(scale*(simEnd[0]-simStart[0]),scale*(simEnd[1]-simStart[1]),scale*(simEnd[2]-simStart[2]),simStart[0],simStart[1],simStart[2]);
+
+            double absoluteDrawScale = 0.1;
+            simArr->SetSourceObject(sP);
+            simArr->SetMainColor(kBlack);
+            if ( sP->getTrackID() == 1 ) { simArr->SetMainColor( kRed ); }
+            simArr->SetTubeR(60*absoluteDrawScale/r);
+            simArr->SetConeL(100*absoluteDrawScale/r);
+            simArr->SetConeR(150*absoluteDrawScale/r);
+            simArr->SetPickable(kTRUE);
+
+            TString name;
+            name.Form("PDG = %d, Gen E = %1.5g MeV, Track ID = %d", sP->getPdgID(), sP->getEnergy(), sP->getTrackID() );
+            simArr->SetElementName(name);
+            simParticles_->AddElement(simArr);
+        }
+
+        hits_->AddElement(simParticles_);
+
+        return;
     }
 
     void EventObjects::drawECALClusters(TClonesArray* clusters) {

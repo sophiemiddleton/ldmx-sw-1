@@ -53,6 +53,7 @@ namespace ldmx {
                 delete ecalHits_;
                 delete hcalHits_;
                 delete recoilTrackerHits_;
+                delete simParticles_;
                 delete ecalClusters_;
                 delete ecalSimParticles_;
 
@@ -80,6 +81,11 @@ namespace ldmx {
              * that hit the recoil tracker.
              */
             void drawRecoilHits(TClonesArray* hits);
+
+            /**
+             * Draws the sim particles assuming they are SimParticles
+             */
+            void drawSimParticles(TClonesArray* particles);
 
             /**
              * Draws the hits in the input collection assuming that they are EcalClusters
@@ -121,6 +127,7 @@ namespace ldmx {
             TEveElement* ecalHits_; //* Eve Element containing ecal hits
             TEveElement* hcalHits_; //* Eve Element containing hcal hits
             TEveElement* recoilTrackerHits_; //* Eve Element containing recoil tracker hits
+            TEveElement* simParticles_; //* Eve Element containing sim particles
             TEveElement* ecalClusters_; //* Eve Element containing ecal clusters
             TEveElement* ecalSimParticles_; //* Eve Element containing ecal sim particles
 

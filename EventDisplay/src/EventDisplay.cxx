@@ -170,12 +170,14 @@ namespace ldmx {
         hcalDigiHits_     = new TClonesArray( EventConstants::HCAL_HIT.c_str() );
         recoilHits_       = new TClonesArray( EventConstants::SIM_TRACKER_HIT.c_str() );
         ecalClusters_     = new TClonesArray( EventConstants::ECAL_CLUSTER.c_str() );
+        simParticles_     = new TClonesArray( EventConstants::SIM_PARTICLE.c_str() );
         ecalSimParticles_ = new TClonesArray( EventConstants::SIM_TRACKER_HIT.c_str() );
 
         foundECALDigis_     = GetCollection( ecalDigisCollName_ , ecalDigiHits_ );
         foundHCALDigis_     = GetCollection( hcalDigisCollName_ , hcalDigiHits_ );
         foundClusters_      = GetCollection( clustersCollName_ , ecalClusters_ );
         foundTrackerHits_   = GetCollection( trackerHitsCollName_ , recoilHits_ );
+        foundSimParticles_  = GetCollection( simParticlesCollName_ , simParticles_ );
         foundEcalSPHits_    = GetCollection( ecalSimParticlesCollName_ , ecalSimParticles_ );
 
         return true;
@@ -312,6 +314,10 @@ namespace ldmx {
 
         if (foundTrackerHits_) {
             eventObjects_->drawRecoilHits(recoilHits_);
+        }
+
+        if (foundSimParticles_) {
+            eventObjects_->drawSimParticles(simParticles_);
         }
 
         if (foundEcalSPHits_) {

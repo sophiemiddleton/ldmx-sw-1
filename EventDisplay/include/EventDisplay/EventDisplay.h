@@ -55,6 +55,7 @@ namespace ldmx {
                 delete ecalDigiHits_;
                 delete hcalDigiHits_;
                 delete recoilHits_;
+                delete simParticles_;
                 delete ecalClusters_;
                 delete ecalSimParticles_;
 
@@ -176,6 +177,7 @@ namespace ldmx {
             TClonesArray* ecalDigiHits_; //* current ecalDigis collection
             TClonesArray* hcalDigiHits_; //* current hcalDigis collection
             TClonesArray* recoilHits_; //* curent recoil hits collection
+            TClonesArray* simParticles_; //* current sim particles collection
             TClonesArray* ecalClusters_; //* current ecal clusters collection
             TClonesArray* ecalSimParticles_; //* current ecal sim particles collection
 
@@ -183,6 +185,7 @@ namespace ldmx {
             bool foundHCALDigis_ = false;//* flag check if hcalDigis collection has been found
             bool foundClusters_ = false;//* flag check if clusters collection has been found
             bool foundTrackerHits_ = false;//* flag check if tracker hits collection has been found
+            bool foundSimParticles_ = false;//* flag check if sim particles collection has been found
             bool foundEcalSPHits_ = false;//* flag check if ecal sim particles collection has been found
 
             int eventNum_ = -1; //* current event number
@@ -192,6 +195,7 @@ namespace ldmx {
             TString ecalDigisCollName_ = "ecalDigis_recon"; //* name of ecalDigis collection in event tree
             TString hcalDigisCollName_ = "hcalDigis_recon"; //* name of hcalDigis collection in event tree
             TString trackerHitsCollName_ = "RecoilSimHits_sim"; //* name of recoil hitss collection in event tree
+            TString simParticlesCollName_ = "SimParticles_sim"; //* name of sim particles collection in event tree
             TString ecalSimParticlesCollName_ = "EcalScoringPlaneHits_sim"; //* name of ecal sim particles collection in event tree
             TString eventTreeName_ = "LDMX_Events"; //* name of event tree
 
