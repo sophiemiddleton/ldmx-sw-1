@@ -42,10 +42,11 @@ namespace ldmx {
 
             //checks tagger sim hits for weird behavior
             //  basically tries to veto tagger veto events
-            bool taggerVetoed( const TClonesArray *taggerSimHits ) const;
+            //bool taggerVetoed( const TClonesArray *taggerSimHits ) const;
 
-            //get energy of electron in last layer of tagger
-            double electronTaggerEnergy( const TClonesArray *taggerSimHits ) const;
+            //get energy and pT of electron in last layer of tagger
+            //return pass/fail depending on energy/pT cuts
+            bool electronTaggerEnergy( const TClonesArray *taggerSimHits , double &electronE, double &electronPT ) const;
 
             //totals the non-noise reconstructed energy in ECAL
             double calculateReconEnergy( const TClonesArray *ecalHitColl ) const;
@@ -62,7 +63,8 @@ namespace ldmx {
             std::string taggerSimHitsCollName_; //name of collection to calculate tagger sim hits
             std::string taggerSimHitsPassName_; //name of pass to get tagger sim hits collection
             double minPrimaryPhotonEnergy_; //minimum energy to allow a photon to be labled the primary photon
-            double upstreamLossThresh_; //minimum fraction of primary electron's energy to allow through to target
+            double energyCut_; //minimum energy for primary electron pre-target to keep event
+            double pTCut_; //maximum pT for primary electron pre-target to keep event
             double lowReconEnergy_; //definitive low Recon E for determining if event is saved
             double lowPNEnergy_; //definitie low PN energy for determining if event is saved
 

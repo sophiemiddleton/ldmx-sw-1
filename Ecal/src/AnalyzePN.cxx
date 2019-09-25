@@ -20,7 +20,9 @@ namespace ldmx {
         taggerSimHitsPassName_ = ps.getString( "taggerSimHitsPassName" , "sim" );
 
         minPrimaryPhotonEnergy_ = ps.getDouble( "minPrimaryPhotonEnergy" , 2800.0 );
-        upstreamLossThresh_ = ps.getDouble( "upstreamLossThresh" , 0.95 );
+
+        energyCut_ = ps.getDouble( "energyCut" , 3600.0 );
+        pTCut_     = ps.getDouble( "pTCut" , 200.0 );
 
         //constants to determine if event is saved
         lowReconEnergy_ = ps.getDouble( "lowReconEnergy" , 2000.0 );
@@ -32,9 +34,9 @@ namespace ldmx {
     void AnalyzePN::analyze(const ldmx::Event& event) {
 
         const TClonesArray *taggerSimHits = event.getCollection( taggerSimHitsCollName_ , taggerSimHitsPassName_ );
-        double preTargetElectronEnergy = electronTaggerEnergy( taggerSimHits );
+        double preTargetElectronEnergy, preTargetElectronPT;
 
-        if ( taggerVetoed( taggerSimHits ) ) {
+        if ( electronTaggerEnergy( taggerSimHits , preTargetElectronEnergy , preTargetElectronPT ) ) {
             //something funky happened upstream
             // SKIP EVENT
             skippedEvents_++;
@@ -172,34 +174,35 @@ namespace ldmx {
         return;
     }
 
-    bool AnalyzePN::taggerVetoed( const TClonesArray *taggerSimHits ) const {
+//    bool AnalyzePN::taggerVetoed( const TClonesArray *taggerSimHits ) const {
+//
+//        int nTaggerHits = taggerSimHits->GetEntriesFast();
+//        for ( int iHit = 0; iHit < nTaggerHits; iHit++ ) {
+//            
+//            SimTrackerHit *taggerHit = (SimTrackerHit *)(taggerSimHits->At( iHit ));
+//
+//            //skip hits that aren't in the last layer
+//            if ( taggerHit->getLayerID() < 14 ) { continue; }
+//
+//            SimParticle *particle = taggerHit->getSimParticle();
+//            std::vector<double> momentum = taggerHit->getMomentum();
+//            double momentum2 = momentum.at(0)*momentum.at(0) + momentum.at(1)*momentum.at(1) + momentum.at(2)*momentum.at(2);
+//            double energy = sqrt( momentum2 + particle->getMass()*particle->getMass() );
+//
+//            //check if found primary electron
+//            if ( particle->getPdgID() == 11 and energy > upstreamLossThresh_*4000.0 ) { return false; }
+//
+//        } //loop through tagger hits
+//
+//        //skip event since unable to find primary electron
+//        return true;
+//    }
+
+    bool AnalyzePN::electronTaggerEnergy( const TClonesArray *taggerSimHits , double &electronE, double &electronPT ) const {
 
         int nTaggerHits = taggerSimHits->GetEntriesFast();
-        for ( int iHit = 0; iHit < nTaggerHits; iHit++ ) {
-            
-            SimTrackerHit *taggerHit = (SimTrackerHit *)(taggerSimHits->At( iHit ));
-
-            //skip hits that aren't in the last layer
-            if ( taggerHit->getLayerID() < 14 ) { continue; }
-
-            SimParticle *particle = taggerHit->getSimParticle();
-            std::vector<double> momentum = taggerHit->getMomentum();
-            double momentum2 = momentum.at(0)*momentum.at(0) + momentum.at(1)*momentum.at(1) + momentum.at(2)*momentum.at(2);
-            double energy = sqrt( momentum2 + particle->getMass()*particle->getMass() );
-
-            //check if found primary electron
-            if ( particle->getPdgID() == 11 and energy > upstreamLossThresh_*4000.0 ) { return false; }
-
-        } //loop through tagger hits
-
-        //skip event since unable to find primary electron
-        return true;
-    }
-
-    double AnalyzePN::electronTaggerEnergy( const TClonesArray *taggerSimHits ) const {
-
-        int nTaggerHits = taggerSimHits->GetEntriesFast();
-        double electronEnergy = 0.0;
+        electronE = 0.0;
+        electronPT = 4000.0;
         for ( int iHit = 0; iHit < nTaggerHits; iHit++ ) {
             
             SimTrackerHit *taggerHit = (SimTrackerHit *)(taggerSimHits->At( iHit ));
@@ -214,15 +217,16 @@ namespace ldmx {
 
             //calculate energy at this hit in the event
             std::vector<double> momentum = taggerHit->getMomentum();
+            double pT = sqrt( momentum.at(0)*momentum.at(0) + momentum.at(1)*momentum.at(1) ); 
             double momentum2 = momentum.at(0)*momentum.at(0) + momentum.at(1)*momentum.at(1) + momentum.at(2)*momentum.at(2);
             double energy = sqrt( momentum2 + particle->getMass()*particle->getMass() );
 
             //check if found primary electron
-            if ( energy > electronEnergy ) { electronEnergy = energy; }
+            if ( energy > electronE ) { electronE = energy; electronPT = pT; }
 
         } //loop through tagger hits
 
-        return electronEnergy;
+        return ( electronE < energyCut_ and electronPT > pTCut_ );
     }
 
     double AnalyzePN::calculateReconEnergy( const TClonesArray *ecalHitColl ) const {
