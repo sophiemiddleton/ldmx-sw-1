@@ -131,7 +131,7 @@ namespace ldmx {
                 400,0,4000);
 
         TString title;
-        title.Form( "Events with Total PN Energy < %.1MeV" , lowPNEnergy_ );
+        title.Form( "Events with Total PN Energy < %.1fMeV" , lowPNEnergy_ );
         h_ReconE_TaggerElecE->SetTitle( title );
         h_ReconE_TaggerElecPT->SetTitle( title );
 
