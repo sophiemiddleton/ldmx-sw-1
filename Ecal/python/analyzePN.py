@@ -7,12 +7,23 @@ from LDMX.Framework import ldmxcfg
 
 analyzePN = ldmxcfg.Analyzer( "analyzePN" , "ldmx::AnalyzePN" );
 
-#analyzePN.parameters[ "simParticlesCollName" ] = "SimParticles"
-#analyzePN.parameters[ "simParticlesPassName" ] = "sim"
+# event object collection and pass names
+analyzePN.parameters[ "simParticlesCollName" ] = "SimParticles"
+analyzePN.parameters[ "simParticlesPassName" ] = "sim"
 
-#analyzePN.parameters[ "ecalDigiCollName" ] = "ecalDigis"
-#analyzePN.parameters[ "ecalDigiPassName" ] = "" #blank means take first match (any pass)
+analyzePN.parameters[ "ecalDigiCollName" ] = "ecalDigis"
+analyzePN.parameters[ "ecalDigiPassName" ] = "" #blank means take first match (any pass)
 
-#analyzePN.parameters[ "minPrimaryPhotonEnergy" ] = 2800. #MeV - matches trigger cut
-#analyzePN.parameters[ "upstreamLossThresh" ] = 0.95 #min fraction of primary electron energy to allow left when reaching target
+analyzePN.parameters[ "taggerSimHitsCollName" ] = "TaggerSimHits"
+analyzePN.parameters[ "taggerSimHitsPassName" ] = "sim" 
 
+# minimum energy to allow photon to be categorized as primary
+analyzePN.parameters[ "minPrimaryPhotonEnergy" ] = 2800. #MeV - matches trigger cut
+
+# cuts on primary electron in last layer of tagger (min energy, max pT)
+analyzePN.parameters[ "energyCut" ] = 2800. #MeV
+analyzePN.parameters[ "pTCut"     ] = 100. #MeV
+
+# cuts on event characteristics to be given storage hint "keep" (both are maxima)
+analyzePN.parameters[ "lowReconEnergy" ] = 2000.0 #MeV
+analyzePN.parameters[ "lowPNEnergy"    ] = 100.0 #MeV

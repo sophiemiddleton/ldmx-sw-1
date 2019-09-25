@@ -40,10 +40,6 @@ namespace ldmx {
 
         private:
 
-            //checks tagger sim hits for weird behavior
-            //  basically tries to veto tagger veto events
-            //bool taggerVetoed( const TClonesArray *taggerSimHits ) const;
-
             //get energy and pT of electron in last layer of tagger
             //return pass/fail depending on energy/pT cuts
             bool electronTaggerEnergy( const TClonesArray *taggerSimHits , double &electronE, double &electronPT ) const;
@@ -71,10 +67,10 @@ namespace ldmx {
             //Persistence Counters
             int lowReconLowPN_; //counter for low recon energy in a low PN event
             int skippedEvents_; //counter for number of events that were skipped
-            int skippedBecausePrimaryLostEnergy_; //counter for events where primary lost energy
 
             //ROOT Histograms
             TH2F *h_ReconE_TaggerElecE; //recon energy vs energy of electron in last layer of tagger
+            TH2F *h_ReconE_TaggerElecPT; //recon energy vs pT of electron in last layer of tagger
             TH2F *h_ReconE_HardestPN_All; //recon energy vs energy of hardest photon going PN
             TH2F *h_ReconE_TotalPN_All; //recon energy vs total energy of photons going PN
             //recon energy vs energy of hardest photon going PN excluding NoPN and PrimaryPhoton events

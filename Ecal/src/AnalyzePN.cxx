@@ -21,8 +21,8 @@ namespace ldmx {
 
         minPrimaryPhotonEnergy_ = ps.getDouble( "minPrimaryPhotonEnergy" , 2800.0 );
 
-        energyCut_ = ps.getDouble( "energyCut" , 3600.0 );
-        pTCut_     = ps.getDouble( "pTCut" , 200.0 );
+        energyCut_ = ps.getDouble( "energyCut" , 2800.0 );
+        pTCut_     = ps.getDouble( "pTCut" , 100.0 );
 
         //constants to determine if event is saved
         lowReconEnergy_ = ps.getDouble( "lowReconEnergy" , 2000.0 );
@@ -99,6 +99,7 @@ namespace ldmx {
         if ( totalEnergyPN < lowPNEnergy_ ) {
             
             h_ReconE_TaggerElecE->Fill( ecalReconEnergy , preTargetElectronEnergy );
+            h_ReconE_TaggerElecPT->Fill( ecalReconEnergy , preTargetElectronPT );
 
             if ( ecalReconEnergy < lowReconEnergy_ ) {
                 //signal region low pn shower - worrisome
@@ -114,13 +115,18 @@ namespace ldmx {
 
         lowReconLowPN_ = 0;
         skippedEvents_ = 0;
-        skippedBecausePrimaryLostEnergy_ = 0;
 
         TDirectory* baseDirectory = getHistoDirectory();
 
         h_ReconE_TaggerElecE = new TH2F(
                 "ReconE_TaggerElecE",
                 ";Reconstruced Energy in ECAL [MeV];Energy of Electron in Last Layer of Tagger [MeV]",
+                800,0,8000,
+                400,0,4000);
+
+        h_ReconE_TaggerElecPT = new TH2F(
+                "ReconE_TaggerElecPT",
+                ";Reconstruced Energy in ECAL [MeV];p_{T} of Electron in Last Layer of Tagger [MeV/c]",
                 800,0,8000,
                 400,0,4000);
 
@@ -166,37 +172,12 @@ namespace ldmx {
         printf( "================================================\n" );
         printf( "| Mid-Shower PN Analyzer                       |\n" );
         printf( "|----------------------------------------------|\n" );
-        printf( "| Low PN Events with Recon E < 2.0GeV : %6d |\n" , lowReconLowPN_ );
+        printf( "| Low PN Events with Recon E < %2.1fGeV : %6d |\n" , lowReconEnergy_/1000.0 , lowReconLowPN_ );
         printf( "| N Events Skipped for Upstream Loss :  %6d |\n" , skippedEvents_ );
-        printf( "| N Events Skipped becasue Primary   :  %6d |\n" , skippedBecausePrimaryLostEnergy_ );
         printf( "================================================\n" );
 
         return;
     }
-
-//    bool AnalyzePN::taggerVetoed( const TClonesArray *taggerSimHits ) const {
-//
-//        int nTaggerHits = taggerSimHits->GetEntriesFast();
-//        for ( int iHit = 0; iHit < nTaggerHits; iHit++ ) {
-//            
-//            SimTrackerHit *taggerHit = (SimTrackerHit *)(taggerSimHits->At( iHit ));
-//
-//            //skip hits that aren't in the last layer
-//            if ( taggerHit->getLayerID() < 14 ) { continue; }
-//
-//            SimParticle *particle = taggerHit->getSimParticle();
-//            std::vector<double> momentum = taggerHit->getMomentum();
-//            double momentum2 = momentum.at(0)*momentum.at(0) + momentum.at(1)*momentum.at(1) + momentum.at(2)*momentum.at(2);
-//            double energy = sqrt( momentum2 + particle->getMass()*particle->getMass() );
-//
-//            //check if found primary electron
-//            if ( particle->getPdgID() == 11 and energy > upstreamLossThresh_*4000.0 ) { return false; }
-//
-//        } //loop through tagger hits
-//
-//        //skip event since unable to find primary electron
-//        return true;
-//    }
 
     bool AnalyzePN::electronTaggerEnergy( const TClonesArray *taggerSimHits , double &electronE, double &electronPT ) const {
 
