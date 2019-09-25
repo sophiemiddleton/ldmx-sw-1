@@ -130,6 +130,11 @@ namespace ldmx {
                 800,0,8000,
                 400,0,4000);
 
+        TString title;
+        title.Form( "Events with Total PN Energy < %.1MeV" , lowPNEnergy_ );
+        h_ReconE_TaggerElecE->SetTitle( title );
+        h_ReconE_TaggerElecPT->SetTitle( title );
+
         h_ReconE_HardestPN_All = new TH2F(
                 "ReconE_HardestPN_All",
                 ";Reconstructed Energy in ECAL [MeV];Energy of Hardest Photon Going PN [MeV]",
