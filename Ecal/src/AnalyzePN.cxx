@@ -33,15 +33,15 @@ namespace ldmx {
 
     void AnalyzePN::analyze(const ldmx::Event& event) {
 
-        const TClonesArray *taggerSimHits = event.getCollection( taggerSimHitsCollName_ , taggerSimHitsPassName_ );
-        double preTargetElectronEnergy, preTargetElectronPT;
-
-        if ( electronTaggerEnergy( taggerSimHits , preTargetElectronEnergy , preTargetElectronPT ) ) {
-            //something funky happened upstream
-            // SKIP EVENT
-            skippedEvents_++;
-            //return;
-        }
+//        const TClonesArray *taggerSimHits = event.getCollection( taggerSimHitsCollName_ , taggerSimHitsPassName_ );
+//        double preTargetElectronEnergy, preTargetElectronPT;
+//
+//        if ( electronTaggerEnergy( taggerSimHits , preTargetElectronEnergy , preTargetElectronPT ) ) {
+//            //something funky happened upstream
+//            // SKIP EVENT
+//            skippedEvents_++;
+//            //return;
+//        }
 
         const TClonesArray *ecalDigiHits = event.getCollection( ecalDigiCollName_ , ecalDigiPassName_ );
         double ecalReconEnergy = calculateReconEnergy( ecalDigiHits );
@@ -98,8 +98,8 @@ namespace ldmx {
 
         if ( totalEnergyPN < lowPNEnergy_ ) {
             
-            h_ReconE_TaggerElecE->Fill( ecalReconEnergy , preTargetElectronEnergy );
-            h_ReconE_TaggerElecPT->Fill( ecalReconEnergy , preTargetElectronPT );
+//            h_ReconE_TaggerElecE->Fill( ecalReconEnergy , preTargetElectronEnergy );
+//            h_ReconE_TaggerElecPT->Fill( ecalReconEnergy , preTargetElectronPT );
 
             if ( ecalReconEnergy < lowReconEnergy_ ) {
                 //signal region low pn shower - worrisome
