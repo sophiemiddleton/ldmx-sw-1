@@ -35,6 +35,8 @@
 
 namespace ldmx {
 
+    class ParticleGun; 
+
     /**
      * @class PrimaryGeneratorAction
      * @brief Implementation of Geant4 primary generator action
@@ -107,6 +109,9 @@ namespace ldmx {
              */
             void smearingBeamspot(G4Event* anEvent);
 
+            /** By default, G4ParticleGun is used as the primary generator. */
+            ParticleGun* gun; 
+
             /**
              * The primary generator.
              */
@@ -122,13 +127,13 @@ namespace ldmx {
             bool useBeamspot_{false};
             
             /** Extent of the beamspot in x. */
-            double beamspotXSize_{20.};            
+            double beamspotXSize_{0};            
             
             /** Extent of the beamspot in y. */
-            double beamspotYSize_{10.};   
+            double beamspotYSize_{0};   
 
             /** Extent of the beamspot in y. */
-            double beamspotZSize_{1.};   
+            double beamspotZSize_{0.};   
 
             /** The index of the last generator in the list of generators. */ 
             int indexMpg_{-1};          

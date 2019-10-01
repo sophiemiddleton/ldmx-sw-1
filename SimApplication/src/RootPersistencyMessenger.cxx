@@ -1,7 +1,23 @@
 #include "SimApplication/RootPersistencyMessenger.h"
 
-// STL
+//----------------//
+//   C++ StdLib   //
+//----------------//
 #include <string>
+
+//------------//
+//   Geant4   //
+//------------//
+#include "G4UIdirectory.hh"
+#include "G4UIparameter.hh"
+#include "G4UIcmdWithABool.hh"
+#include "G4UIcmdWithAnInteger.hh"
+#include "G4UIcmdWithAString.hh"
+
+//-------------//
+//   ldmx-sw   //
+//-------------//
+#include "SimApplication/RootPersistencyManager.h"
 
 namespace ldmx {
 
@@ -52,6 +68,13 @@ namespace ldmx {
         dropCmd_ = new G4UIcmdWithAString{"/ldmx/persistency/root/dropCol", this}; 
         dropCmd_->AvailableForStates(G4ApplicationState::G4State_Idle);
         dropCmd_->SetGuidance("Drop the hits associated with the specified collection."); 
+    
+        descriptionCmd_ = new G4UIcmdWithAString{"/ldmx/persistency/root/description", this};
+        descriptionCmd_->SetGuidance("Description of this run.");  
+
+        runCmd_ = new G4UIcmdWithAnInteger{"/ldmx/persistency/root/runNumber", this}; 
+        runCmd_->AvailableForStates(G4ApplicationState::G4State_Idle);
+        runCmd_->SetGuidance("Set the run number."); 
     }
 
     RootPersistencyMessenger::~RootPersistencyMessenger() {
@@ -60,9 +83,10 @@ namespace ldmx {
         delete enableCmd_;
         delete disableCmd_;
         delete comprCmd_;
-        //delete modeCmd_;
         delete rootDir_;
-        delete dropCmd_; 
+        delete dropCmd_;
+        delete descriptionCmd_; 
+        delete runCmd_;  
     }
 
     void RootPersistencyMessenger::SetNewValue(G4UIcommand* command, G4String newValues) {
@@ -85,14 +109,20 @@ namespace ldmx {
             } else if (command == comprCmd_) {
                 int compr = std::stoi(newValues);
                 rootIO_->setCompressionLevel(compr);
-            } /*else if (command == modeCmd_) {
-             rootIO_->getWriter()->setMode(newValues);
-             }*/else if (command == hitContribsCmd_) {
-                rootIO_->setEnableHitContribs(hitContribsCmd_->GetNewBoolValue(newValues.c_str()));
+            } else if (command == hitContribsCmd_) {
+                rootIO_->setEnableHitContribs(
+                        static_cast<G4UIcmdWithABool*>(hitContribsCmd_)->GetNewBoolValue(newValues.c_str()));
             } else if (command == compressContribsCmd_) {
-                rootIO_->setCompressHitContribs(compressContribsCmd_->GetNewBoolValue(newValues.c_str()));
+                rootIO_->setCompressHitContribs(
+                        static_cast<G4UIcmdWithABool*>(compressContribsCmd_)->GetNewBoolValue(newValues.c_str()));
             } else if (command == dropCmd_) { 
                 rootIO_->dropCollection(newValues); 
+            } else if (command == descriptionCmd_) {
+                rootIO_->setRunDescription(newValues);  
+            } else if (command == runCmd_) { 
+                rootIO_->setRunNumber(
+                       static_cast<G4UIcmdWithAnInteger*>(runCmd_)->GetNewIntValue(
+                           newValues.c_str())); 
             }
         } else {
             // Re-enable ROOT IO.
