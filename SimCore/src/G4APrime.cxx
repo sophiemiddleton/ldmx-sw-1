@@ -1,4 +1,4 @@
-#include "SimApplication/G4APrime.h"
+#include "SimCore/G4APrime.h"
 
 G4APrime* G4APrime::theAPrime = 0;
 

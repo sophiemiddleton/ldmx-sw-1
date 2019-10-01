@@ -1,4 +1,4 @@
-#include "SimApplication/G4eDarkBremsstrahlung.h"
+#include "SimCore/G4eDarkBremsstrahlung.h"
 
 using namespace std;
 
@@ -47,9 +47,14 @@ void G4eDarkBremsstrahlung::PrintInfo()
 {
    if(EmModel(1))
    {
-      G4cout << "    LPM flag: " << "false " << " for E > " << EmModel(1)->HighEnergyLimit()/GeV<< " GeV";
-      G4cout << G4endl;
+//      G4cout << "    LPM flag: " << "false " << " for E > " << EmModel(1)->HighEnergyLimit()/GeV<< " GeV";
+//      G4cout << G4endl;
+      
    }
 }
 
-
+void G4eDarkBremsstrahlung::SetMethod(std::string method_in)
+{
+   ((G4eDarkBremsstrahlungModel*)EmModel(1))->SetMethod(method_in);
+   return;
+}

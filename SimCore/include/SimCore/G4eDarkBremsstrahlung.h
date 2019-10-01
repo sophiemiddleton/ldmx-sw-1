@@ -35,6 +35,8 @@ class G4eDarkBremsstrahlung : public G4VEnergyLossProcess
 
       virtual void PrintInfo();
 
+      void SetMethod(std::string method_in);
+
    protected:
 
       virtual void InitialiseEnergyLossProcess(const G4ParticleDefinition*,

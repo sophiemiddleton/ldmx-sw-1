@@ -18,6 +18,9 @@
 #include "SimPlugins/UserActionPlugin.h"
 #include "SimPlugins/DarkBremXsecBiasingMessenger.h"
 
+// Sim Core
+#include "SimCore/G4eDarkBremsstrahlung.h"
+
 namespace ldmx {
 
     /**
@@ -85,10 +88,21 @@ namespace ldmx {
                 xsecBiasingFactor_ = xsecBiasingFactor;
             }
 
+	    /**
+	     * Set the simulation mode.
+	     * @param mode The new simulation mode.
+	     */
+	    void setXsecSimulationMode(std::string mode) {
+	        mode_ = mode;
+            }
+
         private:
 
             /** DarkBrem cross-section multiplicative factor. */
             double xsecBiasingFactor_ {1000};
+
+            /** DarkBrem simulation mode ("forward_only" or "cm_scaling") */
+            std::string mode_ {"forward_only"};
 
             /** Messenger used to parse arguments specified in a macro. */
             DarkBremXsecBiasingMessenger* messenger_ {new DarkBremXsecBiasingMessenger {this}};

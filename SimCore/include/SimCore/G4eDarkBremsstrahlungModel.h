@@ -38,7 +38,11 @@
 #include <stdio.h>
 #include <dirent.h>
 
+// ROOT
+#include "TLorentzVector.h"
+
 struct ParamsForChi {double AA; double ZZ; double MMA; double EE0;};
+struct frame {TLorentzVector* fEl; TLorentzVector* cm; G4double E;};
 
 class G4Element;
 class G4ParticleChangeForLoss;
@@ -75,7 +79,9 @@ class G4eDarkBremsstrahlungModel : public G4VEmModel
      
      void MakePlaceholders();
 
-     std::pair < double, double > GetMadgraphData(double E0);
+     void SetMethod(std::string);
+
+     frame GetMadgraphData(double E0);
 
    protected:
 
@@ -107,8 +113,9 @@ class G4eDarkBremsstrahlungModel : public G4VEmModel
       G4double lowKinEnergy;
       G4double probsup;
       G4bool   isInitialised;
+      std::string method;
       G4bool lhe_loaded;
-      std::map< double , std::vector < std::pair < double, double > > > mgdata;
+      std::map< double , std::vector < frame > > mgdata;
       std::vector < std::pair < double, int > > energies;
       std::vector<G4DataVector*> partialSumSigma;
   

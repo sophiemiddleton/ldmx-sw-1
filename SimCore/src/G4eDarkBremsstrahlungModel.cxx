@@ -1,4 +1,4 @@
-#include "SimApplication/G4eDarkBremsstrahlungModel.h"
+#include "SimCore/G4eDarkBremsstrahlungModel.h"
 
 using namespace std;
 
@@ -9,6 +9,7 @@ G4eDarkBremsstrahlungModel::G4eDarkBremsstrahlungModel(const G4ParticleDefinitio
      isElectron(true),
      probsup(1.0),
      isInitialised(false),
+     method("forward_only"),
      lhe_loaded(false)
 {
    if(p) { SetParticle(p); } //Verify that the particle is an electron.
@@ -112,21 +113,34 @@ void G4eDarkBremsstrahlungModel::ParseLHE (std::string fname)
    {
       std::istringstream iss(line);
       int ptype, state;
-      double skip, px, py, pz, E, pt, efrac, M;
+      double skip, px, py, pz, E, pt, M;
       if (iss >> ptype >> state >> skip >> skip >> skip >> skip >> px >> py >> pz >> E >> M )
       {
          if((ptype==11)&&(state==-1))
 	 {
 	    double ebeam = E;
+	    double e_px, e_py, e_pz, a_px, a_py, a_pz, e_E, a_E, e_M, a_M; 
 	    if (mgdata.count(ebeam) == 0) {mgdata[ebeam];}
 	    for(int i=0;i<2;i++) {std::getline(ifile,line);}
 	    std::istringstream jss(line);
-	    jss >> ptype >> state >> skip >> skip >> skip >> skip >> px >> py >> pz >> E >> M; 
+	    jss >> ptype >> state >> skip >> skip >> skip >> skip >> e_px >> e_py >> e_pz >> e_E >> e_M; 
             if((ptype==11)&&(state==1)) //Find a final state electron.
             {
-               pt=sqrt(px*px+py*py);
-               efrac = (E-M)/(ebeam-M-MA);
-               mgdata[ebeam].push_back(std::make_pair(efrac,pt));
+               for(int i=0;i<2;i++) {std::getline(ifile,line);}
+	       std::istringstream kss(line);
+	       kss >> ptype >> state >> skip >> skip >> skip >> skip >>  a_px >> a_py >> a_pz >> a_E >> a_M;
+	       if((ptype==622)&&(state==1))
+	       {
+	          frame evnt;
+		  double cmpx = a_px+e_px;
+		  double cmpy = a_py+e_py;
+		  double cmpz = a_pz+e_pz;
+		  double cmE = a_E + e_E;
+		  evnt.fEl = new TLorentzVector(e_px,e_py,e_pz,e_E);
+		  evnt.cm = new TLorentzVector(cmpx,cmpy,cmpz,cmE);
+		  evnt.E = ebeam;
+		  mgdata[ebeam].push_back(evnt);
+	       }
             }
 	 }   
       }
@@ -142,15 +156,13 @@ void G4eDarkBremsstrahlungModel::MakePlaceholders()
    {
       energies.push_back(std::make_pair(iter.first,iter.second.size()));
    }
-
 }
 
-std::pair < double, double > G4eDarkBremsstrahlungModel::GetMadgraphData(double E0)
+frame G4eDarkBremsstrahlungModel::GetMadgraphData(double E0)
 //Gets the energy fraction and Pt from the imported LHE data. E0 should be in GeV, returns the total energy and Pt in GeV. Scales from the closest imported beam energy above the given value (scales down to avoid biasing issues).
 {
    double samplingE = energies[0].first;
-   double efrac = 0;
-   double pt = 0;
+   frame cmdata;
    uint64_t i=0;
    bool pass = false;
    G4double Mel = 5.1E-04;
@@ -170,15 +182,13 @@ std::pair < double, double > G4eDarkBremsstrahlungModel::GetMadgraphData(double 
    //on energies[i].second.
    if(energies[i].second>=double(mgdata[energies[i].first].size())) {energies[i].second = 0;}
 
-   //Get the kinetic energy fraction and pt from the index given by the placeholder.
-   efrac = mgdata[energies[i].first].at(energies[i].second).first;
-   pt = mgdata[energies[i].first].at(energies[i].second).second;
+   //Get the lorentz vectors from the index given by the placeholder.
+   cmdata = mgdata[energies[i].first].at(energies[i].second);
 
    //Increment the placeholder.
    energies[i].second=energies[i].second+1;
 
-   double avail = E0-MA-Mel; //Find the kinetic energy for the new beam energy.
-   return std::make_pair(efrac*avail+Mel,pt);
+   return cmdata;
 }
 
 G4double G4eDarkBremsstrahlungModel::DsigmaDx (double x, void * pp)
@@ -341,7 +351,9 @@ void G4eDarkBremsstrahlungModel::SampleSecondaries(std::vector<G4DynamicParticle
 
    if(lhe_loaded==false)
    {
-      //Read all of the lhe files in the Resources/ directory. Assumes that they are of the correct mass, need to implement method of separating masses (either filenames, or skipping events with incorrect masses).
+      //Read all of the lhe files in the Resources/ directory. Assumes that they 
+      //are of the correct mass, need to implement method of separating masses 
+      //(either filenames, or skipping events with incorrect masses).
       DIR *dir;
       dir = opendir("Resources/"); 
       struct dirent *directory;
@@ -363,25 +375,51 @@ void G4eDarkBremsstrahlungModel::SampleSecondaries(std::vector<G4DynamicParticle
    G4double Mel = 5.1E-04;
    E0 = E0 / CLHEP::GeV; //Convert the energy to GeV, the units used in the LHE files.
 
-   std::pair < double, double > data = GetMadgraphData(E0);
-   double EAcc = data.first;
-   double Pt = data.second;
-   double P = sqrt(EAcc*EAcc-Mel*Mel);
-   double PhiAcc = G4UniformRand()*2.*3.14159;
-   int i = 0;
-   while(Pt*Pt+Mel*Mel>EAcc*EAcc) //Skip events until the Pt is less than the energy.
+   frame data = GetMadgraphData(E0);
+   double EAcc, Pt, P, PhiAcc;
+   if(method == "forward_only")
    {
-      i++;
-      data = GetMadgraphData(E0);
-      EAcc = data.first;
-      Pt = data.second;
+      EAcc = (data.fEl->E()-Mel)/(data.E-Mel-MA)*(E0-Mel-MA);
+      Pt = data.fEl->Pt();
       P = sqrt(EAcc*EAcc-Mel*Mel);
-      if(i>10000)
+      PhiAcc = data.fEl->Phi();
+      int i = 0;
+      while(Pt*Pt+Mel*Mel>EAcc*EAcc) //Skip events until the Pt is less than the energy.
       {
-         printf("Did not manage to simulate. E0 = %e, EAcc = %e\n", E0, EAcc);
+         i++;
+         data = GetMadgraphData(E0);
+         EAcc = (data.fEl->E()-Mel)/(data.E-Mel-MA)*(E0-Mel-MA);
+         Pt = data.fEl->Pt();
+         P = sqrt(EAcc*EAcc-Mel*Mel);
+	 PhiAcc = data.fEl->Phi();
+
+         if(i>10000)
+         {
+            printf("Did not manage to simulate. E0 = %e, EAcc = %e\n", E0, EAcc);
+         }
       }
+   }   
+   else if(method == "cm_scaling")
+   {
+      TLorentzVector* el = new TLorentzVector(data.fEl->X(),data.fEl->Y(),data.fEl->Z(),data.fEl->E());
+      double ediff = data.E-E0;
+      TLorentzVector* newcm = new TLorentzVector(data.cm->X(),data.cm->Y(),data.cm->Z()-ediff,data.cm->E()-ediff);
+      el->Boost(-1.*data.cm->BoostVector());
+      el->Boost(newcm->BoostVector());
+      double newE = (data.fEl->E()-Mel)/(data.E-Mel-MA)*(E0-Mel-MA);
+      el->SetE(newE);
+      EAcc = el->E();
+      Pt = el->Pt();
+      P = el->P();
    }
-   
+   else 
+   {
+      G4cout << "Method not recognized. Skipping Event.\n";
+      EAcc = E0;
+      P = dp->GetTotalMomentum();
+      Pt = sqrt(dp->Get4Momentum().px()*dp->Get4Momentum().px()+dp->Get4Momentum().py()*dp->Get4Momentum().py());
+   }
+
    EAcc = EAcc*CLHEP::GeV; //Change the energy back to MeV, the internal GEANT unit.
 
    G4double momentum = sqrt(EAcc*EAcc-electron_mass_c2*electron_mass_c2); //Electron momentum in MeV.
@@ -446,5 +484,9 @@ void G4eDarkBremsstrahlungModel::SampleSecondaries(std::vector<G4DynamicParticle
    return elm;
  }
  
- 
+void G4eDarkBremsstrahlungModel::SetMethod(std::string method_in)
+{
+   method = method_in;
+   return;
+}
 
