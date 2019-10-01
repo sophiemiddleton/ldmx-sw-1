@@ -33,15 +33,9 @@ namespace ldmx {
 
     void AnalyzePN::analyze(const ldmx::Event& event) {
 
-//        const TClonesArray *taggerSimHits = event.getCollection( taggerSimHitsCollName_ , taggerSimHitsPassName_ );
-//        double preTargetElectronEnergy, preTargetElectronPT;
-//
-//        if ( electronTaggerEnergy( taggerSimHits , preTargetElectronEnergy , preTargetElectronPT ) ) {
-//            //something funky happened upstream
-//            // SKIP EVENT
-//            skippedEvents_++;
-//            //return;
-//        }
+        const TClonesArray *taggerSimHits = event.getCollection( taggerSimHitsCollName_ , taggerSimHitsPassName_ );
+        double preTargetElectronEnergy, preTargetElectronPT;
+        bool taggerWouldVeto = electronTaggerEnergy( taggerSimHits , preTargetElectronEnergy , preTargetElectronPT );
 
         const TClonesArray *ecalDigiHits = event.getCollection( ecalDigiCollName_ , ecalDigiPassName_ );
         double ecalReconEnergy = calculateReconEnergy( ecalDigiHits );
@@ -60,6 +54,16 @@ namespace ldmx {
                 continue;
             } 
        
+            if ( simParticle->getTrackID() == 1 and
+                 simParticle->getVertex().at(2) < -500.0 and
+                 taggerWouldVeto 
+               ) { 
+                //something funky happened upstream and primary electron was generated upstream of tagger
+                // SKIP EVENT
+                skippedEvents_++;
+                return;
+            }
+
             double energy = simParticle->getEnergy();
 
             if ( simParticle->getPdgID() == 22 ) {
@@ -98,8 +102,10 @@ namespace ldmx {
 
         if ( totalEnergyPN < lowPNEnergy_ ) {
             
-//            h_ReconE_TaggerElecE->Fill( ecalReconEnergy , preTargetElectronEnergy );
-//            h_ReconE_TaggerElecPT->Fill( ecalReconEnergy , preTargetElectronPT );
+            if ( taggerSimHits->GetEntriesFast() > 0 ) {
+                h_ReconE_TaggerElecE->Fill( ecalReconEnergy , preTargetElectronEnergy );
+                h_ReconE_TaggerElecPT->Fill( ecalReconEnergy , preTargetElectronPT );
+            }
 
             if ( ecalReconEnergy < lowReconEnergy_ ) {
                 //signal region low pn shower - worrisome
