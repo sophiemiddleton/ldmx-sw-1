@@ -13,7 +13,7 @@ namespace ldmx {
         = {1.641, 3.526, 5.184, 6.841,
         8.222, 8.775, 8.775, 8.775, 8.775, 8.775, 8.775, 8.775, 8.775, 8.775,
         8.775, 8.775, 8.775, 8.775, 8.775, 8.775, 8.775, 8.775, 12.642, 16.51,
-        16.51, 16.51, 16.51, 16.51, 16.51, 16.51, 16.51, 16.51, 8.45}; 
+        16.51, 16.51, 16.51, 16.51, 16.51, 16.51, 16.51, 16.51, 16.51, 8.45}; 
    
     const double EcalDigiProducer::ELECTRONS_PER_MIP = 33000.0; // e-
 
@@ -21,12 +21,17 @@ namespace ldmx {
 
     EcalDigiProducer::EcalDigiProducer(const std::string& name, Process& process) :
         Producer(name, process) {
-        noiseGenerator_ = new NoiseGenerator();
+        noiseGenerator_ = std::make_unique<NoiseGenerator>();
+        noiseInjector_ = std::make_unique<TRandom3>(time(nullptr));
+    }
+
+    EcalDigiProducer::~EcalDigiProducer() {
+        if ( ecalDigis_ ) delete ecalDigis_;
     }
 
     void EcalDigiProducer::configure(const ParameterSet& ps) {
 
-        hexReadout_ = new EcalHexReadout();
+        hexReadout_ = std::make_unique<EcalHexReadout>();
 
         noiseIntercept_ = ps.getDouble("noiseIntercept",0.); 
         noiseSlope_     = ps.getDouble("noiseSlope",1.);

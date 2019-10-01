@@ -1,22 +1,41 @@
+/**
+ * @file RunManager.cxx
+ * @brief Class providing a Geant4 run manager implementation.
+ * @author Jeremy McCormick, SLAC National Accelerator Laboratory
+ * @author Omar Moreno, SLAC National Accelerator Laboratory
+ */
+
 #include "SimApplication/RunManager.h"
 
-// LDMX
+//-------------//
+//   ldmx-sw   //
+//-------------//
 #include "SimApplication/APrimePhysics.h"
+#include "SimApplication/DetectorConstruction.h"
 #include "SimApplication/GammaPhysics.h"
+#include "SimApplication/ParallelWorld.h"
+#include "SimApplication/ParallelWorldMessenger.h"
 #include "SimApplication/PrimaryGeneratorAction.h"
 #include "SimApplication/PrimaryGeneratorMessenger.h"
 #include "SimApplication/RootPersistencyMessenger.h"
+#include "SimApplication/RootPersistencyManager.h" 
 #include "SimApplication/SteppingAction.h"
 #include "SimApplication/UserEventAction.h"
 #include "SimApplication/UserRunAction.h"
 #include "SimApplication/UserStackingAction.h"
 #include "SimApplication/UserTrackingAction.h"
+#include "SimPlugins/PluginManager.h"
+#include "SimPlugins/PluginMessenger.h"
 
-// Geant4
+//------------//
+//   Geant4   //
+//------------//
 #include "FTFP_BERT.hh"
+#include "G4GDMLParser.hh"
 #include "G4GenericBiasingPhysics.hh"
 #include "G4VModularPhysicsList.hh"
 #include "G4ParallelWorldPhysics.hh"
+#include "G4PhysListFactory.hh"
 
 namespace ldmx {
 
@@ -24,27 +43,29 @@ namespace ldmx {
         pluginManager_ = new PluginManager();
         pluginMessenger_ = new PluginMessenger(pluginManager_);
         pwMessenger_ = new ParallelWorldMessenger(this);
+        
+        // Setup messenger for physics list.
+        physicsListFactory_ = new G4PhysListFactory;
     }
 
     RunManager::~RunManager() {
         delete pluginManager_;
         delete pluginMessenger_;
+        delete physicsListFactory_; 
     }
 
-    void RunManager::InitializePhysics() {
+    void RunManager::setupPhysics() {
 
-        G4VUserPhysicsList* thePhysicsList = new FTFP_BERT;
-        G4VModularPhysicsList* modularPhysicsList = dynamic_cast<G4VModularPhysicsList*>(thePhysicsList);
-
+        G4VModularPhysicsList* pList = physicsListFactory_->GetReferencePhysList("FTFP_BERT");
+        
         if (isPWEnabled_) {
             std::cout << "[ RunManager ]: Parallel worlds physics list has been registered." << std::endl;
-            modularPhysicsList->RegisterPhysics(new G4ParallelWorldPhysics("ldmxParallelWorld"));
+            pList->RegisterPhysics(new G4ParallelWorldPhysics("ldmxParallelWorld"));
         }
-
-        modularPhysicsList->RegisterPhysics(new APrimePhysics);
-        modularPhysicsList->RegisterPhysics(new GammaPhysics);
-        //modularPhysicsList->RegisterPhysics(new TungstenIonPhysics);
-
+        
+        pList->RegisterPhysics(new APrimePhysics);
+        pList->RegisterPhysics(new GammaPhysics);
+       
         if (BiasingMessenger::isBiasingEnabled()) {
 
             std::cout << "[ RunManager ]: Enabling biasing of particle type " << BiasingMessenger::getParticleType() << std::endl;
@@ -56,17 +77,16 @@ namespace ldmx {
             biasingPhysics->Bias(BiasingMessenger::getParticleType());
 
             // Register the physics constructor to the physics list:
-            modularPhysicsList->RegisterPhysics(biasingPhysics);
+            pList->RegisterPhysics(biasingPhysics);
         }
 
-        SetUserInitialization(thePhysicsList);
-
-        G4RunManager::InitializePhysics();
+        this->SetUserInitialization(pList);
     }
 
     void RunManager::Initialize() {
         
-        
+        setupPhysics();
+
         // The parallel world needs to be registered before the mass world is
         // constructed i.e. before G4RunManager::Initialize() is called. 
         if (isPWEnabled_) {
@@ -106,4 +126,8 @@ namespace ldmx {
         new RootPersistencyMessenger(rootIO);
     }
 
-}
+    DetectorConstruction* RunManager::getDetectorConstruction() {
+        return static_cast<DetectorConstruction*>(this->userDetector); 
+    }
+
+} // ldmx 

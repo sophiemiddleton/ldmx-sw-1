@@ -33,7 +33,10 @@ void ldmx::DarkBremXsecBiasingPlugin::beginRun(const G4Run*) {
         if (process->GetProcessName().compareTo("eDBrem") == 0) {
 
             ((G4VEnergyLossProcess*)process)->SetCrossSectionBiasingFactor(xsecBiasingFactor_);
-            std::cout << "[ DarkBremXsecBiasingPlugin ]: " << "Dark Brem xsec has increased by a factor of " << xsecBiasingFactor_ << std::endl;
+            ((G4eDarkBremsstrahlung*)process)->SetMethod(mode_);
+
+	    std::cout << "[ DarkBremXsecBiasingPlugin ]: " << "Dark Brem xsec has increased by a factor of " << xsecBiasingFactor_ << std::endl;
+	    std::cout << "[ DarkBremXsecBiasingPlugin ]: " << "Dark Brem simulation mode set to " << mode_ << std::endl;
         }
     }
 }

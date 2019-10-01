@@ -54,6 +54,11 @@ namespace ldmx {
              * The command for setting the cross-section biasing factor.
              */
             G4UIcommand* xsecFactorCmd_;
+
+	    /**
+	     * The command for changing the simulation mode.
+	     */
+	    G4UIcommand* modeCmd_;
     };
 
 }
