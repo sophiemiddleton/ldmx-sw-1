@@ -1,9 +1,10 @@
 /persistency/gdml/read detector.gdml
 /ldmx/plugins/load TargetDarkBremFilter libBiasing.so
+/ldmx/plugins/TargetDarkBremFilter/volume target_PV
 /run/initialize
 /ldmx/plugins/load DarkBremXsecBiasingPlugin
 /ldmx/plugins/DarkBremXsecBiasingPlugin/mode forward_only 
-/ldmx/plugins/DarkBremXsecBiasingPlugin/xsecFactor 10000
+/ldmx/plugins/DarkBremXsecBiasingPlugin/xsecFactor 1
 /gun/particle e-
 /gun/energy 4 GeV
 /gun/position -27.926 5 -700 mm
