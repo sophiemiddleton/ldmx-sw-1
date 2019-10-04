@@ -21,7 +21,7 @@ analyzePN.parameters[ "taggerSimHitsPassName" ] = "sim"
 analyzePN.parameters[ "minPrimaryPhotonEnergy" ] = 2800. #MeV - matches trigger cut
 
 # cuts on primary electron in last layer of tagger (min energy, max pT)
-analyzePN.parameters[ "energyCut" ] = 2800. #MeV
+analyzePN.parameters[ "energyCut" ] = 3800. #MeV
 analyzePN.parameters[ "pTCut"     ] = 100. #MeV
 
 # cuts on event characteristics to be given storage hint "keep" (both are maxima)

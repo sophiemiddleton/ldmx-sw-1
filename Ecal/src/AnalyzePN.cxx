@@ -10,23 +10,23 @@ namespace ldmx {
 
     void AnalyzePN::configure(const ldmx::ParameterSet& ps) {
 
-        simParticlesCollName_ = ps.getString( "simParticlesCollName" , "SimParticles" );
-        simParticlesPassName_ = ps.getString( "simParticlesPassName" , "sim" );
+        simParticlesCollName_ = ps.getString( "simParticlesCollName" );
+        simParticlesPassName_ = ps.getString( "simParticlesPassName" );
 
-        ecalDigiCollName_ = ps.getString( "ecalDigiCollName" , "ecalDigis" );
-        ecalDigiPassName_ = ps.getString( "ecalDigiPassName" , "" );
+        ecalDigiCollName_ = ps.getString( "ecalDigiCollName" );
+        ecalDigiPassName_ = ps.getString( "ecalDigiPassName" );
 
-        taggerSimHitsCollName_ = ps.getString( "taggerSimHitsCollName" , "TaggerSimHits" );
-        taggerSimHitsPassName_ = ps.getString( "taggerSimHitsPassName" , "sim" );
+        taggerSimHitsCollName_ = ps.getString( "taggerSimHitsCollName" );
+        taggerSimHitsPassName_ = ps.getString( "taggerSimHitsPassName" );
 
-        minPrimaryPhotonEnergy_ = ps.getDouble( "minPrimaryPhotonEnergy" , 2800.0 );
+        minPrimaryPhotonEnergy_ = ps.getDouble( "minPrimaryPhotonEnergy" );
 
-        energyCut_ = ps.getDouble( "energyCut" , 2800.0 );
-        pTCut_     = ps.getDouble( "pTCut" , 100.0 );
+        energyCut_ = ps.getDouble( "energyCut" );
+        pTCut_     = ps.getDouble( "pTCut"     );
 
         //constants to determine if event is saved
-        lowReconEnergy_ = ps.getDouble( "lowReconEnergy" , 2000.0 );
-        lowPNEnergy_    = ps.getDouble( "lowPNEnergy" , 100.0 );
+        lowReconEnergy_ = ps.getDouble( "lowReconEnergy" );
+        lowPNEnergy_    = ps.getDouble( "lowPNEnergy"    );
 
         return;
     }
@@ -54,15 +54,16 @@ namespace ldmx {
                 continue;
             } 
        
-            if ( simParticle->getTrackID() == 1 and
+            if ( (simParticle->getTrackID() == 1 and
                  simParticle->getVertex().at(2) < -500.0 and
-                 taggerWouldVeto 
+                 taggerWouldVeto ) or unphysicalWideAngleBrem( simParticle )
                ) { 
                 //something funky happened upstream and primary electron was generated upstream of tagger
+                //or particle was an unphysical wide angle brem
                 // SKIP EVENT
                 skippedEvents_++;
                 return;
-            }
+            } 
 
             double energy = simParticle->getEnergy();
 
@@ -232,6 +233,33 @@ namespace ldmx {
         }
         
         return ecalTotalEnergy;
+    }
+
+    bool AnalyzePN::unphysicalWideAngleBrem( const SimParticle *particle ) const {
+        
+        //only considering photons for this cut
+        if ( particle->getPdgID() != 22 ) { return false; }
+
+        //only photons originating in target
+        //  target dimensions pulled from v9 gdml file
+        std::vector<double> vertex = particle->getVertex();
+        if ( abs(vertex.at(2)) > 0.3504/2 or abs(vertex.at(1)) > 95./2. or abs(vertex.at(0)) > 35./2. ) { return false; }
+
+        //check photons in target minimum momentum transfer
+        double energy = particle->getEnergy();
+        std::vector<double> momentum = particle->getMomentum();
+
+        //theta = arctan( pT / pz )
+        double theta = atan( sqrt( momentum.at(0)*momentum.at(0) + momentum.at(1)*momentum.at(1) ) / momentum.at(2) );
+
+        double E0 = 4000.0; //energy of originating electron (assumed to be beam)
+        
+        //minimum possible momentum transfer for this target photon
+        double Qmin = (E0 * energy * theta*theta ) / ( 4 * ( E0 - energy ) );
+
+        //momentum transfer greater than ~1/fermi are considered unphysical
+        return ( Qmin > 139.531 );
+
     }
 
     bool AnalyzePN::goesPN( const SimParticle *particle ) const {

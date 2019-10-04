@@ -47,6 +47,16 @@ namespace ldmx {
             //totals the non-noise reconstructed energy in ECAL
             double calculateReconEnergy( const TClonesArray *ecalHitColl ) const;
 
+            //checks if particle is unphysical wide angle brem by checking three things:
+            //  1) if it is a photon
+            //  2) if it originated in the target
+            //  3) if the momentum transfer is greater than the scale of the nucleus
+            //  The minimum momentum transfer for a photon of energy k and polar angle theta is
+            //      q_min = E_0 k theta^2 / (4 (E_0-k))
+            //      where E_0 is energy of bremming electron (we set E_0 = E_beam in this function)
+            //  The momentum scale of the nucleus is ~1/fermi~-.139531GeV=139.531MeV
+            bool unphysicalWideAngleBrem( const SimParticle *particle ) const;
+
             //returns true if particle is considered as "going PN"
             //  checks if any children of particle has processType photonNuclear
             bool goesPN( const SimParticle *particle ) const;
