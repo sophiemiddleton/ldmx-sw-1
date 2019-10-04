@@ -113,9 +113,9 @@ namespace ldmx {
             // If the particle didn't produce any secondaries, stop processing
             // the event.
             if (secondaries->size() == 0) { 
-                /*std::cout << "[ TargetDarkBremFilter ]: "
+                std::cout << "[ TargetDarkBremFilter ]: "
                             << "Primary did not produce secondaries --> Killing primary track!" 
-                            << std::endl;*/
+                            << std::endl;
                 
                 track->SetTrackStatus(fKillTrackAndSecondaries);
                 G4RunManager::GetRunManager()->AbortEvent();
@@ -124,8 +124,8 @@ namespace ldmx {
            
             bool hasDBrem = false;
             for (auto& secondary_track : *secondaries) {
-                G4String processName = secondary_track->GetCreatorProcess()->GetProcessName();
-                if (processName.compareTo("eDBrem") == 1) hasDBrem=true;
+                std::string pName = secondary_track->GetParticleDefinition()->GetParticleName();
+                if (pName == "A^1") hasDBrem=true;
             }
 
             if (!hasDBrem) { 
@@ -175,13 +175,21 @@ namespace ldmx {
             } else track->SetTrackStatus(fSuspend);  
 
         } else if (step->GetPostStepPoint()->GetKineticEnergy() == 0) { 
-            /*std::cout << "[ TargetDarkBremFilter ]: "
-                        << "Electron never made it out of the target --> Killing all tracks!"
-                        << std::endl;*/
+            const G4TrackVector* secondaries = step->GetSecondary();
+            bool hasDBrem = false;
+            for (auto& secondary_track : *secondaries) {
+                std::string pName = secondary_track->GetParticleDefinition()->GetParticleName();
+                if (pName =="A^1"){hasDBrem=true;}
+            }
+            if(!hasDBrem){
+                std::cout << "[ TargetDarkBremFilter ]: "
+                          << "Electron never made it out of the target --> Killing all tracks!"
+                          << std::endl;
 
-            track->SetTrackStatus(fKillTrackAndSecondaries);
-            G4RunManager::GetRunManager()->AbortEvent();
-            return;
+                track->SetTrackStatus(fKillTrackAndSecondaries);
+                G4RunManager::GetRunManager()->AbortEvent();
+                return;
+            }
         }
     }
 
