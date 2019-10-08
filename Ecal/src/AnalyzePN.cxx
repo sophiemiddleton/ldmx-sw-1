@@ -219,7 +219,7 @@ namespace ldmx {
 
         } //loop through tagger hits
 
-        return ( electronE < energyCut_ and electronPT > pTCut_ );
+        return ( electronE < energyCut_ or electronPT > pTCut_ );
     }
 
     double AnalyzePN::calculateReconEnergy( const TClonesArray *ecalHitColl ) const {
