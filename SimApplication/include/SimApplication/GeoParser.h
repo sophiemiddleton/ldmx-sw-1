@@ -22,7 +22,7 @@ namespace ldmx {
              *
              * @return The world volume 
              */
-            G4VPhysicalVolume* GetWorldVolume() = 0; 
+            virtual G4VPhysicalVolume* GetWorldVolume() = 0; 
     };
 }
 
