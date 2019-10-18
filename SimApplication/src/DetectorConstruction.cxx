@@ -18,11 +18,6 @@ namespace ldmx {
 
     G4VPhysicalVolume* DetectorConstruction::Construct() {
 
-        if (parser_) { 
-        }
-
-        //auxInfoReader_->readGlobalAuxInfo();
-        //auxInfoReader_->assignAuxInfoToVolumes();
         return parser_->GetWorldVolume();
     }
 
