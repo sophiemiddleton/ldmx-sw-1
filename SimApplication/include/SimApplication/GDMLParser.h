@@ -13,9 +13,11 @@
 #include "SimApplication/GeoParser.h" 
 
 // Forward Declarations
-class G4VPhysicalVolume; 
+class G4VPhysicalVolume;
 
 namespace ldmx { 
+
+    class AuxInfoReader; 
     
     /**
      */
@@ -29,16 +31,16 @@ namespace ldmx {
             /** Destructor */ 
             ~GDMLParser(); 
 
-            /**
-            *
-            */
-            G4VPhysicalVolume* GetWorldVolume() { return parser_->GetWorldVolume(); }
+            G4VPhysicalVolume* GetWorldVolume(); 
+
     
         private: 
 
             G4GDMLParser* parser_{new G4GDMLParser()};
 
-            G4UImessenger* messenger_{nullptr};  
+            G4UImessenger* messenger_{nullptr}; 
+
+            AuxInfoReader* auxInfoReader_{nullptr};  
 
     }; // GDMLParser 
 
