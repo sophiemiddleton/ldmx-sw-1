@@ -18,11 +18,13 @@
 
 // Geant4
 #include "G4VUserDetectorConstruction.hh"
-#include "G4GDMLParser.hh"
 #include "G4LogicalVolume.hh"
 #include "G4LogicalVolumeStore.hh"
 
 namespace ldmx {
+
+    // Forward Declerations
+    class GeoParser; 
 
     /**
      * @class DetectorConstruction
@@ -43,7 +45,7 @@ namespace ldmx {
              * Class constructor.
              * @param theParser GDML parser defining the geometry.
              */
-            DetectorConstruction(G4GDMLParser* theParser);
+            DetectorConstruction(GeoParser* theParser);
 
             /**
              * Class destructor.
@@ -70,10 +72,7 @@ namespace ldmx {
 
         private:
 
-            /**
-             * The GDML parser defining the detector.
-             */
-            G4GDMLParser* parser_;
+            GeoParser* parser_;
 
             /**
              * The auxiliary GDML info reader.
