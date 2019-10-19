@@ -11,11 +11,14 @@ if(NOT CMAKE_BUILD_TYPE)
 endif()
 set(CMAKE_CXX_FLAGS_RELEASE "-O3")
 
-
 # find XercesC installation
 if(XercesC_DIR)
   set(XercesC_INCLUDE_DIR "${XercesC_DIR}/include")
-  set(XercesC_LIBRARY "${XercesC_DIR}/lib/libxerces-c.so")
+  if (${CMAKE_SYSTEM_NAME} MATCHES "Darwin")
+     set(XercesC_LIBRARY "${XercesC_DIR}/lib/libxerces-c.dylib")
+  else()
+     set(XercesC_LIBRARY "${XercesC_DIR}/lib/libxerces-c.so")
+  endif()
   if (NOT EXISTS "${XercesC_LIBRARY}")
     message(FATAL_ERROR "Unable to guess location of Xerces lib.  Please specify using: -DXercesC_LIBRARY")
   endif()
@@ -28,6 +31,10 @@ message(STATUS "XercesC libs found at: ${XercesC_LIBRARIES}")
 message(STATUS "XercesC include dir found at: ${XercesC_INCLUDE_DIRS}")
 get_filename_component(XercesC_LIBRARY_DIR ${XercesC_LIBRARIES} DIRECTORY)
 
+# find ROOT installation
+find_package(ROOT REQUIRED COMPONENTS Core RIO PyROOT Geom Eve Gui)
+message(STATUS "ROOT found at: ${ROOT_DIR}")
+
 # find Geant4 installation
 find_package(Geant4 REQUIRED ui_all vis_all)
 message(STATUS "Geant4 found at: ${Geant4_DIR}")
@@ -37,10 +44,6 @@ find_package(PythonLibs REQUIRED)
 message(STATUS "Python lib found at: ${PYTHON_LIBRARIES}")
 message(STATUS "Python include dir found at: ${PYTHON_INCLUDE_DIRS}")
 get_filename_component(PYTHON_LIBRARY_DIR ${PYTHON_LIBRARIES} DIRECTORY)
-
-# find ROOT installation
-find_package(ROOT REQUIRED COMPONENTS Core RIO PyROOT Geom Eve Gui)
-message(STATUS "ROOT found at: ${ROOT_DIR}")
 
 # find boost headers
 # specify location with -DBOOST_ROOT=<location-of-boost-prefix>

@@ -13,6 +13,7 @@
 #include <cmath>
 #include <vector>
 #include <unordered_map>
+#include <string>
 
 // Forward declaration
 class TClonesArray; 
