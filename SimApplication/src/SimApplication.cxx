@@ -5,6 +5,7 @@
 #include "SimApplication/RunManager.h"
 #include "SimApplication/SimApplicationMessenger.h"
 #include "SimApplication/GDMLParser.h" 
+#include "SimApplication/LCDDparser.h" 
 
 // STL
 #include <vector>
@@ -41,7 +42,8 @@ namespace ldmx {
         G4RunManager* runManager = new RunManager;
 
         // Setup GDML parser and messenger.
-        auto parser{new GDMLParser()}; 
+        //auto parser{new GDMLParser()}; 
+        auto parser{new LCDDparser()}; 
 
         // Create application messenger.
         new SimApplicationMessenger();
