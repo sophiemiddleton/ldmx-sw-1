@@ -66,6 +66,13 @@ if (GDML_DIR)
     message(STATUS "GDML library set to: ${GDML_LIBRARY}")
 endif()
 
+find_package(LCIO REQUIRED)
+if (LCIO_DIR)
+    message(STATUS "LCIO dir set to: ${LCIO_DIR}")
+    message(STATUS "LCIO include dir set to: ${LCIO_INCLUDE_DIR}")
+    message(STATUS "LCIO library set to: ${LCIO_LIBRARY}")
+endif()
+
 # mag field map installation
 option(INSTALL_FIELDMAP "Install field map data from MagFieldMap sub-module" ON)
 message(STATUS "MagFieldMap installation: ${INSTALL_FIELDMAP}")
