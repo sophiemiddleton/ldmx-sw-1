@@ -50,6 +50,14 @@ if(Boost_FOUND)
     include_directories(${Boost_INCLUDE_DIRS})
 endif()
 
+# Find the ACTS headers and library
+list(APPEND CMAKE_MODULE_PATH ${ACTS_DIR}/share/cmake/Acts)
+find_package(Acts)
+if(Acts_FOUND)
+    message(STATUS "ACTS include dir found at: ${ACTS_INCLUDE_DIR}")
+    message(STATUS "ACTS libraries found at: ${ACTS_LIBRARY_DIR}")
+endif()
+
 # mag field map installation
 option(INSTALL_FIELDMAP "Install field map data from MagFieldMap sub-module" ON)
 message(STATUS "MagFieldMap installation: ${INSTALL_FIELDMAP}")
