@@ -17,6 +17,7 @@
 //   ldmx-sw   //
 //-------------//
 #include "Biasing/BiasingMessenger.h"
+#include "SimApplication/LcioPersistencyManager.h" 
 
 class G4PhysListFactory; 
 
@@ -99,6 +100,8 @@ namespace ldmx {
 
             /** Path to GDML description of parallel world. */
             std::string parallelWorldPath_{""};
+
+            LcioPersistencyManager* lcioMgr_{nullptr}; 
 
     }; // RunManager
 } // ldmx

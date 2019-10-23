@@ -3,6 +3,7 @@
 // LDMX
 #include "SimPlugins/PluginManager.h"
 #include "SimApplication/RootPersistencyManager.h"
+#include "SimApplication/LcioPersistencyManager.h"
 
 namespace ldmx {
 
@@ -15,8 +16,11 @@ namespace ldmx {
     void UserRunAction::BeginOfRunAction(const G4Run* aRun) {
 
         // Open the ROOT writer.
-        if (RootPersistencyManager::getInstance()) {
+        /*if (RootPersistencyManager::getInstance()) {
             RootPersistencyManager::getInstance()->Initialize();
+        }*/
+        if (LcioPersistencyManager::getInstance()) {
+            LcioPersistencyManager::getInstance()->Initialize();
         }
 
         pluginManager_->beginRun(aRun);
