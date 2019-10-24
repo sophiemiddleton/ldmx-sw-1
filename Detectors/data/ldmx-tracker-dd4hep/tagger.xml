@@ -1,0 +1,15 @@
+<lccdd>
+
+    <info name="tagger"
+        title="Tagger tracker" 
+        author=":" 
+        url="jlfsjklfs"
+        status="development" 
+        version="jkdsajds">
+        <comment>I hope this works. </comment> 
+    </info>
+    
+    <includes> 
+        <gdmlFile ref="tagger.xml" />
+    </includes>
+</lccdd>
