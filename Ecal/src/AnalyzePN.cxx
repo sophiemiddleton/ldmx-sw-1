@@ -19,6 +19,9 @@ namespace ldmx {
         taggerSimHitsCollName_ = ps.getString( "taggerSimHitsCollName" );
         taggerSimHitsPassName_ = ps.getString( "taggerSimHitsPassName" );
 
+        hcalVetoCollName_ = ps.getString( "hcalVetoCollName" );
+        hcalVetoPassName_ = ps.getString( "hcalVetoPassName" );
+
         minPrimaryPhotonEnergy_ = ps.getDouble( "minPrimaryPhotonEnergy" );
 
         energyCut_ = ps.getDouble( "energyCut" );
@@ -32,6 +35,20 @@ namespace ldmx {
     }
 
     void AnalyzePN::analyze(const ldmx::Event& event) {
+
+        //check for Hcal Veto
+        //  if veto exists and event fails to pass it ==> skip event
+        if ( event.exists( hcalVetoCollName_ , hcalVetoPassName_ ) ) {
+            const TClonesArray *hcalVeto = event.getCollection( hcalVetoCollName_ , hcalVetoPassName_ );
+            HcalVetoResult *result = (HcalVetoResult *)(hcalVeto->At(0));
+            if ( ! result->passesVeto() ) {
+                //event failed hcal veto
+                //  leave out of analysis
+                vetoedEvents_++;
+                return;
+            }
+        }
+
 
         const TClonesArray *taggerSimHits = event.getCollection( taggerSimHitsCollName_ , taggerSimHitsPassName_ );
         double preTargetElectronEnergy, preTargetElectronPT;
@@ -122,6 +139,7 @@ namespace ldmx {
 
         lowReconLowPN_ = 0;
         skippedEvents_ = 0;
+        vetoedEvents_  = 0;
 
         TDirectory* baseDirectory = getHistoDirectory();
 
@@ -186,6 +204,7 @@ namespace ldmx {
         printf( "|----------------------------------------------|\n" );
         printf( "| Low PN Events with Recon E < %2.1fGeV : %6d |\n" , lowReconEnergy_/1000.0 , lowReconLowPN_ );
         printf( "| N Events Skipped for Upstream Loss :  %6d |\n" , skippedEvents_ );
+        printf( "| N Events Vetoed by HCal            :  %6d |\n" , vetoedEvents_ );
         printf( "================================================\n" );
 
         return;

@@ -68,6 +68,8 @@ namespace ldmx {
             std::string ecalDigiPassName_; //name of pass to get ecal digis collection
             std::string taggerSimHitsCollName_; //name of collection to calculate tagger sim hits
             std::string taggerSimHitsPassName_; //name of pass to get tagger sim hits collection
+            std::string hcalVetoCollName_; //name of collection for hcal veto
+            std::string hcalVetoPassName_; //name of pass to get hcal veto
             double minPrimaryPhotonEnergy_; //minimum energy to allow a photon to be labled the primary photon
             double energyCut_; //minimum energy for primary electron pre-target to keep event
             double pTCut_; //maximum pT for primary electron pre-target to keep event
@@ -77,6 +79,7 @@ namespace ldmx {
             //Persistence Counters
             int lowReconLowPN_; //counter for low recon energy in a low PN event
             int skippedEvents_; //counter for number of events that were skipped
+            int vetoedEvents_; //events skipped because they were vetoed by hcal
 
             //ROOT Histograms
             TH2F *h_ReconE_TaggerElecE; //recon energy vs energy of electron in last layer of tagger

@@ -17,6 +17,9 @@ analyzePN.parameters[ "ecalDigiPassName" ] = "" #blank means take first match (a
 analyzePN.parameters[ "taggerSimHitsCollName" ] = "TaggerSimHits"
 analyzePN.parameters[ "taggerSimHitsPassName" ] = "sim" 
 
+analyzePN.parameters[ "hcalVetoCollName" ] = "HcalVeto"
+analyzePN.parameters[ "hcalVetoPassName" ] = "" 
+
 # minimum energy to allow photon to be categorized as primary
 analyzePN.parameters[ "minPrimaryPhotonEnergy" ] = 2800. #MeV - matches trigger cut
 
