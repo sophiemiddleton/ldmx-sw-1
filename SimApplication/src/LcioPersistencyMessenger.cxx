@@ -8,32 +8,32 @@
 namespace ldmx {
 
 LcioPersistencyMessenger::LcioPersistencyMessenger(LcioPersistencyManager* mgr) : mgr_{mgr} {
-    dir_ = new G4UIdirectory("/hps/lcio/", this);
-    fileCmd_ = new G4UIcmdWithAString("/hps/lcio/file", this);
-    verboseCmd_ = new G4UIcmdWithAnInteger("/hps/lcio/verbose", this);
+    dir_ = new G4UIdirectory("/ldmx/lcio/", this);
+    fileCmd_ = new G4UIcmdWithAString("/ldmx/lcio/file", this);
+    verboseCmd_ = new G4UIcmdWithAnInteger("/ldmx/lcio/verbose", this);
 
-    newCmd_ = new G4UIcommand("/hps/lcio/new", this);
+    newCmd_ = new G4UIcommand("/ldmx/lcio/new", this);
     newCmd_->SetGuidance("Write a new LCIO file and throw an error if the file exists already.");
 
-    recreateCmd_ = new G4UIcommand("/hps/lcio/recreate", this);
+    recreateCmd_ = new G4UIcommand("/ldmx/lcio/recreate", this);
     recreateCmd_->SetGuidance("Recreate the output LCIO file and delete the file if it exists already.");
 
-    appendCmd_ = new G4UIcommand("/hps/lcio/append", this);
+    appendCmd_ = new G4UIcommand("/ldmx/lcio/append", this);
     appendCmd_->SetGuidance("Append events to an existing LCIO file.");
 
-    mergeDir_ = new G4UIdirectory("/hps/lcio/merge/", this);
+    mergeDir_ = new G4UIdirectory("/ldmx/lcio/merge/", this);
 
-    mergeAddCmd_ = new G4UIcmdWithAString("/hps/lcio/merge/add", this);
+    mergeAddCmd_ = new G4UIcmdWithAString("/ldmx/lcio/merge/add", this);
 
-    dumpEventDetailedCmd_ = new G4UIcmdWithABool("/hps/lcio/dumpEventDetailed", this);
+    dumpEventDetailedCmd_ = new G4UIcmdWithABool("/ldmx/lcio/dumpEventDetailed", this);
     dumpEventDetailedCmd_->GetParameter(0)->SetOmittable(true);
     dumpEventDetailedCmd_->GetParameter(0)->SetDefaultValue("true");
 
-    dumpEventSummaryCmd_ = new G4UIcmdWithABool("/hps/lcio/dumpEventSummary", this);
+    dumpEventSummaryCmd_ = new G4UIcmdWithABool("/ldmx/lcio/dumpEventSummary", this);
     dumpEventSummaryCmd_->GetParameter(0)->SetOmittable(true);
     dumpEventSummaryCmd_->GetParameter(0)->SetDefaultValue("true");
 
-    dumpFileCmd_ = new G4UIcommand("/hps/lcio/dumpFile", this);
+    dumpFileCmd_ = new G4UIcommand("/ldmx/lcio/dumpFile", this);
     auto p = new G4UIparameter("file", 's', false);
     dumpFileCmd_->SetParameter(p);
     p = new G4UIparameter("nevents", 'i', true);
