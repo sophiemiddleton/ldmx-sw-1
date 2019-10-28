@@ -35,12 +35,9 @@
 #include "IOIMPL/LCFactory.h"
 #include "UTIL/LCTOOLS.h"
 
-/*
- * HPS
- */
-#include "LcioMergeTool.h"
-#include "LcioPersistencyMessenger.h"
-//#include "MCParticleBuilder.h"
+#include "SimApplication/LcioMergeTool.h"
+#include "SimApplication/LcioPersistencyMessenger.h"
+#include "SimApplication/LcioSimParticleBuilder.h" 
 
 /*
  * C++
@@ -180,7 +177,7 @@ class LcioPersistencyManager : public G4PersistencyManager {
         IO::LCWriter* writer_;
 
         /** Builds MCParticle collection for the persistency manager. */
-        //MCParticleBuilder* builder_;
+        LcioSimParticleBuilder* builder_{nullptr};
 
         /** Messenger for macro command processing. */
         LcioPersistencyMessenger* messenger_;

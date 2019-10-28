@@ -1,5 +1,7 @@
 #include "SimApplication/LcioPersistencyManager.h"
 
+#include "SimApplication/UserTrackingAction.h" 
+
 namespace ldmx {
 
 LcioPersistencyManager::LcioPersistencyManager() :
@@ -7,7 +9,7 @@ LcioPersistencyManager::LcioPersistencyManager() :
     G4PersistencyCenter::GetPersistencyCenter()->RegisterPersistencyManager(this);
     G4PersistencyCenter::GetPersistencyCenter()->SetPersistencyManager(this, "LcioPersistencyManager");
     writer_ = nullptr;
-    //builder_ = new MCParticleBuilder(UserTrackingAction::getUserTrackingAction()->getTrackMap()); // FIXME: Probably shouldn't set this here!
+    builder_ = new LcioSimParticleBuilder(UserTrackingAction::getUserTrackingAction()->getTrackMap()); // FIXME: Probably shouldn't set this here!
     messenger_ = new LcioPersistencyMessenger(this);
 }
 
@@ -17,7 +19,7 @@ LcioPersistencyManager::~LcioPersistencyManager() {
         delete writer_;
     }
 
-    //delete builder_;
+    delete builder_;
     delete messenger_;
 
     for (auto entry : merge_) {
@@ -58,13 +60,13 @@ G4bool LcioPersistencyManager::Store(const G4Event* anEvent) {
         }
 
         // Write MCParticles to LCIO event (allowed to be empty).
-        //auto particleColl = builder_->buildMCParticleColl(anEvent);
-        /*if (m_verbose > 1) {
+        auto particleColl = builder_->buildMCParticleColl(anEvent);
+        if (m_verbose > 1) {
             std::cout << "LcioPersistencyManager: Storing " << particleColl->size() << " MC particles in event "
                     << anEvent->GetEventID() << std::endl;
         }
         lcioEvent->addCollection(particleColl, EVENT::LCIO::MCPARTICLE);
-        */
+        
 
         // Write hits collections to LCIO event.
         writeHitsCollections(anEvent, lcioEvent);
@@ -311,9 +313,9 @@ IMPL::LCCollectionVec* LcioPersistencyManager::writeTrackerHitsCollection(G4VHit
     collVec->setFlag(collFlag.getFlag());
 
     int nhits = trackerHits->GetSize();
-    if (m_verbose > 2) {
+    //if (m_verbose > 2) {
         std::cout << "LcioPersistencyManager: Converting " << nhits << " tracker hits to LCIO" << std::endl;
-    }
+    //}
     for (int i = 0; i < nhits; i++) {
 
         auto trackerHit = static_cast<TrackerHit*>(trackerHits->GetHit(i));
@@ -323,6 +325,7 @@ IMPL::LCCollectionVec* LcioPersistencyManager::writeTrackerHitsCollection(G4VHit
         const G4ThreeVector posVec = trackerHit->getPosition();
         double pos[3] = { posVec.x(), posVec.y(), posVec.z() };
         simTrackerHit->setPosition(pos);
+        std::cout << "x: " << posVec.x() << std::endl;
 
         // momentum in GeV
         const G4ThreeVector& momentum = trackerHit->getMomentum();
@@ -344,9 +347,9 @@ IMPL::LCCollectionVec* LcioPersistencyManager::writeTrackerHitsCollection(G4VHit
         collVec->push_back(simTrackerHit);
 
         // get the MCParticle for the hit
-        /*if (m_verbose > 3) {
-            std::cout << "LcioPersistencyManager: Looking for track ID " << trackerHit->getTrackID() << std::endl;
-        }
+        //if (m_verbose > 3) {
+        /*    std::cout << "LcioPersistencyManager: Looking for track ID " << trackerHit->getTrackID() << std::endl;
+        //}
         IMPL::MCParticleImpl* mcp = builder_->findMCParticle(trackerHit->getTrackID());
         if (!mcp) {
             std::cerr << "LcioPersistencyManager: No MCParticle found for trackID " << trackerHit->getTrackID()
@@ -394,9 +397,8 @@ IMPL::LCCollectionVec* LcioPersistencyManager::writeCalorimeterHitsCollection(G4
        // add to output collection
         collVec->push_back(simCalHit);
 
-        /*
         auto contribs = calHit->getHitContributions();
-        for (auto contrib : contribs) {
+        /*for (auto contrib : contribs) {
             auto edep = contrib.getEdep()/GeV;
             auto hitTime = contrib.getGlobalTime();
             auto pdg = contrib.getPDGID();
