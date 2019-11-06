@@ -99,7 +99,7 @@ namespace ldmx {
 	    cellPEs[detIDraw]   = random_->Poisson(meanPE);
 
 	    //readout threshold
-	    if( cellPEs[detIDraw] >= readoutThreshold_ ){ // > or >= ?
+	    if( cellPEs[detIDraw] >= 1 ){ // > or >= ?
                 
 	      TrigScintHit *hit = (TrigScintHit*) (hits_->ConstructedAt(ihit));
           
@@ -144,7 +144,6 @@ namespace ldmx {
 	int detIDraw, tempID;
 	
 	for( int inoisehit = 0 ; inoisehit < noiseHits_PE.size() ; inoisehit++ ){
-	  std::cout << "check: " << ihit<< std::endl;
 	  TrigScintHit *hit = (TrigScintHit*) (hits_->ConstructedAt(ihit));
 
 	  // generate random ID from remoaining cells
