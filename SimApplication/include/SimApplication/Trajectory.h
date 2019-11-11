@@ -149,6 +149,10 @@ namespace ldmx {
              */
             G4int getGenStatus() const;
 
+            bool getSaveFlag() const { return saveFlag_; }
+
+            void setSaveFlag(bool saveFlag) { saveFlag_ = saveFlag; }
+
             /**
              * Get the particle's vertex position.
              * @return The particle's vertex position.
@@ -231,6 +235,10 @@ namespace ldmx {
 
             /** The type of the process which created the track. */
             int processType_;
+            
+            /** Save flag. */
+            bool saveFlag_{false}; 
+
     };
 
     /**

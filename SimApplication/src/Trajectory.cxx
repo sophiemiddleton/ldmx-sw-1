@@ -42,6 +42,9 @@ namespace ldmx {
         const G4ThreeVector& p = trackInfo->getInitialMomentum();
         initialMomentum_.set(p.x(), p.y(), p.z());
 
+        saveFlag_ = dynamic_cast<UserTrackInformation*>(aTrack->GetUserInformation())->getSaveFlag();
+
+
         // If the track has not been stepped, then only the first point is added.
         // Otherwise, the track has already been stepped so we add also its last location
         // which should be its endpoint.
