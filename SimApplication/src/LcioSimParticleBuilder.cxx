@@ -13,11 +13,11 @@ LcioSimParticleBuilder::~LcioSimParticleBuilder() {
 void LcioSimParticleBuilder::buildParticleMap(G4TrajectoryContainer* trajectories, IMPL::LCCollectionVec* collVec) {
     particleMap_.clear();
     for (auto trajectory : *trajectories->GetVector()) {
-        //if (Trajectory::getTrajectory(trajectory)->getSaveFlag()) {
+        if (static_cast<Trajectory*>(trajectory)->getSaveFlag()) {
             auto particle = new IMPL::MCParticleImpl;
             collVec->addElement(particle);
             particleMap_[trajectory->GetTrackID()] = particle;
-        //}
+        }
     }
 }
 
