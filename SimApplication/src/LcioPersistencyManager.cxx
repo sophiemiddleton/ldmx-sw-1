@@ -313,9 +313,9 @@ IMPL::LCCollectionVec* LcioPersistencyManager::writeTrackerHitsCollection(G4VHit
     collVec->setFlag(collFlag.getFlag());
 
     int nhits = trackerHits->GetSize();
-    //if (m_verbose > 2) {
+    if (m_verbose > 2) {
         std::cout << "LcioPersistencyManager: Converting " << nhits << " tracker hits to LCIO" << std::endl;
-    //}
+    }
     for (int i = 0; i < nhits; i++) {
 
         auto trackerHit = static_cast<TrackerHit*>(trackerHits->GetHit(i));
@@ -325,7 +325,6 @@ IMPL::LCCollectionVec* LcioPersistencyManager::writeTrackerHitsCollection(G4VHit
         const G4ThreeVector posVec = trackerHit->getPosition();
         double pos[3] = { posVec.x(), posVec.y(), posVec.z() };
         simTrackerHit->setPosition(pos);
-        std::cout << "x: " << posVec.x() << std::endl;
 
         // momentum in GeV
         const G4ThreeVector& momentum = trackerHit->getMomentum();
@@ -347,9 +346,9 @@ IMPL::LCCollectionVec* LcioPersistencyManager::writeTrackerHitsCollection(G4VHit
         collVec->push_back(simTrackerHit);
 
         // get the MCParticle for the hit
-        //if (m_verbose > 3) {
-        /*    std::cout << "LcioPersistencyManager: Looking for track ID " << trackerHit->getTrackID() << std::endl;
-        //}
+        if (m_verbose > 3) {
+            std::cout << "LcioPersistencyManager: Looking for track ID " << trackerHit->getTrackID() << std::endl;
+        }
         IMPL::MCParticleImpl* mcp = builder_->findMCParticle(trackerHit->getTrackID());
         if (!mcp) {
             std::cerr << "LcioPersistencyManager: No MCParticle found for trackID " << trackerHit->getTrackID()
@@ -358,7 +357,7 @@ IMPL::LCCollectionVec* LcioPersistencyManager::writeTrackerHitsCollection(G4VHit
                     "MCParticle for track ID is missing.");
         } else {
             simTrackerHit->setMCParticle(mcp);
-        }*/
+        }
     }
     return collVec;
 }
@@ -405,7 +404,6 @@ IMPL::LCCollectionVec* LcioPersistencyManager::writeCalorimeterHitsCollection(G4
             auto contribPos = contrib.getPosition();
             auto trackID = contrib.getTrackID();
 
-            /*
             if (trackID <= 0) {
                 std::cerr << "LcioPersistencyManager: Bad track ID " << trackID << " for calorimeter hit contrib"
                         << std::endl;
@@ -429,9 +427,7 @@ IMPL::LCCollectionVec* LcioPersistencyManager::writeCalorimeterHitsCollection(G4
                         "No MCParticle found for track ID.");
             }
 
-            */
-            //simCalHit->addMCParticleContribution(static_cast<EVENT::MCParticle*>(mcp), (float) edep, (float) hitTime); //  (int) pdg, (float*) contribPos);
-            simCalHit->addMCParticleContribution(nullptr, (float) edep, (float) hitTime); //  (int) pdg, (float*) contribPos);
+            simCalHit->addMCParticleContribution(static_cast<EVENT::MCParticle*>(mcp), (float) edep, (float) hitTime); //  (int) pdg, (float*) contribPos);
             if (m_verbose > 3) {
                 std::cout << "LcioPersistencyManager: Assigned hit contrib with " << "trackID = " << trackID << "; "
                         << "edep = " << edep << "; " << "time = " << hitTime << "; " << "pdg = " << pdg << "; "
