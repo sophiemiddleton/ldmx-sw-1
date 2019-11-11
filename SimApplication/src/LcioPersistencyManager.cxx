@@ -398,20 +398,21 @@ IMPL::LCCollectionVec* LcioPersistencyManager::writeCalorimeterHitsCollection(G4
         collVec->push_back(simCalHit);
 
         auto contribs = calHit->getHitContributions();
-        /*for (auto contrib : contribs) {
+        for (auto contrib : contribs) {
             auto edep = contrib.getEdep()/GeV;
             auto hitTime = contrib.getGlobalTime();
             auto pdg = contrib.getPDGID();
             auto contribPos = contrib.getPosition();
             auto trackID = contrib.getTrackID();
 
+            /*
             if (trackID <= 0) {
                 std::cerr << "LcioPersistencyManager: Bad track ID " << trackID << " for calorimeter hit contrib"
                         << std::endl;
                 G4Exception("LcioPersistencyManager::writeCalorimeterHitsCollections", "", FatalException,
                         "Bad track ID in cal hit contribution.");
             }
-
+        
             // Find the first parent track with a trajectory; it could actually be this track.
             G4VTrajectory* traj = builder_->getTrackMap().findTrajectory(trackID);
             if (!traj) {
@@ -428,14 +429,16 @@ IMPL::LCCollectionVec* LcioPersistencyManager::writeCalorimeterHitsCollection(G4
                         "No MCParticle found for track ID.");
             }
 
-            simCalHit->addMCParticleContribution(static_cast<EVENT::MCParticle*>(mcp), (float) edep, (float) hitTime); //  (int) pdg, (float*) contribPos);
+            */
+            //simCalHit->addMCParticleContribution(static_cast<EVENT::MCParticle*>(mcp), (float) edep, (float) hitTime); //  (int) pdg, (float*) contribPos);
+            simCalHit->addMCParticleContribution(nullptr, (float) edep, (float) hitTime); //  (int) pdg, (float*) contribPos);
             if (m_verbose > 3) {
                 std::cout << "LcioPersistencyManager: Assigned hit contrib with " << "trackID = " << trackID << "; "
                         << "edep = " << edep << "; " << "time = " << hitTime << "; " << "pdg = " << pdg << "; "
                         << "pos = ( " << contribPos[0] << ", " << contribPos[1] << ", " << contribPos[2] << " ) "
                         << std::endl;
             }
-        }*/
+        }
     }
     return collVec;
 }
