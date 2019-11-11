@@ -34,9 +34,28 @@ namespace ldmx {
 
             bool getStoreSecondaries() const;
 
+/**
+     * Set the energy threshold.
+     * @param[in] t The energy threshold.
+     */
+    void setThreshold(double t) {
+        _threshold = t;
+    }
+
+    /**
+     * Get the energy threshold.
+     * @return The energy threshold.
+     */
+    double getThreshold() const {
+        return _threshold;
+    }
+
+
         private:
 
             bool storeSecondaries_;
+
+            double _threshold{0}; 
     };
 
 }
