@@ -48,8 +48,9 @@ namespace ldmx {
 
         // std::cout << "tracking acition: zpos = " << aTrack->GetPosition().z() << ", pdgid = " << aTrack->GetDefinition()->GetPDGEncoding() << ", volname = " << aTrack->GetVolume()->GetLogicalVolume()->GetName().c_str() << std::endl;
 
+        auto info = static_cast<UserTrackInformation*>(aTrack->GetUserInformation());
         // Save extra trajectories on tracks that were flagged for saving during event processing.
-        if (dynamic_cast<UserTrackInformation*>(aTrack->GetUserInformation())->getSaveFlag()) {
+        if (info->getSaveFlag()) {
             if (!trackMap_.hasTrajectory(aTrack->GetTrackID())) {
                 storeTrajectory(aTrack);
             }
@@ -62,6 +63,8 @@ namespace ldmx {
                 if (aTrack->GetTrackStatus() == G4TrackStatus::fStopAndKill) {
                     traj->setEndPointMomentum(aTrack);
                 }
+
+                traj->setSaveFlag(dynamic_cast<UserTrackInformation*>(aTrack->GetUserInformation())->getSaveFlag()); 
             }
         }
     }
@@ -88,15 +91,22 @@ namespace ldmx {
     void UserTrackingAction::processTrack(const G4Track* aTrack) {
 
         // Set user track info on new track.
+        UserTrackInformation* trackInfo{nullptr}; 
         if (!aTrack->GetUserInformation()) {
-            auto trackInfo = new UserTrackInformation;
+            trackInfo = new UserTrackInformation;
             trackInfo->setInitialMomentum(aTrack->GetMomentum());
             const_cast<G4Track*>(aTrack)->SetUserInformation(trackInfo);
         }
 
         // Check if trajectory storage should be turned on or off from the region info.
         UserRegionInformation* regionInfo = (UserRegionInformation*) aTrack->GetLogicalVolumeAtVertex()->GetRegion()->GetUserInformation();
-        
+        bool aboveEnergyThreshold = false; 
+        if (regionInfo) {
+            //regionInfo->Print();
+            //std::cout << "threshold: " << regionInfo->getThreshold() << std::endl; 
+            aboveEnergyThreshold = (aTrack->GetKineticEnergy() > regionInfo->getThreshold());
+        }
+
         // Check if trajectory storage should be turned on or off from the gen status info
         int curGenStatus = -1;
         if (aTrack->GetDynamicParticle()->GetPrimaryParticle() != NULL){
@@ -107,14 +117,20 @@ namespace ldmx {
         // Always save a particle if it has gen status == 1
         if (curGenStatus == 1){
             storeTrajectory(aTrack);
+            trackInfo->setSaveFlag(true); 
         }
         else if (regionInfo && !regionInfo->getStoreSecondaries()) {
             // Turn off trajectory storage for this track from region flag.
             fpTrackingManager->SetStoreTrajectory(false);
+            trackInfo->setSaveFlag(false); 
+        } else if (regionInfo && (regionInfo->getStoreSecondaries() && aboveEnergyThreshold)) { 
+            storeTrajectory(aTrack);
+            trackInfo->setSaveFlag(true); 
         } 
         else {
             // Store a new trajectory for this track.
             storeTrajectory(aTrack);
+            trackInfo->setSaveFlag(true); 
         }
 
         // Save the association between track ID and its parent ID for all tracks in the event.
