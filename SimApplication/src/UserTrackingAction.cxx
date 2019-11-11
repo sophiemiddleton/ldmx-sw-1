@@ -16,11 +16,16 @@
 // STL
 #include <iostream>
 
+#include "lcdd/detectors/CurrentTrackState.hh" 
+
 namespace ldmx {
 
     void UserTrackingAction::PreUserTrackingAction(const G4Track* aTrack) {
 
         int trackID = aTrack->GetTrackID();
+        
+        // This is set for LCDD sensitive detectors, which is strange but we don't want to change it right now!
+        CurrentTrackState::setCurrentTrackID(trackID);
 
         if (trackMap_.contains(trackID)) {
             if (trackMap_.hasTrajectory(trackID)) {
