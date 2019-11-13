@@ -47,7 +47,7 @@ namespace ldmx {
         pluginManager_->postTracking(aTrack);
 
         // std::cout << "tracking acition: zpos = " << aTrack->GetPosition().z() << ", pdgid = " << aTrack->GetDefinition()->GetPDGEncoding() << ", volname = " << aTrack->GetVolume()->GetLogicalVolume()->GetName().c_str() << std::endl;
-
+        
         auto info = static_cast<UserTrackInformation*>(aTrack->GetUserInformation());
         // Save extra trajectories on tracks that were flagged for saving during event processing.
         if (info->getSaveFlag()) {
@@ -100,11 +100,13 @@ namespace ldmx {
 
         // Check if trajectory storage should be turned on or off from the region info.
         UserRegionInformation* regionInfo = (UserRegionInformation*) aTrack->GetLogicalVolumeAtVertex()->GetRegion()->GetUserInformation();
-        bool aboveEnergyThreshold = false; 
+        bool aboveEnergyThreshold = false;
+        bool storeSecondaries = false; 
         if (regionInfo) {
             //regionInfo->Print();
             //std::cout << "threshold: " << regionInfo->getThreshold() << std::endl; 
             aboveEnergyThreshold = (aTrack->GetKineticEnergy() > regionInfo->getThreshold());
+            storeSecondaries = regionInfo->getStoreSecondaries(); 
         }
 
         // Check if trajectory storage should be turned on or off from the gen status info
@@ -118,20 +120,23 @@ namespace ldmx {
         if (curGenStatus == 1){
             storeTrajectory(aTrack);
             trackInfo->setSaveFlag(true); 
-        }
-        else if (regionInfo && !regionInfo->getStoreSecondaries()) {
+        } else if (storeSecondaries && aboveEnergyThreshold) {
+            storeTrajectory(aTrack); 
+            trackInfo->setSaveFlag(true); 
+        } else {
+        //else if (!storeSecondaries) {
             // Turn off trajectory storage for this track from region flag.
             fpTrackingManager->SetStoreTrajectory(false);
             trackInfo->setSaveFlag(false); 
-        } else if (regionInfo && (regionInfo->getStoreSecondaries() && aboveEnergyThreshold)) { 
+        } /*else if (regionInfo && (regionInfo->getStoreSecondaries() && aboveEnergyThreshold)) { 
             storeTrajectory(aTrack);
             trackInfo->setSaveFlag(true); 
-        } 
-        else {
+        } */
+        //else {
             // Store a new trajectory for this track.
-            storeTrajectory(aTrack);
-            trackInfo->setSaveFlag(true); 
-        }
+            //storeTrajectory(aTrack);
+            //trackInfo->setSaveFlag(true); 
+        //}
 
         // Save the association between track ID and its parent ID for all tracks in the event.
         trackMap_.addSecondary(aTrack->GetTrackID(), aTrack->GetParentID());
