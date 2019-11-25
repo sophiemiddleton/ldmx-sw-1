@@ -5,11 +5,11 @@
     <variable name="x" value="1"/>
     <variable name="xx" value="1"/>
     <variable name="xxx" value="1"/>
-    <variable name="dx" value="40"/>
+    <variable name="dx" value="25"/>
     <variable name="dy" value="3"/>		
     <variable name="dz" value="2"/>		
     <variable name="gap" value="0.3"/>
-    <variable name="number_of_bars" value="25"/>
+    <variable name="number_of_bars" value="31"/>
 
     <!-- define center position and identity rotation -->
     <position name="center" x="0" y="0" z="0"/>
@@ -179,12 +179,12 @@
       <loop for="x" to="number_of_bars" step="1">
       	<physvol copynumber="2*x">
       	  <volumeref ref="trigger_pad_tag_bar_volume"/>
-      	  <position name="trigger_pad_tag_bar_layer1_pos" unit="mm" x="-28.06" y="-target_dim_y/2+dy*(x-0.5)+gap*(x-1)" z="trigger_pad_tag_z-dz/2-gap/2"/>
+      	  <position name="trigger_pad_tag_bar_layer1_pos" unit="mm" x="-42.06" y="-target_dim_y/2+dy*(x-0.5)+gap*(x-1)" z="trigger_pad_tag_z-dz/2-gap/2"/>
           <rotationref ref="identity"/>
       	</physvol>
       	<physvol copynumber="2*x+1">
       	  <volumeref ref="trigger_pad_tag_bar_volume"/>
-      	  <position name="trigger_pad_tag_bar_layer2_pos" unit="mm" x="-28.06" y="-target_dim_y/2+dy*x+gap*(x-1)" z="trigger_pad_tag_z+dz/2+gap/2"/>
+      	  <position name="trigger_pad_tag_bar_layer2_pos" unit="mm" x="-42.06" y="-target_dim_y/2+dy*x+gap*(x-1)" z="trigger_pad_tag_z+dz/2+gap/2"/>
           <rotationref ref="identity"/>
       	</physvol>
       </loop>
