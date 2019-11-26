@@ -91,6 +91,17 @@
         <position name="sp_recoil_l5_pos" x="0.0" y="0.0" z="recoil_l5_z"/>
         <position name="sp_recoil_l6_pos" x="0.0" y="0.0" z="recoil_l6_z"/>
 
+	<!-- tagger trigger scintillator array -->    
+	<variable name="trig_scint_dy" value="105*mm"/>		
+	<variable name="trig_scint_dx" value="26*mm"/>
+	<variable name="trig_scint_dz" value="5*mm"/>
+	<position name="trig_scint_top_pos" x="-42.06*mm" y="0.0*mm+trig_scint_dy/2." z="-865.*mm"/>
+	<position name="trig_scint_bot_pos" x="-42.06*mm" y="0.0*mm-trig_scint_dy/2." z="-865.*mm"/>
+	<position name="trig_scint_lf_pos" x="-42.06*mm+trig_scint_dx/2." y="0.0*mm" z="-865.*mm"/>
+	<position name="trig_scint_rt_pos" x="-42.06*mm-trig_scint_dx/2." y="0.0*mm" z="-865.*mm"/>
+	<position name="trig_scint_fr_pos" x="-42.06*mm" y="0.0*mm" z="-865.*mm+trig_scint_dz/2."/>
+	<position name="trig_scint_bk_pos" x="-42.06*mm" y="0.0*mm" z="-865.*mm-trig_scint_dz/2."/>
+
     </define>
 
     <materials>
@@ -102,6 +113,13 @@
 
     <solids>
         <box name="world_box" x="world_dim" y="world_dim" z="world_dim"/>
+
+	<box name="sp_trig_scint_tag_fr_box"  x="trig_scint_dx" y="trig_scint_dy" z="sp_thickness" />
+	<box name="sp_trig_scint_tag_bk_box"  x="trig_scint_dx" y="trig_scint_dy" z="sp_thickness" />
+	<box name="sp_trig_scint_tag_top_box"  x="trig_scint_dx" y="sp_thickness" z="trig_scint_dz" />
+	<box name="sp_trig_scint_tag_bot_box"  x="trig_scint_dx" y="sp_thickness" z="trig_scint_dz" />
+	<box name="sp_trig_scint_tag_lf_box"  x="sp_thickness" y="trig_scint_dy" z="trig_scint_dz" />
+	<box name="sp_trig_scint_tag_rt_box"  x="sp_thickness" y="trig_scint_dy" z="trig_scint_dz" />
         
         <box name="sp_ecal_front_box"   x="ecal_box_x" y="ecal_box_y" z="sp_thickness" />
         <box name="sp_ecal_back_box"    x="ecal_box_x" y="ecal_box_y" z="sp_thickness" />
@@ -132,6 +150,43 @@
     </solids>
 
     <structure>
+
+        <volume name="sp_trig_scint_top_vol">
+	    <materialref ref="Vacuum" />
+	    <solidref ref="sp_trig_scint_tag_top_box" />
+	    <auxiliary auxtype="SensDet" auxvalue="ScoringPlaneSD5" />
+	    <auxiliary auxtype="VisAttributes" auxvalue="SpVis"/>
+	</volume>
+        <volume name="sp_trig_scint_bot_vol">
+	    <materialref ref="Vacuum" />
+	    <solidref ref="sp_trig_scint_tag_bot_box" />
+	    <auxiliary auxtype="SensDet" auxvalue="ScoringPlaneSD5" />
+	    <auxiliary auxtype="VisAttributes" auxvalue="SpVis"/>
+	</volume>
+        <volume name="sp_trig_scint_rt_vol">
+	    <materialref ref="Vacuum" />
+	    <solidref ref="sp_trig_scint_tag_rt_box" />
+	    <auxiliary auxtype="SensDet" auxvalue="ScoringPlaneSD5" />
+	    <auxiliary auxtype="VisAttributes" auxvalue="SpVis"/>
+	</volume>
+        <volume name="sp_trig_scint_lf_vol">
+	    <materialref ref="Vacuum" />
+	    <solidref ref="sp_trig_scint_tag_lf_box" />
+	    <auxiliary auxtype="SensDet" auxvalue="ScoringPlaneSD5" />
+	    <auxiliary auxtype="VisAttributes" auxvalue="SpVis"/>
+	</volume>
+        <volume name="sp_trig_scint_fr_vol">
+	    <materialref ref="Vacuum" />
+	    <solidref ref="sp_trig_scint_tag_fr_box" />
+	    <auxiliary auxtype="SensDet" auxvalue="ScoringPlaneSD5" />
+	    <auxiliary auxtype="VisAttributes" auxvalue="SpVis"/>
+	</volume>
+        <volume name="sp_trig_scint_bk_vol">
+	    <materialref ref="Vacuum" />
+	    <solidref ref="sp_trig_scint_tag_bk_box" />
+	    <auxiliary auxtype="SensDet" auxvalue="ScoringPlaneSD5" />
+	    <auxiliary auxtype="VisAttributes" auxvalue="SpVis"/>
+	</volume>
 
         <volume name="sp_magnet_gap_top">
             <materialref ref="Vacuum" />
@@ -285,6 +340,38 @@
         <volume name="SP_World">
             <materialref ref="Vacuum" />
             <solidref ref="world_box" />
+
+	    <physvol copynumber="1">
+	        <volumeref ref="sp_trig_scint_top_vol"/>
+		<positionref ref="trig_scint_top_pos" />
+		<rotationref ref="identity" />
+	    </physvol>
+	    <physvol copynumber="2">
+	        <volumeref ref="sp_trig_scint_bot_vol"/>
+		<positionref ref="trig_scint_bot_pos" />
+		<rotationref ref="identity" />
+	    </physvol>
+	    <physvol copynumber="3">
+	        <volumeref ref="sp_trig_scint_lf_vol"/>
+		<positionref ref="trig_scint_lf_pos" />
+		<rotationref ref="identity" />
+	    </physvol>
+	    <physvol copynumber="4">
+	        <volumeref ref="sp_trig_scint_rt_vol"/>
+		<positionref ref="trig_scint_rt_pos" />
+		<rotationref ref="identity" />
+	    </physvol>
+	    <physvol copynumber="5">
+	        <volumeref ref="sp_trig_scint_fr_vol"/>
+		<positionref ref="trig_scint_fr_pos" />
+		<rotationref ref="identity" />
+	    </physvol>
+	    <physvol copynumber="6">
+	        <volumeref ref="sp_trig_scint_bk_vol"/>
+		<positionref ref="trig_scint_bk_pos" />
+		<rotationref ref="identity" />
+	    </physvol>
+
             <physvol copynumber="1" >
                 <volumeref ref="sp_magnet_gap_top" />
                 <positionref ref="sp_magnet_gap_top_pos" />
@@ -440,6 +527,12 @@
             <auxiliary auxtype="SubdetID"       auxvalue="11" />
             <auxiliary auxtype="Verbose"        auxvalue="0" />
         </auxiliary>
+        <auxiliary auxtype="SensDet" auxvalue="ScoringPlaneSD5" >
+            <auxiliary auxtype="SensDetType"    auxvalue="ScoringPlaneSD" />
+            <auxiliary auxtype="HitsCollection" auxvalue="TrigScintScoringPlaneHits" />
+            <auxiliary auxtype="SubdetID"       auxvalue="12" />
+            <auxiliary auxtype="Verbose"        auxvalue="0" />
+        </auxiliary>
         
         <auxiliary auxtype="VisAttributes" auxvalue="SpVis">
             <auxiliary auxtype="R" auxvalue="0.0"/>
@@ -451,6 +544,7 @@
             <auxiliary auxtype="Visible" auxvalue="true"/>
             <auxiliary auxtype="LineWidth" auxvalue="2.0"/>
         </auxiliary>
+
     </userinfo>
 
     <setup name="Default" version="1.0">
