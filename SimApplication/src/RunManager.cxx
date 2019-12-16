@@ -18,6 +18,7 @@
 #include "SimApplication/PrimaryGeneratorAction.h"
 #include "SimApplication/PrimaryGeneratorMessenger.h"
 #include "SimApplication/RootPersistencyMessenger.h"
+#include "SimApplication/RootPersistencyMessenger.h"
 #include "SimApplication/RootPersistencyManager.h" 
 #include "SimApplication/SteppingAction.h"
 #include "SimApplication/UserEventAction.h"
@@ -122,8 +123,11 @@ namespace ldmx {
         SetUserAction(steppingAction);
         SetUserAction(stackingAction);
 
-        RootPersistencyManager* rootIO = new RootPersistencyManager();
-        new RootPersistencyMessenger(rootIO);
+        //RootPersistencyManager* rootIO = new RootPersistencyManager();
+        //new RootPersistencyMessenger(rootIO);
+        // Create the persistency manager (must go here to get pointer to track map).
+        lcioMgr_ = new LcioPersistencyManager();
+        
     }
 
     DetectorConstruction* RunManager::getDetectorConstruction() {

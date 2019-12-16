@@ -4,6 +4,8 @@
 #include "SimApplication/DetectorConstruction.h"
 #include "SimApplication/RunManager.h"
 #include "SimApplication/SimApplicationMessenger.h"
+#include "SimApplication/GDMLParser.h" 
+#include "SimApplication/LCDDparser.h" 
 
 // STL
 #include <vector>
@@ -11,7 +13,6 @@
 
 // Geant4
 #include "G4RunManager.hh"
-#include "G4GDMLParser.hh"
 #include "G4UIExecutive.hh"
 #include "G4UImanager.hh"
 #include "G4VisManager.hh"
@@ -41,8 +42,8 @@ namespace ldmx {
         G4RunManager* runManager = new RunManager;
 
         // Setup GDML parser and messenger.
-        G4GDMLParser* parser = new G4GDMLParser();
-        G4UImessenger* gdmlMessenger = new G4GDMLMessenger(parser);
+        //auto parser{new GDMLParser()}; 
+        auto parser{new LCDDparser()}; 
 
         // Create application messenger.
         new SimApplicationMessenger();
@@ -74,8 +75,6 @@ namespace ldmx {
             delete ui;
         }
 
-        delete gdmlMessenger;
-        delete parser;
         delete runManager;
 
         std::cout << "[ SimApplication ] : exiting" << std::endl;

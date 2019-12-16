@@ -16,11 +16,16 @@
 // STL
 #include <iostream>
 
+#include "lcdd/detectors/CurrentTrackState.hh" 
+
 namespace ldmx {
 
     void UserTrackingAction::PreUserTrackingAction(const G4Track* aTrack) {
 
         int trackID = aTrack->GetTrackID();
+        
+        // This is set for LCDD sensitive detectors, which is strange but we don't want to change it right now!
+        CurrentTrackState::setCurrentTrackID(trackID);
 
         if (trackMap_.contains(trackID)) {
             if (trackMap_.hasTrajectory(trackID)) {
@@ -42,9 +47,10 @@ namespace ldmx {
         pluginManager_->postTracking(aTrack);
 
         // std::cout << "tracking acition: zpos = " << aTrack->GetPosition().z() << ", pdgid = " << aTrack->GetDefinition()->GetPDGEncoding() << ", volname = " << aTrack->GetVolume()->GetLogicalVolume()->GetName().c_str() << std::endl;
-
+        
+        auto info = static_cast<UserTrackInformation*>(aTrack->GetUserInformation());
         // Save extra trajectories on tracks that were flagged for saving during event processing.
-        if (dynamic_cast<UserTrackInformation*>(aTrack->GetUserInformation())->getSaveFlag()) {
+        if (info->getSaveFlag()) {
             if (!trackMap_.hasTrajectory(aTrack->GetTrackID())) {
                 storeTrajectory(aTrack);
             }
@@ -57,6 +63,8 @@ namespace ldmx {
                 if (aTrack->GetTrackStatus() == G4TrackStatus::fStopAndKill) {
                     traj->setEndPointMomentum(aTrack);
                 }
+
+                traj->setSaveFlag(dynamic_cast<UserTrackInformation*>(aTrack->GetUserInformation())->getSaveFlag()); 
             }
         }
     }
@@ -83,15 +91,24 @@ namespace ldmx {
     void UserTrackingAction::processTrack(const G4Track* aTrack) {
 
         // Set user track info on new track.
+        UserTrackInformation* trackInfo{nullptr}; 
         if (!aTrack->GetUserInformation()) {
-            auto trackInfo = new UserTrackInformation;
+            trackInfo = new UserTrackInformation;
             trackInfo->setInitialMomentum(aTrack->GetMomentum());
             const_cast<G4Track*>(aTrack)->SetUserInformation(trackInfo);
         }
 
         // Check if trajectory storage should be turned on or off from the region info.
         UserRegionInformation* regionInfo = (UserRegionInformation*) aTrack->GetLogicalVolumeAtVertex()->GetRegion()->GetUserInformation();
-        
+        bool aboveEnergyThreshold = false;
+        bool storeSecondaries = false; 
+        if (regionInfo) {
+            //regionInfo->Print();
+            //std::cout << "threshold: " << regionInfo->getThreshold() << std::endl; 
+            aboveEnergyThreshold = (aTrack->GetKineticEnergy() > regionInfo->getThreshold());
+            storeSecondaries = regionInfo->getStoreSecondaries(); 
+        }
+
         // Check if trajectory storage should be turned on or off from the gen status info
         int curGenStatus = -1;
         if (aTrack->GetDynamicParticle()->GetPrimaryParticle() != NULL){
@@ -102,15 +119,24 @@ namespace ldmx {
         // Always save a particle if it has gen status == 1
         if (curGenStatus == 1){
             storeTrajectory(aTrack);
-        }
-        else if (regionInfo && !regionInfo->getStoreSecondaries()) {
+            trackInfo->setSaveFlag(true); 
+        } else if (storeSecondaries && aboveEnergyThreshold) {
+            storeTrajectory(aTrack); 
+            trackInfo->setSaveFlag(true); 
+        } else {
+        //else if (!storeSecondaries) {
             // Turn off trajectory storage for this track from region flag.
             fpTrackingManager->SetStoreTrajectory(false);
-        } 
-        else {
-            // Store a new trajectory for this track.
+            trackInfo->setSaveFlag(false); 
+        } /*else if (regionInfo && (regionInfo->getStoreSecondaries() && aboveEnergyThreshold)) { 
             storeTrajectory(aTrack);
-        }
+            trackInfo->setSaveFlag(true); 
+        } */
+        //else {
+            // Store a new trajectory for this track.
+            //storeTrajectory(aTrack);
+            //trackInfo->setSaveFlag(true); 
+        //}
 
         // Save the association between track ID and its parent ID for all tracks in the event.
         trackMap_.addSecondary(aTrack->GetTrackID(), aTrack->GetParentID());

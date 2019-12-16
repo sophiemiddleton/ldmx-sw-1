@@ -11,6 +11,8 @@ if(NOT CMAKE_BUILD_TYPE)
 endif()
 set(CMAKE_CXX_FLAGS_RELEASE "-O3")
 
+# add dir with extra CMake modules 
+list(APPEND CMAKE_MODULE_PATH ${PROJECT_SOURCE_DIR}/cmake/Modules/)
 
 # find XercesC installation
 if(XercesC_DIR)
@@ -49,6 +51,27 @@ message(STATUS "Boost lib found at: ${Boost_LIBRARY_DIRS}")
 if(Boost_FOUND)
     include_directories(${Boost_INCLUDE_DIRS})
 endif()
+    
+find_package(LCDD)
+if (LCDD_DIR)
+    message(STATUS "LCDD dir set to: ${LCDD_DIR}")
+    message(STATUS "LCDD include dir set to: ${LCDD_INCLUDE_DIR}")
+    message(STATUS "LCDD library set to: ${LCDD_LIBRARY}")
+endif() 
+
+find_package(GDML)
+if (GDML_DIR)
+    message(STATUS "GDML dir set to: ${GDML_DIR}")
+    message(STATUS "GDML include dir set to: ${GDML_INCLUDE_DIR}")
+    message(STATUS "GDML library set to: ${GDML_LIBRARY}")
+endif()
+
+find_package(LCIO REQUIRED)
+if (LCIO_DIR)
+    message(STATUS "LCIO dir set to: ${LCIO_DIR}")
+    message(STATUS "LCIO include dir set to: ${LCIO_INCLUDE_DIR}")
+    message(STATUS "LCIO library set to: ${LCIO_LIBRARY}")
+endif()
 
 # mag field map installation
 option(INSTALL_FIELDMAP "Install field map data from MagFieldMap sub-module" ON)
@@ -59,9 +82,6 @@ endif()
 
 # option to print extra module information during CMake config
 option(MODULE_DEBUG "Print extra module information during CMake config" OFF)
-
-# add dir with extra CMake modules 
-list(APPEND CMAKE_MODULE_PATH ${PROJECT_SOURCE_DIR}/cmake/Modules/)
 
 # import macro for declaring modules
 include(MacroModule)
