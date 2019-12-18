@@ -15,4 +15,4 @@
 /ldmx/generators/beamspot/sizeX 20.0
 /ldmx/generators/beamspot/sizeY 80.0
 
-/run/beamOn 5000
+/run/beamOn 20000
