@@ -37,7 +37,7 @@
 
     <!-- trigger pad parameters -->
     <variable name="trigger_pad_dim_x" value="target_dim_x"/>
-    <variable name="trigger_pad_dim_y" value="target_dim_y"/>
+    <variable name="trigger_pad_dim_y" value="(dy+gap)*(number_of_bars-1)+dy"/>
     <variable name="trigger_pad_thickness" value="4.5*mm"/>
     <variable name="trigger_pad_zclear" value="0.001*mm"/>
     <variable name="trigger_pad_down_z" value="target_z + (target_thickness/2) + (trigger_pad_thickness/2) + trigger_pad_zclear"/>
@@ -179,12 +179,12 @@
       <loop for="x" to="number_of_bars" step="1">
       	<physvol copynumber="2*x">
       	  <volumeref ref="trigger_pad_tag_bar_volume"/>
-      	  <position name="trigger_pad_tag_bar_layer1_pos" unit="mm" x="-42.06" y="-target_dim_y/2+dy*(x-0.5)+gap*(x-1)" z="trigger_pad_tag_z-dz/2-gap/2"/>
+      	  <position name="trigger_pad_tag_bar_layer1_pos" unit="mm" x="-42.06" y="-trigger_pad_dim_y/2+dy*(x-0.5)+gap*(x-1)" z="trigger_pad_tag_z-dz/2-gap/2"/>
           <rotationref ref="identity"/>
       	</physvol>
       	<physvol copynumber="2*x+1">
       	  <volumeref ref="trigger_pad_tag_bar_volume"/>
-      	  <position name="trigger_pad_tag_bar_layer2_pos" unit="mm" x="-42.06" y="-target_dim_y/2+dy*x+gap*(x-1)" z="trigger_pad_tag_z+dz/2+gap/2"/>
+      	  <position name="trigger_pad_tag_bar_layer2_pos" unit="mm" x="-42.06" y="-trigger_pad_dim_y/2+dy*x+gap*(x-1)" z="trigger_pad_tag_z+dz/2+gap/2"/>
           <rotationref ref="identity"/>
       	</physvol>
       </loop>
@@ -193,12 +193,12 @@
       <loop for="xxx" to="number_of_bars" step="1">
       	<physvol copynumber="2*xxx">
       	  <volumeref ref="trigger_pad_up_bar_volume"/>
-      	  <position name="trigger_pad_up_bar_layer1_pos" unit="mm" x="0" y="-target_dim_y/2+dy*(xxx-0.5)+gap*(xxx-1)" z="trigger_pad_up_z-dz/2-gap/2"/>
+      	  <position name="trigger_pad_up_bar_layer1_pos" unit="mm" x="0" y="-trigger_pad_dim_y/2+dy*(xxx-0.5)+gap*(xxx-1)" z="trigger_pad_up_z-dz/2-gap/2"/>
           <rotationref ref="identity"/>
       	</physvol>
       	<physvol copynumber="2*xxx+1">
       	  <volumeref ref="trigger_pad_up_bar_volume"/>
-      	  <position name="trigger_pad_up_bar_layer2_pos" unit="mm" x="0" y="-target_dim_y/2+dy*xxx+gap*(xxx-1)" z="trigger_pad_up_z+dz/2+gap/2"/>
+      	  <position name="trigger_pad_up_bar_layer2_pos" unit="mm" x="0" y="-trigger_pad_dim_y/2+dy*xxx+gap*(xxx-1)" z="trigger_pad_up_z+dz/2+gap/2"/>
           <rotationref ref="identity"/>
       	</physvol>
       </loop>
@@ -212,12 +212,12 @@
       <loop for="xx" to="number_of_bars" step="1">
       	<physvol copynumber="2*xx">
       	  <volumeref ref="trigger_pad_dn_bar_volume"/>
-      	  <position name="trigger_pad_dn_bar_layer1_pos" unit="mm" x="0" y="-target_dim_y/2+dy*(xx-0.5)+gap*(xx-1)" z="trigger_pad_down_z-dz/2-gap/2"/>
+      	  <position name="trigger_pad_dn_bar_layer1_pos" unit="mm" x="0" y="-trigger_pad_dim_y/2+dy*(xx-0.5)+gap*(xx-1)" z="trigger_pad_down_z-dz/2-gap/2"/>
           <rotationref ref="identity"/>
       	</physvol>
       	<physvol copynumber="2*xx+1">
       	  <volumeref ref="trigger_pad_dn_bar_volume"/>
-      	  <position name="trigger_pad_dn_bar_layer2_pos" unit="mm" x="0" y="-target_dim_y/2+dy*xx+gap*(xx-1)" z="trigger_pad_down_z+dz/2+gap/2"/>
+      	  <position name="trigger_pad_dn_bar_layer2_pos" unit="mm" x="0" y="-trigger_pad_dim_y/2+dy*xx+gap*(xx-1)" z="trigger_pad_down_z+dz/2+gap/2"/>
           <rotationref ref="identity"/>
       	</physvol>
       </loop>
