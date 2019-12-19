@@ -1,4 +1,8 @@
 /persistency/gdml/read detector.gdml
+
+/ldmx/pw/enable
+/ldmx/pw/read Detectors/data/scoring_planes/detector.gdml
+
 /run/initialize
 
 /ldmx/generators/mpgun/enable
@@ -15,4 +19,11 @@
 /ldmx/generators/beamspot/sizeX 20.0
 /ldmx/generators/beamspot/sizeY 80.0
 
-/run/beamOn 5000
+/ldmx/persistency/root/verbose 0
+/ldmx/persistency/root/file ~/nfs/test.root
+/ldmx/persistency/root/dropCol MagnetScoringPlaneHits
+/ldmx/persistency/root/dropCol TrackerScoringPlaneHits
+/ldmx/persistency/root/dropCol HcalScoringPlaneHits
+/ldmx/persistency/root/dropCol TargetScoringPlaneHits
+
+/run/beamOn 50000
