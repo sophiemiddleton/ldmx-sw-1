@@ -28,7 +28,7 @@ from LDMX.EventProc.simpleTrigger import simpleTrigger
 trigScintDigis = ldmxcfg.Producer("trigScintDigis", "ldmx::TrigScintDigiProducer")
 
 trigScintDigis.parameters["meanNoise"] = 0.02
-trigScintDigis.parameters["number_of_strips"] = 50
+trigScintDigis.parameters["number_of_strips"] = 62
 trigScintDigis.parameters["number_of_arrays"] = 3
 trigScintDigis.parameters["mev_per_mip"] = 0.4
 trigScintDigis.parameters["pe_per_mip"] = 10.
@@ -38,7 +38,7 @@ trigScintDigis.parameters["output_collection"]="trigScintDigisUp"
 trigScintDigisDn = ldmxcfg.Producer("trigScintDigisDn", "ldmx::TrigScintDigiProducer")
 
 trigScintDigisDn.parameters["meanNoise"] = 0.02
-trigScintDigisDn.parameters["number_of_strips"] = 50
+trigScintDigisDn.parameters["number_of_strips"] = 62
 trigScintDigisDn.parameters["number_of_arrays"] = 3
 trigScintDigisDn.parameters["mev_per_mip"] = 0.4
 trigScintDigisDn.parameters["pe_per_mip"] = 10.
@@ -48,7 +48,7 @@ trigScintDigisDn.parameters["output_collection"]="trigScintDigisDn"
 trigScintDigisTag = ldmxcfg.Producer("trigScintDigisTag", "ldmx::TrigScintDigiProducer")
 
 trigScintDigisTag.parameters["meanNoise"] = 0.02
-trigScintDigisTag.parameters["number_of_strips"] = 50
+trigScintDigisTag.parameters["number_of_strips"] = 62
 trigScintDigisTag.parameters["number_of_arrays"] = 3
 trigScintDigisTag.parameters["mev_per_mip"] = 0.4
 trigScintDigisTag.parameters["pe_per_mip"] = 10.
@@ -59,7 +59,7 @@ trigScintDigisTag.parameters["output_collection"]="trigScintDigisTag"
 p.sequence=[trigScintDigis,trigScintDigisDn,trigScintDigisTag]
 
 # Provide the list of input files to run on
-p.inputFiles=["~/nfs/output.root"]
+p.inputFiles=["~/raid/LDMX/trigger_pad_sim/test.root"]
 
 # Provide the list of output files to produce, either one to contain 
 # the results of all input files or one output file name per input file name

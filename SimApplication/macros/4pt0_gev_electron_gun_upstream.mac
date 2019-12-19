@@ -20,7 +20,6 @@
 /ldmx/generators/beamspot/sizeY 80.0
 
 /ldmx/persistency/root/verbose 0
-/ldmx/persistency/root/file ~/nfs/test.root
 /ldmx/persistency/root/dropCol MagnetScoringPlaneHits
 /ldmx/persistency/root/dropCol TrackerScoringPlaneHits
 /ldmx/persistency/root/dropCol HcalScoringPlaneHits
