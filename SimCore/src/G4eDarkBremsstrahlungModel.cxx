@@ -156,6 +156,11 @@ void G4eDarkBremsstrahlungModel::MakePlaceholders()
    {
       energies.push_back(std::make_pair(iter.first,iter.second.size()));
    }
+
+   for(uint64_t i=0;i<energies.size();i++)
+   {
+      energies[i].second=int(G4UniformRand()*mgdata[energies[i].first].size());
+   }
 }
 
 frame G4eDarkBremsstrahlungModel::GetMadgraphData(double E0)
