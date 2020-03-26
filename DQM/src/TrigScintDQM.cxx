@@ -25,7 +25,9 @@ namespace ldmx {
         // Move into the TrigScint directory
 	getHistoDirectory();
 
-	//would like to avoid individual naming of histograms -- they are in different histogram dirs so i would have thought that they could be written individually. however i think this would require passing a name to getInstance() or similar. without that it looks like i always end up writing to the latest set of histograms created. 
+	// would like to avoid individual naming of histograms -- they are in different histogram dirs so i would have thought that 
+	// they could be written individually. however i think this would require passing a name to getInstance() or similar? 
+	// without that it looks like i always end up writing to the latest set of histograms created. 
 
 	// so this is what i would like to, but can't do, for now:
 
@@ -49,42 +51,40 @@ namespace ldmx {
         histograms_->create<TH2F>("min_time_hit_above_thresh:pe", 
                                   "Photoelectrons in a TrigScint bar", 1500, 0, 1500, 
                                   "Earliest time of TrigScint hit above threshold (ns)", 1600, -100, 1500);
-*/
+	*/
 
-	// /*
+
 
 	// instead do this 
 
-	histograms_->create<TH1F>(Form("id_%s", padName_.c_str()), "Channel ID of sim hit", 100, 0, 100);
-        histograms_->create<TH1F>(Form("total_energy_%s", padName_.c_str()), "Total energy deposition in the pad/event", 3000, 0, 3000);
-        histograms_->create<TH1F>(Form("n_hits_%s", padName_.c_str()), "TrigScint hit multiplicity in the pad/event", 300, 0, 300);
-        histograms_->create<TH1F>(Form("x_%s", padName_.c_str()), "Hit x position", 1000, -100, 100);
-        histograms_->create<TH1F>(Form("y_%s", padName_.c_str()), "Hit y position", 1000, -100, 100);
-        histograms_->create<TH1F>(Form("z_%s", padName_.c_str()), "Hit z position", 1000, -900, 100);
+	histograms_->create<TH1F>("id_"+padName_, "Channel ID of sim hit", 100, 0, 100);
+        histograms_->create<TH1F>("total_energy_"+padName_, "Total energy deposition in the pad/event", 3000, 0, 3000);
+        histograms_->create<TH1F>("n_hits_"+padName_, "TrigScint hit multiplicity in the pad/event", 300, 0, 300);
+        histograms_->create<TH1F>("x_"+padName_, "Hit x position", 1000, -100, 100);
+        histograms_->create<TH1F>("y_"+padName_, "Hit y position", 1000, -100, 100);
+        histograms_->create<TH1F>("z_"+padName_, "Hit z position", 1000, -900, 100);
 
-        histograms_->create<TH1F>(Form("energy_%s", padName_.c_str()), "Energy deposition in a TrigScint bar", 1500, 0, 1500);
-        histograms_->create<TH1F>(Form("hit_time_%s", padName_.c_str()), "TrigScint hit time (ns)", 1600, -100, 1500);
+        histograms_->create<TH1F>("energy_"+padName_, "Energy deposition in a TrigScint bar", 1500, 0, 1500);
+        histograms_->create<TH1F>("hit_time_"+padName_, "TrigScint hit time (ns)", 1600, -100, 1500);
 
-        histograms_->create<TH2F>(Form("max_pe:time_%s", padName_.c_str()),
+        histograms_->create<TH2F>("max_pe:time_"+padName_,
                                   "Max Photoelectrons in a TrigScint bar", 1500, 0, 1500,
                                   "TrigScint max PE hit time (ns)", 1500, 0, 1500);
 
-        histograms_->create<TH2F>(Form("min_time_hit_above_thresh:pe_%s", padName_.c_str()),
+        histograms_->create<TH2F>("min_time_hit_above_thresh:pe_"+padName_,
                                   "Photoelectrons in a TrigScint bar", 1500, 0, 1500,
                                   "Earliest time of TrigScint hit above threshold (ns)", 1600, -100, 1500);
 
 
-				  // */
 
-
-	// TODO: implement getting a list of the constructed histograms, to set overflow boolean. 
+	// TODO: implement getting a list of the constructed histograms, to iterate through and set overflow boolean. 
 
 
     }
 
     void TrigScintDQM::configure(const ParameterSet& ps) {
       hitCollectionName_ = ps.getString("hit_collection");
-      padName_ = ps.getString("pad").c_str();
+      padName_ = ps.getString("pad");
 
       std::cout << "In configure, got parameters " << hitCollectionName_ << " and " << padName_ << std::endl;
 
@@ -104,15 +104,13 @@ namespace ldmx {
       //        const std::vector<TrigScintHit> TrigScintHits = event.getCollection<TrigScintHit>( hitCollectionName_);
 
       // trigger scintillator digi not in yet. this is the sim hits DQM. 
-      // TODO implement DQM for digi. mostly same things but maxPE etc
+      // TODO implement DQM for digi. mostly same things but different hit calls, and using maxPE etc, and can count noise hits
       
-      const std::vector<SimCalorimeterHit> TrigScintHits = event.getCollection<SimCalorimeterHit>( hitCollectionName_);
-     
-	const char * pName = padName_.c_str();
+	const std::vector<SimCalorimeterHit> TrigScintHits = event.getCollection<SimCalorimeterHit>( hitCollectionName_);
 
         // Get the total hit count
         int hitCount = TrigScintHits.size();  
-        histograms_->get(Form("n_hits_%s", pName))->Fill(hitCount); 
+        histograms_->get("n_hits_"+padName_)->Fill(hitCount); 
 
         double totalEnergy{0};  
 
@@ -124,22 +122,22 @@ namespace ldmx {
 	//        for (const TrigScintHit &hit : TrigScintHits ) {
         for (const SimCalorimeterHit &hit : TrigScintHits ) {
 
-	  histograms_->get(Form("energy_%s", pName))->Fill(hit.getEdep());  //(add histo for) pe for digi
-	  histograms_->get(Form("hit_time_%s", pName))->Fill(hit.getTime());
-	  histograms_->get(Form("id_%s", pName))->Fill(hit.getID()>>4 );
+	  histograms_->get("energy_"+padName_)->Fill(hit.getEdep());  //(add histo for) pe for digi
+	  histograms_->get("hit_time_"+padName_)->Fill(hit.getTime());
+	  histograms_->get("id_"+padName_)->Fill(hit.getID()>>4 );
 
 	  std::vector<float> posvec = hit.getPosition();
-	  histograms_->get(Form("x_%s", pName))->Fill( posvec.at(0) );
-	  histograms_->get(Form("y_%s", pName))->Fill( posvec.at(1) );
-	  histograms_->get(Form("z_%s", pName))->Fill( posvec.at(2) );
+	  histograms_->get("x_"+padName_)->Fill( posvec.at(0) );
+	  histograms_->get("y_"+padName_)->Fill( posvec.at(1) );
+	  histograms_->get("z_"+padName_)->Fill( posvec.at(2) );
            
 	  totalEnergy += hit.getEdep();  // pe for digi
 
 	  //            if ( hit.getTime() > -999. ) { filteredHits.push_back( &hit ); }
         }
         
-	//        histograms_->get(Form("total_pe_%s", pName))->Fill(totalPE); 
-        histograms_->get(Form("total_energy_%s", pName))->Fill(totalEnergy); 
+	//        histograms_->get("total_pe_"+padName_)->Fill(totalPE); 
+        histograms_->get("total_energy_"+padName_)->Fill(totalEnergy); 
 
 	/* from hcal dqm, keep for later, tweak for trigscint, only for digi
 
@@ -159,8 +157,8 @@ namespace ldmx {
             break;
         } 
 
-        histograms_->get(Form("min_time_hit_above_thresh_%s", pName))->Fill(minTime); 
-        histograms_->get(Form("min_time_hit_above_thresh:pe_%s", pName))->Fill(minTimePE, minTime);  
+        histograms_->get("min_time_hit_above_thresh_"+padName_)->Fill(minTime); 
+        histograms_->get("min_time_hit_above_thresh:pe_"+padName_)->Fill(minTimePE, minTime);  
 
 	*/
 
