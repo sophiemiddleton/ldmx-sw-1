@@ -84,6 +84,7 @@ namespace ldmx {
 
     void TrigScintDQM::configure(const ParameterSet& ps) {
       hitCollectionName_ = ps.getString("hit_collection");
+
       padName_ = ps.getString("pad");
 
       std::cout << "In configure, got parameters " << hitCollectionName_ << " and " << padName_ << std::endl;
