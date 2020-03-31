@@ -84,6 +84,7 @@ namespace ldmx {
 
     void TrigScintDQM::configure(const ParameterSet& ps) {
       hitCollectionName_ = ps.getString("hit_collection");
+
       padName_ = ps.getString("pad");
 
       std::cout << "In configure, got parameters " << hitCollectionName_ << " and " << padName_ << std::endl;
@@ -104,6 +105,7 @@ namespace ldmx {
       //        const std::vector<TrigScintHit> TrigScintHits = event.getCollection<TrigScintHit>( hitCollectionName_);
 
       // trigger scintillator digi not in yet. this is the sim hits DQM. 
+
       // TODO implement DQM for digi. mostly same things but different hit calls, and using maxPE etc, and can count noise hits
       
 	const std::vector<SimCalorimeterHit> TrigScintHits = event.getCollection<SimCalorimeterHit>( hitCollectionName_);
