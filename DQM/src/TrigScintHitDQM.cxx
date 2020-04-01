@@ -25,38 +25,6 @@ namespace ldmx {
         // Move into the TrigScint directory
 	getHistoDirectory();
 
-	// would like to avoid individual naming of histograms -- they are in different histogram dirs so i would have thought that 
-	// they could be written individually. however i think this would require passing a name to getInstance() or similar? 
-	// without that it looks like i always end up writing from all collections to the latest set of histograms created. 
-
-	// so this is what i would like to, but can't do, for now:
-
-	/*
-	histDir_ = getHistoDirectory();
-
-	histograms_->create<TH1F>("id", "Channel ID of sim hit", 100, 0, 100);
-	histograms_->create<TH1F>("total_pe", "Total pe deposition in the pad/event", 2000, 0, 2000);
-	histograms_->create<TH1F>("n_hits", "TrigScint hit multiplicity in the pad/event", 100, 0, 100);
-	histograms_->create<TH1F>("n_noiseHits", "TrigScint noise hit multiplicity in the pad/event", 100, 0, 100);
-	histograms_->create<TH1F>("x", "Hit x position", 1000, -100, 100);
-	histograms_->create<TH1F>("y", "Hit y position", 1000, -100, 100);
-	histograms_->create<TH1F>("z", "Hit z position", 1000, -900, 100);
-	
-	histograms_->create<TH1F>("pe", "Pe deposition in a TrigScint bar", 1500, 0, 1500);
-	histograms_->create<TH1F>("hit_time", "TrigScint hit time (ns)", 1600, -100, 1500);
-	
-        histograms_->create<TH2F>("max_pe:time", 
-                                  "Max Photoelectrons in a TrigScint bar", 1500, 0, 1500, 
-                                  "TrigScint max PE hit time (ns)", 1500, 0, 1500);
-
-        histograms_->create<TH2F>("min_time_hit_above_thresh:pe", 
-                                  "Photoelectrons in a TrigScint bar", 1500, 0, 1500, 
-                                  "Earliest time of TrigScint hit above threshold (ns)", 1600, -100, 1500);
-	*/
-
-
-
-	// instead do this 
 
 	histograms_->create<TH1F>("id_"+padName_, "Channel ID of hits", 100, 0, 100);
 	histograms_->create<TH1F>("id_noise_"+padName_, "Channel ID of pure noise hits", 100, 0, 100);
