@@ -63,10 +63,13 @@ namespace ldmx {
 
       // Check if the collection of digitized TrigScint hits exist. If it doesn't 
       // don't continue processing.
+      // seems to be redundant, at best, and bug inducing, at worst 
+      /*
       if ( !event.exists(hitCollectionName_.c_str()) ) {
 	std::cout << "No collection called " << hitCollectionName_ << std::endl;
 	return; 
       }
+      */
       
       const std::vector<SimCalorimeterHit> TrigScintHits = event.getCollection<SimCalorimeterHit>( hitCollectionName_);
       

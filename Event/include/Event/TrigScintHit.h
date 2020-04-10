@@ -64,6 +64,13 @@ namespace ldmx {
              * @param beamEfrac The beam energy fraction of the hit.
              */
 	        void setBeamEfrac(const float beamEfrac) { beamEfrac_ = beamEfrac; };
+
+	        /** 
+             * get beam energy fraction of hit. 
+             *
+             * @return The beam energy fraction of the hit.
+             */
+		float getBeamEfrac() { return beamEfrac_ ; };
 	  
         private:
 
