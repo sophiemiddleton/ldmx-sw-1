@@ -32,6 +32,22 @@
 
 namespace ldmx {
 
+    /**
+     * @class DarkBremFilter
+     *
+     * This class is meant to filter for events that produce a dark brem matching
+     * the input parameters:
+     *      volume: A' originates inside of the input volume (target or ecal)
+     *      nGensFromPrimary: A' produced by electron removed from primary by <= input n generations
+     *
+     * The general idea for this filter is to force Geant4 to
+     * simulate the tracks in generation order. This is done by
+     * pushing all new tracks to the waiting stack and incrementing
+     * the current generation by one when the urgent stack is empty.
+     * Checking if the A' is produced is done in the PostTrackingAction,
+     * and the event is aborted if we reach a generation later than the input
+     * generation and no A' has been found.
+     */
     class DarkBremFilter : public UserAction {
 
         public:
@@ -46,40 +62,55 @@ namespace ldmx {
             /**
              * Class destructor.
              */
-            ~DarkBremFilter();
+            ~DarkBremFilter() { }
 
             /**
              * Get the types of actions this class can do
              */
             std::vector< TYPE > getTypes() final override {
-                return { TYPE::STACKING , TYPE::STEPPING };
+                return { TYPE::STACKING };
             }
 
             /**
-             * Kills events that don't contain a DarkBrem produced by the primary electron within the desired volume.
-             *
-             * @param step The Geant4 step.
-             */
-            void stepping(const G4Step* step);
-
-            /**
              * Classify a new track which postpones track processing.
-             * Track processing resumes normally if an interaction occurred.
+             *
+             * Push all new tracks to fWaiting
+             *
+             * This forces all tracks in a given generation to be simulated
+             * before the next generation of tracks is started.
+             *
+             * Checks a new track for being an A'
+             *  if it is an A', checks if it is in correct volume and sets foundAp_ member
+             * 
              * @param aTrack The Geant4 track.
              * @param currentTrackClass The current track classification.
              */
             G4ClassificationOfNewTrack ClassifyNewTrack(const G4Track* aTrack, 
-                    const G4ClassificationOfNewTrack& currentTrackClass) final override;
+                    const G4ClassificationOfNewTrack& currentTrackClass) final override; 
+
+            /**
+             * Increment the generation counter
+             *
+             * This function is called when the urgent stack is empty
+             * and the waiting stack is transferred to the urgent stack.
+             *
+             * With all new tracks being pushed to the waiting stack,
+             * this only occurs when a new generation has begun.
+             *
+             * When a new generation has begun, if the new generation is one more
+             * than the input generation limit, we check if the A' was found.
+             */
+            void NewStage() final override;
 
         private:
 
             /**
-             * Checks if the secondaries given has an A Prime.
+             * Check if input volume is in the desired volume name
              *
-             * @param secondaries list to search
-             * @return true if A Prime in secondaries
+             * @param pointer to logical volume at vertex of track
+             * @return true if in desired volume
              */
-            bool hasAPrime(const G4TrackVector *secondaries) const;
+            bool inDesiredVolume(const G4LogicalVolume* vol) const;
 
         private:
             
@@ -94,8 +125,30 @@ namespace ldmx {
              * The volume that the filter will be applied to.
              *
              * Parameter Name: 'volume'
+             *  Searched for in LogicalVolumeStore
              */
-            std::string volumeName_;
+            G4LogicalVolume* volume_;
+
+            /**
+             * Number of generations away from primary
+             * to allow to dark brem.
+             *
+             * Default: 0 (only primary itself)
+             *
+             * Parameter Name: 'nGensFromPrimary'
+             */
+            int nGensFromPrimary_;
+
+            /**
+             * Have we found the A' yet?
+             *  Only true if A' is found IN THE CORRECT VOLUME
+             */
+            bool foundAp_{false};
+
+            /**
+             * The current generation removed from the primary electron
+             */
+            int currentGen_{-1};
 
     }; // DarkBremFilter
 }

@@ -37,11 +37,19 @@ namespace ldmx {
         std::string currentProcess = callingProcess->GetWrappedProcess()->GetProcessName(); 
         if (currentProcess.compare(this->getProcessToBias()) == 0) { 
             //only bias the process that we want to DARKBREM_PROCESS
-                        
-            //only bias primary particle
-            if (track->GetParentID() != 0) return 0; 
-    
-            //only bias primary particles above the minimum energy
+            
+            //TODO do I need to check for electrons here?
+            //skip any particles that aren't electrons
+            if ( track->GetParticleDefinition() != G4Electron::Electron() ) return 0;
+            
+            //check if we want to only bias incident
+            if ( not XsecBiasingOperator::biasAll_ ) {
+                //skip if track is not incident particle (i.e. if track has parent, skip)
+                if ( track->GetParentID() != 0 ) return 0;
+            }
+            
+            //only bias particles above the minimum energy
+            //  this energy threshold should be set to the A' mass
             if (track->GetKineticEnergy() < XsecBiasingOperator::threshold_) return 0; 
 
             G4double interactionLength = callingProcess->GetWrappedProcess()->GetCurrentInteractionLength();

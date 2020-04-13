@@ -11,122 +11,80 @@
 
 #include "SimCore/G4APrime.h"
 
+#include "G4LogicalVolumeStore.hh" //for the store
+#include "G4LogicalVolume.hh" //for IsAncestor
+
 namespace ldmx { 
 
     DarkBremFilter::DarkBremFilter(const std::string& name, Parameters& parameters)
         : UserAction(name, parameters) {
-        volumeName_ = parameters.getParameter< std::string >("volume");
-        verbosity_  = parameters.getParameter< int         >("verbosity");
+
+        std::string volumeName = parameters.getParameter< std::string >("volume");
+        verbosity_ = parameters.getParameter< int         >("verbosity");
+        nGensFromPrimary_ = parameters.getParameter<int    >("nGensFromPrimary");
 
         //re-set verbosity and volumes to reasonable defaults
         if ( verbosity_ < 0 ) verbosity_ = 0;
-        if ( volumeName_.empty() ) volumeName_ = "target_PV";
-    }
+        if ( volumeName.empty() ) volumeName = "target";
+        if ( nGensFromPrimary_ < 0 ) nGensFromPrimary_ = 0;
 
-    DarkBremFilter::~DarkBremFilter() {
-    }
-
-    G4ClassificationOfNewTrack DarkBremFilter::ClassifyNewTrack(
-            const G4Track* track, 
-            const G4ClassificationOfNewTrack& currentTrackClass) {
-
-        // get the PDGID of the track.
-        G4int pdgID = track->GetParticleDefinition()->GetPDGEncoding();
-
-        // Get the particle type.
-        G4String particleName = track->GetParticleDefinition()->GetParticleName();
-
-        // Use current classification by default so values from other plugins are not overridden.
-        G4ClassificationOfNewTrack classification = currentTrackClass;
-
-        if (track->GetTrackID() == 1 && pdgID == 11) {
-            if ( verbosity_ > 2 ) {
-                std::cout << "[ DarkBremFilter ]: Pushing track to waiting stack." << std::endl;
-            }
-            return fWaiting; 
-        }
-
-        return classification;
-    }
-
-    void DarkBremFilter::stepping(const G4Step* step) { 
-
-        // Get the track associated with this step.
-        G4Track* track = step->GetTrack();
-        
-        // Only process the primary electron track
-        if (track->GetParentID() != 0) return;
-
-        // get the PDGID of the track.
-        G4int pdgID = track->GetParticleDefinition()->GetPDGEncoding();
-        
-        // Make sure that the particle being processed is an electron.
-        if (pdgID != 11) return; 
-
-        // Get the volume the particle is in.
-        G4VPhysicalVolume* volume = track->GetVolume();
-        G4String volumeName = volume->GetName();
-
-        // If the particle isn't in the given volume, don't continue with the processing.
-        if (not volumeName.contains(volumeName_.c_str())) return;
-
-        // Get the particle type.
-        G4String particleName = track->GetParticleDefinition()->GetParticleName();
+        //Name of ECal mother volume: 'em_calorimeters'
+        //Name of Target mother volume: 'target'
+        if ( volumeName.compare("ecal") == 0 ) volumeName = "em_calorimeters";
  
-        if (step->GetPostStepPoint()->GetStepStatus() == fGeomBoundary) { 
-            // primary electron is exiting the volume.
-           
-            // Get the particles daughters.
-            const G4TrackVector* secondaries = step->GetSecondary();
-           
-            if (secondaries->size() == 0) { 
-                // If the particle didn't produce any secondaries, stop processing the event.
-                if ( verbosity_ > 1 ) {
-                    std::cout << "[ DarkBremFilter ]: "
-                                << "Primary did not produce secondaries --> Killing primary track!" 
-                                << std::endl;
-                }
-                
-                track->SetTrackStatus(fKillTrackAndSecondaries);
-                G4RunManager::GetRunManager()->AbortEvent();
-                return;
-            } else if (not hasAPrime(secondaries)) { 
-                // If the particle din't produce an A Prime, stop processing the event
-                if ( verbosity_ > 1 ) {
-                    std::cout << "[ DarkBremFilter ]: "
-                                << "No dark brem in " << volumeName_ << " --> Aborting event."
-                                << std::endl;
-                }
-                
-                track->SetTrackStatus(fKillTrackAndSecondaries);
-                G4RunManager::GetRunManager()->AbortEvent();
-                return;
-            }
+        volume_ = G4LogicalVolumeStore::GetInstance()->GetVolume( volumeName.c_str() );
 
-        } else if (step->GetPostStepPoint()->GetKineticEnergy() == 0) { 
-            //primary electron stopped inside of volume
-            const G4TrackVector* secondaries = step->GetSecondary();
-            if(not hasAPrime( secondaries )){
-                // If the particle din't produce an A Prime, stop processing the event
-                if ( verbosity_ > 1 ) {
-                    std::cout << "[ DarkBremFilter ]: "
-                              << "Electron never made it out of the " << volumeName_ << " --> Killing all tracks!"
-                              << std::endl;
-                }
-
-                track->SetTrackStatus(fKillTrackAndSecondaries);
-                G4RunManager::GetRunManager()->AbortEvent();
-                return;
-            }
-        } //check if particle is leaving volume or stopped within it
-
-    }//stepping
-
-    bool DarkBremFilter::hasAPrime(const G4TrackVector *secondaries) const {
-        for (auto& secondary_track : *secondaries) {
-            if (secondary_track->GetParticleDefinition() == G4APrime::APrime()) return true;
+        if ( not volume_ ) {
+            EXCEPTION_RAISE(
+                    "G4Volume",
+                    "Unable to find '" + volumeName + "' in G4LogicalVolumeStore."
+                    );
         }
-        return false;
+    }
+
+    G4ClassificationOfNewTrack DarkBremFilter::ClassifyNewTrack(const G4Track* aTrack, const G4ClassificationOfNewTrack& ) {
+
+        if ( aTrack->GetParticleDefinition() == G4APrime::APrime() ) {
+            //there is an A'! Yay!
+            //  we need to check that it originated in the desired volume
+            if ( inDesiredVolume(aTrack->GetLogicalVolumeAtVertex()) ) foundAp_ = true;
+        }
+
+        return fWaiting;
+    }
+
+    void DarkBremFilter::NewStage() {
+
+        //increment current generation
+        currentGen_++;
+
+        if ( currentGen_ == nGensFromPrimary_+1 ) {
+            //we are at the generation after the limit
+            //  check if A' was produced
+            if ( not foundAp_ ) {
+                //A' wasn't produced, abort event
+                G4RunManager::GetRunManager()->AbortEvent();
+            }
+        }
+        
+        return;
+    }
+
+    bool DarkBremFilter::inDesiredVolume(const G4LogicalVolume* vol) const {
+
+        return true;
+
+        /* TODO check if logical volume at vertex is in desired volume
+        //check if vol is nullptr
+        if ( vol ) std::cout << vol->GetName() << std::endl;
+        else return false; //TODO warning? exception?
+
+        //check if vol is the same as mother volume or if it is an
+        //ancestor of the mother volume
+        //IsAncestor is the computationally expensive function
+        //  but good news, only called maximum once per event
+        return (vol->GetName() == volume_->GetName() or volume_->IsAncestor( vol ));
+        */
     }
 }
 

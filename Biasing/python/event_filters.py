@@ -64,4 +64,16 @@ def targetPNFilter( ) :
 def targetDarkFilter( ) :
     target_process_filter = simcfg.UserAction("targetDark", "ldmx::DarkBremFilter")
     target_process_filter.parameters['volume'] = 'target'
+    target_process_filter.parameters['nGensFromPrimary'] = 0 #only do primary electron
     return target_process_filter
+
+###############################################################################
+# @func ecalDarkFilter
+# Returns a filter that only considers events that have a dark brem
+#   happen inside of the ecal
+###############################################################################
+def ecalDarkFilter( nGens ) :
+    ecal_process_filter = simcfg.UserAction("ecalDark", "ldmx::DarkBremFilter")
+    ecal_process_filter.parameters['volume'] = 'ecal'
+    ecal_process_filter.parameters['nGensFromPrimary'] = nGens
+    return ecal_process_filter
