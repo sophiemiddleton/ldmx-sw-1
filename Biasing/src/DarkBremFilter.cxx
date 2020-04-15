@@ -33,24 +33,22 @@ namespace ldmx {
         for (G4LogicalVolume* volume : *G4LogicalVolumeStore::GetInstance()) {
             G4String volumeName = volume->GetName();
             if ((desiredVolume.compare("ecal") == 0) 
-                    and (volumeName.contains("Si") or volumeName.contains("W")) 
-                    and volumeName.contains("volume")) {
+                    and volumeName.contains("volume")
+                    and (volumeName.contains("Si") or volumeName.contains("W") or volumeName.contains("PCB")) 
+               ) {
                 volumes_.push_back( volume );
             } else if (volumeName.contains(desiredVolume)) {
                 volumes_.push_back( volume );
             }
         }
 
-        std::cout << "DarkBremFilter: "
+        std::cout << "[ DarkBremFilter ]: "
             << "Looking for A' in: ";
         for ( auto const& volume : volumes_ ) std::cout << volume->GetName() << ", ";
         std::cout << std::endl;
     }
 
     void DarkBremFilter::BeginOfEventAction(const G4Event*) {
-        std::cout << "DarkBremFilter: "
-                  << "Beginning event, resetting currentGen and foundAp" 
-                  << std::endl;
         currentGen_ = 0;
         foundAp_    = false;
         return;
@@ -63,9 +61,11 @@ namespace ldmx {
             //  we need to check that it originated in the desired volume
             //  keep A' in the current generation so that we can have it be processed
             //  before the abort event check
-            std::cout << "DarkBremFilter: "
+            /* info about finding A'
+            std::cout << "[ DarkBremFilter ]: "
                       << "Found A', still need to check if it originated in requested volume." 
                       << std::endl;
+            */
             foundAp_ = true;
             return fUrgent; 
         }
@@ -82,9 +82,11 @@ namespace ldmx {
          * and we are starting the next one.
          */
 
-        std::cout << "DarkBremFilter: "
+        /* Check that generational stacking is working
+        std::cout << "[ DarkBremFilter ]: "
             << "Closing up generation " << currentGen_ << " and starting a new one."
             << std::endl;
+        */
 
         //increment current generation
         currentGen_++;
@@ -94,9 +96,11 @@ namespace ldmx {
             //  check if A' was produced
             if ( not foundAp_ ) {
                 //A' wasn't produced, abort event
-                std::cout << "DarkBremFilter: "
+                /* Warning about aborting event
+                std::cout << "[ DarkBremFilter ]: "
                     << "A' wasn't produced, aborting event." 
                     << std::endl;
+                */
                 G4RunManager::GetRunManager()->AbortEvent();
             }
         }
@@ -107,7 +111,7 @@ namespace ldmx {
     void DarkBremFilter::PostUserTrackingAction(const G4Track* track) {
 
         /* Check that generational stacking is working
-        std::cout << "DarkBremFilter:"
+        std::cout << "[ DarkBremFilter ]:"
             << track->GetTrackID() << " " << track->GetParticleDefinition()->GetPDGEncoding()
             << std::endl;
         */
@@ -122,14 +126,17 @@ namespace ldmx {
             //check if A' was made in the desired volume
             if ( not inDesiredVolume(track) ) {
                 //abort event if A' wasn't in correct volume
-                std::cout << "DarkBremFilter: "
+                std::cout << "[ DarkBremFilter ]: "
                     << "A' wasn't produced inside of requested volume, aborting event." 
+                    << " A' was produced in '" << track->GetLogicalVolumeAtVertex()->GetName() << "'."
                     << std::endl;
                 G4RunManager::GetRunManager()->AbortEvent();
             } else {
-                std::cout << "DarkBremFilter: "
+                /* info about where A' was produced
+                std::cout << "[ DarkBremFilter ]: "
                     << "A' was produced inside of the requested volume. Yay!" 
                     << std::endl;
+                */
             }
 
         }//track is A'
