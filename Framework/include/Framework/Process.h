@@ -110,6 +110,18 @@ namespace ldmx {
                 eventLimit_=limit;
             }
 
+            /**
+             * Set the maximum number of tries.
+             * This number is the maximum number of events that can be aborted in a row
+             * without incrementing the number of events processed.
+             * Only implemented in Production Mode
+             * i.e. We stay on the same event index until we get an un-aborted event or maxTries is reached.
+             * @param maxTries maximum number of tries
+             */
+            void setMaxTries(int tries) {
+                maxTries_ = tries;
+            }
+
             /** 
              * Set the frequency with which event information is printed. 
              * @param logFrequency The frequency specied as number of events.
@@ -154,6 +166,9 @@ namespace ldmx {
 
             /** Limit on events to process. */
             int eventLimit_{-1};
+
+            /** Maximum number of events that is allowed to be aborted in a row before incrementing number of events processed. */
+            int maxTries_{0};
             
             /** The frequency with which event info is printed. */
             int logFrequency_{-1}; 

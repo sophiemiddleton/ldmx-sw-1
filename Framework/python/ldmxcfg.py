@@ -61,6 +61,7 @@ class Process:
     def __init__(self, passName):
         self.passName=passName
         self.maxEvents=-1
+        self.maxTriesPerEvent=1
         self.run=-1
         self.inputFiles=[]
         self.outputFiles=[]
@@ -91,6 +92,7 @@ class Process:
         if (self.run>0): msg += "\n using run number %d"%(self.run)
         if (self.maxEvents>0): msg += "\n Maximum events to process: %d"%(self.maxEvents)
         else: msg += "\n No limit on maximum events to process"
+        if (self.maxTriesPerEvent>1): msg += "\n Try a maximum of %d times before giving up on an event."%(self.maxTriesPerEvent)
         msg += "\n Processor sequence:"
         for proc in self.sequence:
             msg += str(proc)

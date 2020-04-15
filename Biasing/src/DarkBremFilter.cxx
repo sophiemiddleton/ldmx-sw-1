@@ -126,11 +126,11 @@ namespace ldmx {
                     << "A' wasn't produced inside of requested volume, aborting event." 
                     << std::endl;
                 G4RunManager::GetRunManager()->AbortEvent();
+            } else {
+                std::cout << "DarkBremFilter: "
+                    << "A' was produced inside of the requested volume. Yay!" 
+                    << std::endl;
             }
-
-            std::cout << "DarkBremFilter: "
-                << "A' was produced inside of the requested volume. Yay!" 
-                << std::endl;
 
         }//track is A'
 

@@ -110,6 +110,7 @@ namespace ldmx {
 
         passname_ = stringMember(pProcess, "passName");
         eventLimit_ = intMember(pProcess, "maxEvents");
+        maxTries_ = intMember(pProcess, "maxTriesPerEvent");
         run_ = intMember(pProcess, "run");
         histoOutFile_ = stringMember(pProcess, "histogramFile");
 
@@ -228,6 +229,7 @@ namespace ldmx {
 
         process->setHistogramFileName(histoOutFile_);
         process->setEventLimit(eventLimit_);
+        process->setMaxTries( maxTries_ > 1 ? maxTries_ : 1 );
         process->setLogFrequency(logFrequency_); 
 
         std::for_each(libraries_.begin(), libraries_.end(), 

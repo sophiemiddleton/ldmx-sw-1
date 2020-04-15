@@ -57,11 +57,14 @@ namespace ldmx {
                 
                 for ( auto rule : dropKeepRules_ ) outFile.addDrop(rule);
 
+                int numTries = 0; //number of events that have been done for the current event index
                 while (n_events_processed < eventLimit_) {
                     EventHeader& eh = theEvent.getEventHeader();
                     eh.setRun(runForGeneration_);
                     eh.setEventNumber(n_events_processed + 1);
                     eh.setTimestamp(TTimeStamp());
+
+                    numTries++;
 
                     // reset the storage controller state
                     m_storageController.resetEventState();
@@ -94,7 +97,11 @@ namespace ldmx {
                     
                     outFile.nextEvent( eventAborted ? false : m_storageController.keepEvent() /*ignore storage control if event aborted*/);
                     theEvent.Clear();
-                    n_events_processed++;
+
+                    if ( not eventAborted or numTries >= maxTries_ ) {
+                        n_events_processed++; 
+                        numTries = 0;
+                    }
                 }
 
                 for (auto module : sequence_) module->onFileClose(outFile);

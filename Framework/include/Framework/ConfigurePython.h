@@ -118,6 +118,12 @@ namespace ldmx {
             int eventLimit_ {-1};
 
             /** 
+             * The maximum number of tries per event, if provided in python
+             * file. 
+             */
+            int maxTries_{1};
+
+            /** 
              * The run number to use when generating events (no input file), 
              * if provided in python file. 
              */
