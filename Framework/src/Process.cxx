@@ -69,7 +69,7 @@ namespace ldmx {
                     // reset the storage controller state
                     m_storageController.resetEventState();
 
-                    if ( getLogFrequency() > 0 and (eh.getEventNumber() % getLogFrequency() == 0 ) ) {
+                    if ( numTries <= 1 and getLogFrequency() > 0 and (eh.getEventNumber() % getLogFrequency() == 0 ) ) {
                         TTimeStamp t;
                         std::cout << "[ Process ] : Processing " << n_events_processed + 1 
                             << " Run " << theEvent.getEventHeader().getRun() 
