@@ -9,7 +9,8 @@
 
 #include "Biasing/DarkBremFilter.h"
 
-#include "SimCore/G4APrime.h"
+#include "SimCore/G4APrime.h" //checking if particles match A'
+#include "SimCore/UserTrackInformation.h" //make sure A' is saved
 
 #include "G4LogicalVolumeStore.hh" //for the store
 #include "G4LogicalVolume.hh" //for IsAncestor
@@ -42,6 +43,12 @@ namespace ldmx {
         }
     }
 
+    void DarkBremFilter::BeginOfEventAction(const G4Event*) {
+        currentGen_ = -1;
+        foundAp_    = false;
+        return;
+    }
+
     G4ClassificationOfNewTrack DarkBremFilter::ClassifyNewTrack(const G4Track* aTrack, const G4ClassificationOfNewTrack& ) {
 
         if ( aTrack->GetParticleDefinition() == G4APrime::APrime() ) {
@@ -55,18 +62,37 @@ namespace ldmx {
 
     void DarkBremFilter::NewStage() {
 
+        std::cout << "DarkBremFilter::NewStage: " << currentGen_ << std::endl;
+
         //increment current generation
         currentGen_++;
 
-        if ( currentGen_ == nGensFromPrimary_+1 ) {
-            //we are at the generation after the limit
+        if ( currentGen_ > nGensFromPrimary_ ) {
+            //we are after the generation after the limit
             //  check if A' was produced
+            std::cout << "DarkBremFilter : Past generation limit" << std::endl;
             if ( not foundAp_ ) {
                 //A' wasn't produced, abort event
+                std::cout << "DarkBremFilter : A' wasn't produced, aborting event." << std::endl;
                 G4RunManager::GetRunManager()->AbortEvent();
             }
         }
         
+        return;
+    }
+
+    void DarkBremFilter::PostUserTrackingAction(const G4Track* track) {
+        
+        if ( track->GetParticleDefinition() == G4APrime::APrime() ) {
+            //make sure found A' flag is set
+            foundAp_ = true;
+
+            //make sure A' is persisted into output file
+            UserTrackInformation* userInfo 
+              = dynamic_cast<UserTrackInformation*>(track->GetUserInformation());
+            userInfo->setSaveFlag(true); 
+        }//track is A'
+
         return;
     }
 

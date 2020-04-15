@@ -68,8 +68,13 @@ namespace ldmx {
              * Get the types of actions this class can do
              */
             std::vector< TYPE > getTypes() final override {
-                return { TYPE::STACKING };
+                return { TYPE::STACKING , TYPE::EVENT , TYPE::TRACKING };
             }
+
+            /**
+             * Reset generation counter and flag on if A' has been found
+             */
+            void BeginOfEventAction(const G4Event* ) final override;
 
             /**
              * Classify a new track which postpones track processing.
@@ -101,6 +106,14 @@ namespace ldmx {
              * than the input generation limit, we check if the A' was found.
              */
             void NewStage() final override;
+
+            /**
+             * Make sure A' is saved.
+             *
+             * If passed track is A', set save status to true
+             */
+            void PostUserTrackingAction(const G4Track* ) final override;
+
 
         private:
 
@@ -143,12 +156,12 @@ namespace ldmx {
              * Have we found the A' yet?
              *  Only true if A' is found IN THE CORRECT VOLUME
              */
-            bool foundAp_{false};
+            bool foundAp_;
 
             /**
              * The current generation removed from the primary electron
              */
-            int currentGen_{-1};
+            int currentGen_;
 
     }; // DarkBremFilter
 }
