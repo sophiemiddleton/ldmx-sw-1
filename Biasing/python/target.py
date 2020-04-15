@@ -7,7 +7,7 @@
 ###############################################################################
 
 from LDMX.Framework import ldmxcfg
-from LDMX.Detector.makePath import * #both detector and scoring planes path
+from LDMX.Detectors.makePath import makeDetectorPath, makeScoringPlanesPath #both detector and scoring planes path
 from LDMX.SimApplication import generators
 from LDMX.Biasing import event_filters, track_filters
 
@@ -160,11 +160,12 @@ def photonNuclear( ) :
 #   where massAPrime is the mass of the A' in MeV and lheFile is the path
 #   to the LHE file to use as vertices of the dark brem
 ###############################################################################
-def darkBrem( massAPrime , lheFile )
+def darkBrem( massAPrime , lheFile ) :
     darkBremOn = ldmxcfg.Producer( "darkBrem_" + str(massAPrime) + "_MeV" , "ldmx::Simulator")
     
     darkBremOn.parameters[ "description" ] = "One e- fired far upstream with Dark Brem turned on and biased up in target"
     darkBremOn.parameters[ "detector" ] = makeDetectorPath( "ldmx-det-full-v12-fieldmap-magnet" )
+    darkBremOn.parameters[ 'runNumber' ] = 0
     darkBremOn.parameters[ "generators" ] = [ generators.farUpstreamSingle4GeVElectron() ]
     
     # Bias the electron dark brem process inside of the target

@@ -40,7 +40,7 @@ namespace ldmx {
             
             //TODO do I need to check for electrons here?
             //skip any particles that aren't electrons
-            if ( track->GetParticleDefinition() != G4Electron::Electron() ) return 0;
+            //if ( track->GetParticleDefinition() != G4Electron::Electron() ) return 0;
             
             //check if we want to only bias incident
             if ( not XsecBiasingOperator::biasAll_ ) {

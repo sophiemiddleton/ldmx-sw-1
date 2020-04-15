@@ -54,6 +54,7 @@ namespace ldmx {
         if ( aTrack->GetParticleDefinition() == G4APrime::APrime() ) {
             //there is an A'! Yay!
             //  we need to check that it originated in the desired volume
+            std::cout << "DarkBremFilter: Classifying an A'" << std::endl;
             if ( inDesiredVolume(aTrack->GetLogicalVolumeAtVertex()) ) foundAp_ = true;
         }
 
@@ -82,6 +83,12 @@ namespace ldmx {
     }
 
     void DarkBremFilter::PostUserTrackingAction(const G4Track* track) {
+
+        /* Check that generational stacking is working
+        std::cout << "DarkBremFilter:"
+            << track->GetTrackID() << " " << track->GetParticleDefinition()->GetPDGEncoding()
+            << std::endl;
+        */
         
         if ( track->GetParticleDefinition() == G4APrime::APrime() ) {
             //make sure found A' flag is set
