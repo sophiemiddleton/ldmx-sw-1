@@ -152,6 +152,7 @@ namespace ldmx {
         persistencyManager_->setCurrentEvent( &event ); 
 
         // Generate and process a Geant4 event. 
+        numEventsBegan_++;
         runManager_->ProcessOneEvent( event.getEventHeader().getEventNumber() );
 
         // If a Geant4 event has been aborted, skip the rest of the processing
@@ -170,6 +171,7 @@ namespace ldmx {
 
         // Terminate the event.  This checks if an event is to be stored or 
         // stacked for later. 
+        numEventsCompleted_++;
         runManager_->TerminateOneEvent();
 
         return;
@@ -240,6 +242,11 @@ namespace ldmx {
     }
 
     void Simulator::onProcessEnd() {
+
+        std::cout << "[ Simulator ] : "
+            << "Started " << numEventsBegan_ << " events to produce "
+            << numEventsCompleted_  << " events."
+            << std::endl;
         
         // Delete Run Manager
         // From Geant4 Basic Example B01:
