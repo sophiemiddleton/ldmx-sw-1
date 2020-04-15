@@ -157,7 +157,10 @@ namespace ldmx {
         // If a Geant4 event has been aborted, skip the rest of the processing
         // sequence. This will immediately force the simulation to move on to 
         // the next event. 
-        if ( runManager_->GetCurrentEvent()->IsAborted() ) { this->abortEvent(); }
+        if ( runManager_->GetCurrentEvent()->IsAborted() ) { 
+            runManager_->TerminateOneEvent(); //still need to cleanup event objects
+            this->abortEvent(); //get out of processors loop
+        }
         
         if ( process_.getLogFrequency() > 0 and event.getEventHeader().getEventNumber() % process_.getLogFrequency() == 0 ) {
             //print according to log frequency and verbosity
@@ -168,7 +171,7 @@ namespace ldmx {
         // Terminate the event.  This checks if an event is to be stored or 
         // stacked for later. 
         runManager_->TerminateOneEvent();
-    
+
         return;
     }
     

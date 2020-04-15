@@ -13,38 +13,45 @@
 #include "SimCore/UserTrackInformation.h" //make sure A' is saved
 
 #include "G4LogicalVolumeStore.hh" //for the store
-#include "G4LogicalVolume.hh" //for IsAncestor
 
 namespace ldmx { 
 
     DarkBremFilter::DarkBremFilter(const std::string& name, Parameters& parameters)
         : UserAction(name, parameters) {
 
-        std::string volumeName = parameters.getParameter< std::string >("volume");
-        verbosity_ = parameters.getParameter< int         >("verbosity");
-        nGensFromPrimary_ = parameters.getParameter<int    >("nGensFromPrimary");
+        std::string desiredVolume = parameters.getParameter< std::string >("volume");
+        verbosity_ = parameters.getParameter< int >("verbosity");
+        nGensFromPrimary_ = parameters.getParameter< int >("nGensFromPrimary");
 
-        //re-set verbosity and volumes to reasonable defaults
+        //re-set parameters to reasonable defaults
+        //  getParameter returns compiler minimum if parameter is not provided
         if ( verbosity_ < 0 ) verbosity_ = 0;
-        if ( volumeName.empty() ) volumeName = "target";
+        if ( desiredVolume.empty() ) desiredVolume = "target";
         if ( nGensFromPrimary_ < 0 ) nGensFromPrimary_ = 0;
-
-        //Name of ECal mother volume: 'em_calorimeters'
-        //Name of Target mother volume: 'target'
-        if ( volumeName.compare("ecal") == 0 ) volumeName = "em_calorimeters";
  
-        volume_ = G4LogicalVolumeStore::GetInstance()->GetVolume( volumeName.c_str() );
-
-        if ( not volume_ ) {
-            EXCEPTION_RAISE(
-                    "G4Volume",
-                    "Unable to find '" + volumeName + "' in G4LogicalVolumeStore."
-                    );
+        //TODO check if this needs to be updated when v12 geo updates are merged in
+        for (G4LogicalVolume* volume : *G4LogicalVolumeStore::GetInstance()) {
+            G4String volumeName = volume->GetName();
+            if ((desiredVolume.compare("ecal") == 0) 
+                    and (volumeName.contains("Si") or volumeName.contains("W")) 
+                    and volumeName.contains("volume")) {
+                volumes_.push_back( volume );
+            } else if (volumeName.contains(desiredVolume)) {
+                volumes_.push_back( volume );
+            }
         }
+
+        std::cout << "DarkBremFilter: "
+            << "Looking for A' in: ";
+        for ( auto const& volume : volumes_ ) std::cout << volume->GetName() << ", ";
+        std::cout << std::endl;
     }
 
     void DarkBremFilter::BeginOfEventAction(const G4Event*) {
-        currentGen_ = -1;
+        std::cout << "DarkBremFilter: "
+                  << "Beginning event, resetting currentGen and foundAp" 
+                  << std::endl;
+        currentGen_ = 0;
         foundAp_    = false;
         return;
     }
@@ -54,8 +61,13 @@ namespace ldmx {
         if ( aTrack->GetParticleDefinition() == G4APrime::APrime() ) {
             //there is an A'! Yay!
             //  we need to check that it originated in the desired volume
-            std::cout << "DarkBremFilter: Classifying an A'" << std::endl;
-            if ( inDesiredVolume(aTrack->GetLogicalVolumeAtVertex()) ) foundAp_ = true;
+            //  keep A' in the current generation so that we can have it be processed
+            //  before the abort event check
+            std::cout << "DarkBremFilter: "
+                      << "Found A', still need to check if it originated in requested volume." 
+                      << std::endl;
+            foundAp_ = true;
+            return fUrgent; 
         }
 
         return fWaiting;
@@ -63,18 +75,28 @@ namespace ldmx {
 
     void DarkBremFilter::NewStage() {
 
-        std::cout << "DarkBremFilter::NewStage: " << currentGen_ << std::endl;
+        /**
+         * called when urgent stack is empty 
+         * since we are putting everything on waiting stack, 
+         * this is only called when a generation has been simulated 
+         * and we are starting the next one.
+         */
+
+        std::cout << "DarkBremFilter: "
+            << "Closing up generation " << currentGen_ << " and starting a new one."
+            << std::endl;
 
         //increment current generation
         currentGen_++;
 
         if ( currentGen_ > nGensFromPrimary_ ) {
-            //we are after the generation after the limit
+            //we finished the number of generations that are allowed to produce A'
             //  check if A' was produced
-            std::cout << "DarkBremFilter : Past generation limit" << std::endl;
             if ( not foundAp_ ) {
                 //A' wasn't produced, abort event
-                std::cout << "DarkBremFilter : A' wasn't produced, aborting event." << std::endl;
+                std::cout << "DarkBremFilter: "
+                    << "A' wasn't produced, aborting event." 
+                    << std::endl;
                 G4RunManager::GetRunManager()->AbortEvent();
             }
         }
@@ -91,33 +113,43 @@ namespace ldmx {
         */
         
         if ( track->GetParticleDefinition() == G4APrime::APrime() ) {
-            //make sure found A' flag is set
-            foundAp_ = true;
 
             //make sure A' is persisted into output file
             UserTrackInformation* userInfo 
               = dynamic_cast<UserTrackInformation*>(track->GetUserInformation());
             userInfo->setSaveFlag(true); 
+
+            //check if A' was made in the desired volume
+            if ( not inDesiredVolume(track) ) {
+                //abort event if A' wasn't in correct volume
+                std::cout << "DarkBremFilter: "
+                    << "A' wasn't produced inside of requested volume, aborting event." 
+                    << std::endl;
+                G4RunManager::GetRunManager()->AbortEvent();
+            }
+
+            std::cout << "DarkBremFilter: "
+                << "A' was produced inside of the requested volume. Yay!" 
+                << std::endl;
+
         }//track is A'
 
         return;
     }
 
-    bool DarkBremFilter::inDesiredVolume(const G4LogicalVolume* vol) const {
+    bool DarkBremFilter::inDesiredVolume(const G4Track* track) const {
 
-        return true;
+        /**
+         * Comparing the pointers to logical volumes isn't very robust.
+         * TODO find a better way to do this
+         */
 
-        /* TODO check if logical volume at vertex is in desired volume
-        //check if vol is nullptr
-        if ( vol ) std::cout << vol->GetName() << std::endl;
-        else return false; //TODO warning? exception?
+        auto inVol = track->GetLogicalVolumeAtVertex();
+        for ( auto const& volume : volumes_ ) {
+            if ( inVol == volume ) return true;
+        }
 
-        //check if vol is the same as mother volume or if it is an
-        //ancestor of the mother volume
-        //IsAncestor is the computationally expensive function
-        //  but good news, only called maximum once per event
-        return (vol->GetName() == volume_->GetName() or volume_->IsAncestor( vol ));
-        */
+        return false;
     }
 }
 

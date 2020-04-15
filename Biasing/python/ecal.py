@@ -7,7 +7,7 @@
 ###############################################################################
 
 from LDMX.Framework import ldmxcfg
-from LDMX.Detector.makePath import * #both detector and scoring planes path
+from LDMX.Detectors.makePath import * #both detector and scoring planes path
 from LDMX.SimApplication import generators
 from LDMX.Biasing import event_filters, track_filters
 
@@ -33,7 +33,6 @@ def electronNuclear( ) :
     # The detectors installed with ldmx-sw can be accessed using the makeDetectorPath function.
     # Otherwise, you can provide the full path yourself.
     #
-    from LDMX.Detectors.makePath import *
     simulator.parameters["detector"] = makeDetectorPath( "ldmx-det-full-v12-fieldmap-magnet" )
     
     #
@@ -161,7 +160,7 @@ def photonNuclear( ) :
 #   where massAPrime is the mass of the A' in MeV and lheFile is the path
 #   to the LHE file to use as vertices of the dark brem
 ###############################################################################
-def darkBrem( massAPrime , lheFile )
+def darkBrem( massAPrime , lheFile ) :
     darkBremOn = ldmxcfg.Producer( "darkBrem_" + str(massAPrime) + "_MeV" , "ldmx::Simulator")
     
     darkBremOn.parameters[ "description" ] = "One e- fired far upstream with Dark Brem turned on and biased up in ecal"
@@ -174,17 +173,11 @@ def darkBrem( massAPrime , lheFile )
     darkBremOn.parameters[ "biasing.particle"] = "e-"
     darkBremOn.parameters[ "biasing.process" ] = "eDBrem"
     darkBremOn.parameters[ "biasing.volume"  ] = "ecal" #options: target, ecal
-    darkBremOn.parameters[ "biasing.factor"  ] = 1000000 #this factor is only applied in the volume defined in biasing
+    darkBremOn.parameters[ "biasing.factor"  ] = 1000 #this factor is only applied in the volume defined in biasing
     
     darkBremOn.parameters[ "darkbrem.method" ] = 1 #Forward only
 
     darkBremOn.parameters[ "APrimeMass" ] = massAPrime #MeV
     darkBremOn.parameters[ "darkbrem.madgraphfilepath" ] = lheFile
-    
-    # Then give the UserAction to the simulation so that it knows to use it
-    darkBremOn.parameters['actions'] = [ 
-            event_filters.targetDarkFilter() , #only keep events when a dark brem happens in the target
-            track_filters.keepDarkTracks()     #keep all eDBrem children
-            ]
     
     return darkBremOn

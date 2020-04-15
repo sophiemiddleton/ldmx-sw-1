@@ -102,7 +102,7 @@ namespace ldmx {
              * With all new tracks being pushed to the waiting stack,
              * this only occurs when a new generation has begun.
              *
-             * When a new generation has begun, if the new generation is one more
+             * When a new generation has begun, if the new generation is more
              * than the input generation limit, we check if the A' was found.
              */
             void NewStage() final override;
@@ -111,6 +111,7 @@ namespace ldmx {
              * Make sure A' is saved.
              *
              * If passed track is A', set save status to true
+             * Aborts event if A' does not originate in desired volume
              */
             void PostUserTrackingAction(const G4Track* ) final override;
 
@@ -120,10 +121,10 @@ namespace ldmx {
             /**
              * Check if input volume is in the desired volume name
              *
-             * @param pointer to logical volume at vertex of track
-             * @return true if in desired volume
+             * @param pointer to track to check
+             * @return true if originated in desired volume
              */
-            bool inDesiredVolume(const G4LogicalVolume* vol) const;
+            bool inDesiredVolume(const G4Track* ) const;
 
         private:
             
@@ -135,12 +136,12 @@ namespace ldmx {
             int verbosity_;
 
             /** 
-             * The volume that the filter will be applied to.
+             * The volumes that the filter will be applied to.
              *
              * Parameter Name: 'volume'
-             *  Searched for in LogicalVolumeStore
+             *  Searched for in PhysicalVolumeStore
              */
-            G4LogicalVolume* volume_;
+            std::vector< G4LogicalVolume* > volumes_;
 
             /**
              * Number of generations away from primary
@@ -154,7 +155,6 @@ namespace ldmx {
 
             /**
              * Have we found the A' yet?
-             *  Only true if A' is found IN THE CORRECT VOLUME
              */
             bool foundAp_;
 
