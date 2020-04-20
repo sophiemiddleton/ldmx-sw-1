@@ -54,7 +54,7 @@ namespace ldmx {
         auto numRecHits{0};
 
         // looper over sim hits and aggregate energy depositions for each detID
-        const auto simHits{event.getCollection< SimCalorimeterHit >(inputCollection_, "sim")};
+        const auto simHits{event.getCollection< SimCalorimeterHit >(inputCollection_)};
 
         for (const auto& simHit : simHits) {          
 
