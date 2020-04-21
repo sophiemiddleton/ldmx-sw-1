@@ -34,7 +34,7 @@ namespace ldmx {
             auto biasIncident{parameters_.getParameter< bool >("biasing.incident")}; 
             auto disableEMBiasing{parameters_.getParameter< bool >("biasing.disableEMBiasing")};
             auto biasThreshold{parameters_.getParameter< double >("biasing.threshold")}; 
-            auto biasFactor{parameters_.getParameter< int >("biasing.factor")}; 
+            auto biasFactor{parameters_.getParameter< double >("biasing.factor")}; 
 
             // Instantiate the biasing operator
             // TODO: At some point, this should be more generic i.e. operators should be
