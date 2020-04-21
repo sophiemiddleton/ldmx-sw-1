@@ -42,10 +42,12 @@ namespace ldmx {
             }
         }
 
-        std::cout << "[ DarkBremFilter ]: "
-            << "Looking for A' in: ";
-        for ( auto const& volume : volumes_ ) std::cout << volume->GetName() << ", ";
-        std::cout << std::endl;
+        if ( G4RunManager::GetRunManager()->GetVerboseLevel() > 0 ) {
+            std::cout << "[ DarkBremFilter ]: "
+                << "Looking for A' in: ";
+            for ( auto const& volume : volumes_ ) std::cout << volume->GetName() << ", ";
+            std::cout << std::endl;
+        }
     }
 
     void DarkBremFilter::BeginOfEventAction(const G4Event*) {
@@ -61,11 +63,11 @@ namespace ldmx {
             //  we need to check that it originated in the desired volume
             //  keep A' in the current generation so that we can have it be processed
             //  before the abort event check
-            /* info about finding A'
-            std::cout << "[ DarkBremFilter ]: "
-                      << "Found A', still need to check if it originated in requested volume." 
-                      << std::endl;
-            */
+            if ( G4RunManager::GetRunManager()->GetVerboseLevel() > 1 ) {
+                std::cout << "[ DarkBremFilter ]: "
+                          << "Found A', still need to check if it originated in requested volume." 
+                          << std::endl;
+            }
             foundAp_ = true;
             return fUrgent; 
         }
@@ -96,11 +98,11 @@ namespace ldmx {
             //  check if A' was produced
             if ( not foundAp_ ) {
                 //A' wasn't produced, abort event
-                /* Warning about aborting event
-                std::cout << "[ DarkBremFilter ]: "
-                    << "A' wasn't produced, aborting event." 
-                    << std::endl;
-                */
+                if ( G4RunManager::GetRunManager()->GetVerboseLevel() > 1 ) {
+                    std::cout << "[ DarkBremFilter ]: "
+                        << "A' wasn't produced, aborting event." 
+                        << std::endl;
+                }
                 G4RunManager::GetRunManager()->AbortEvent();
             }
         }
@@ -126,17 +128,21 @@ namespace ldmx {
             //check if A' was made in the desired volume
             if ( not inDesiredVolume(track) ) {
                 //abort event if A' wasn't in correct volume
-                std::cout << "[ DarkBremFilter ]: "
-                    << "A' wasn't produced inside of requested volume, aborting event." 
-                    << " A' was produced in '" << track->GetLogicalVolumeAtVertex()->GetName() << "'."
-                    << std::endl;
+                if ( G4RunManager::GetRunManager()->GetVerboseLevel() > 1 ) {
+                    std::cout << "[ DarkBremFilter ]: "
+                        << "A' wasn't produced inside of requested volume, aborting event." 
+                        << " A' was produced in '" << track->GetLogicalVolumeAtVertex()->GetName() << "'."
+                        << std::endl;
+                }
                 G4RunManager::GetRunManager()->AbortEvent();
             } else {
-                /* info about where A' was produced
-                std::cout << "[ DarkBremFilter ]: "
-                    << "A' was produced inside of the requested volume. Yay!" 
-                    << std::endl;
-                */
+                ///* info about where A' was produced
+                if ( G4RunManager::GetRunManager()->GetVerboseLevel() > 1 ) {
+                    std::cout << "[ DarkBremFilter ]: "
+                        << "A' was produced inside of the requested volume. Yay!" 
+                        << std::endl;
+                }
+                //*/
             }
 
         }//track is A'

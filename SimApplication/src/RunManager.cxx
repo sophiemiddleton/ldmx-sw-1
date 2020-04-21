@@ -46,6 +46,8 @@ namespace ldmx {
         auto rootPrimaryGenUseSeed{parameters.getParameter< bool >("rootPrimaryGenUseSeed")}; 
         setUseRootSeed(rootPrimaryGenUseSeed); 
     
+        int verbosity = parameters_.getParameter<int>("verbosity");
+        if ( verbosity > 0 ) this->SetVerboseLevel( verbosity );
     }
 
     RunManager::~RunManager() {

@@ -32,8 +32,12 @@ namespace ldmx {
             EXCEPTION_RAISE("BiasingException", "Invalid particle type"); 
         }
 
-        std::cout << "[ XsecBiasingOperator ]: Biasing particles of type " 
-                  << particleType_ << std::endl; 
+        if ( G4RunManager::GetRunManager()->GetVerboseLevel() > 0 ) {
+            std::cout << "[ XsecBiasingOperator ]: Biasing particles of type " 
+                      << particleType_
+                      << " by a factor of "
+                      << xsecFactor_ << std::endl;
+        }
 
         if (processIsBiased(this->getProcessToBias())) { 
             xsecOperation = new G4BOptnChangeCrossSection("changeXsec-" + this->getProcessToBias());
