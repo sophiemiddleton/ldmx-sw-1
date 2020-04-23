@@ -20,7 +20,7 @@ def basicOneElectron() :
     sim.parameters[ "detector"  ] = makeDetectorPath( "ldmx-det-v12" )
     sim.parameters[ "runNumber" ] = 1
     sim.parameters[ "description"] = "One 4GeV electron shot from far upstream."
-    sim.parameters[ "generators" ] = [ generators.farUpstreamSingle4GeVElectron() ]
+    sim.parameters[ "generators" ] = [ generators.single_4gev_e_upstream_tagger() ]
     return sim
 
 ################################################################################################
