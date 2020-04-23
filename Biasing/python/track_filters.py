@@ -14,7 +14,7 @@ from LDMX.SimApplication import simcfg
 ###############################################################################
 def keepTracksMadeBy( processName ) :
     track_process_filter = simcfg.UserAction( 'keep_' + processName + '_children' , "ldmx::TrackProcessFilter")
-    track_process_filter.parameters['process'] = processName
+    track_process_filter.parameters['process'] = [ processName ]
     return track_process_filter
 
 ###############################################################################
