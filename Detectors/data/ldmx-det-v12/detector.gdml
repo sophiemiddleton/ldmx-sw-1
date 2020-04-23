@@ -108,7 +108,7 @@
             </physvol> 
 
             <physvol copynumber="2">
-                <file name="trig_scint.gdml"  />
+                <file name="target.gdml"  />
                 <positionref ref="center" />
                 <rotationref ref="identity"   /> 
             </physvol>
@@ -217,6 +217,13 @@
         <auxiliary auxtype="Region" auxvalue="MagnetRegion">
             <auxiliary auxtype="StoreTrajectories" auxvalue="false"/>
         </auxiliary>
+        <auxiliary auxtype="Region" auxvalue="tagger" >
+            <auxiliary auxtype="StoreTrajectories" auxvalue="true"/>
+        </auxiliary>
+        <auxiliary auxtype="Region" auxvalue="target" >
+            <auxiliary auxtype="StoreTrajectories" auxvalue="true"/>
+        </auxiliary>
+
 
         <!-- define vis attributes -->
         <auxiliary auxtype="VisAttributes" auxvalue="InvisibleNoDau">
