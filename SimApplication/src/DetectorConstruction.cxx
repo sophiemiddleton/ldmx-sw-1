@@ -72,14 +72,14 @@ namespace ldmx {
                             || volumeName.contains("W")) 
                         && volumeName.contains("volume")) {
                     xsecBiasing->AttachTo(volume);
-                    std::cout << "[ DetectorConstruction ]: " << "Attaching biasing operator " 
+                    G4cout << "[ DetectorConstruction ]: " << "Attaching biasing operator " 
                               << xsecBiasing->GetName() << " to volume " 
-                              << volume->GetName() << std::endl;
+                              << volume->GetName() << G4endl;
                 } else if (volumeName.contains(biasingVolume)) {
                     xsecBiasing->AttachTo(volume);
-                    std::cout << "[ DetectorConstruction ]: " 
+                    G4cout << "[ DetectorConstruction ]: " 
                               << "Attaching biasing operator " << xsecBiasing->GetName() 
-                              << " to volume " << volume->GetName() << std::endl;
+                              << " to volume " << volume->GetName() << G4endl;
                 }
             }
         }
