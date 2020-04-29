@@ -1,10 +1,14 @@
-# minimum cmake version
-cmake_minimum_required(VERSION 3.14)
 
+# Range of CMake versions allowed.  These version are known to work.
+cmake_minimum_required(VERSION 3.14...3.16)
+
+# Define the project
+project(ldmx-sw VERSION 2.0 LANGUAGES CXX)
+
+# Set the required C++ standard
 set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
-set(CMAKE_C_STANDARD 17)
-set(CMAKE_C_STANDARD_REQUIRED ON)
+set(CMAKE_CXX_EXTENSIONS OFF)
 
 if(NOT CMAKE_BUILD_TYPE)
   set(CMAKE_BUILD_TYPE Release)
@@ -38,7 +42,6 @@ get_filename_component(XercesC_LIBRARY_DIR ${XercesC_LIBRARIES} DIRECTORY)
 find_package(Geant4 REQUIRED ui_all vis_all)
 message(STATUS "Geant4 found at: ${Geant4_DIR}")
 
-# find Python installation
 find_package(PythonLibs 2 REQUIRED EXACT)
 message(STATUS "Python lib found at: ${PYTHON_LIBRARIES}")
 message(STATUS "Python include dir found at: ${PYTHON_INCLUDE_DIRS}")
