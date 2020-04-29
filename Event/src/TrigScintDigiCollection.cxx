@@ -30,7 +30,7 @@ namespace ldmx {
             int cid_back   = (it_newSamples->cap_id_back_   > CID_BIT_MASK) ? CID_BIT_MASK : it_newSamples->cap_id_back_;
 
             // pack...
-            word = ( cid_front << (CID_BIT_SHIFT+16)  ) +
+            int32_t word = ( cid_front << (CID_BIT_SHIFT+16)  ) +
               ( tdc_front << (TDC_BIT_SHIFT+16) ) +
               ( adc_front << (ADC_BIT_SHIFT+16) ) + 
               ( cid_back << CID_BIT_SHIFT  ) +

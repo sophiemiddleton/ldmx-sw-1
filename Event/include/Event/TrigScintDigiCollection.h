@@ -5,8 +5,8 @@
  * @author Tom Eichlersmith, University of Minnesota
  */
 
-#ifndef EVENT_ECALDIGICOLLECTION_H_
-#define EVENT_ECALDIGICOLLECTION_H_
+#ifndef EVENT_TRIGSCINTDIGICOLLECTION_H_
+#define EVENT_TRIGSCINTDIGICOLLECTION_H_
 
 // LDMX
 #include "Event/DigiCollection.h"
@@ -19,7 +19,7 @@ namespace ldmx {
      *
      * Usually several samples are used for each channel to re-construct the hit.
      */
-    struct EcalDigiSample {
+    struct TrigScintDigiSample {
         //Note each sample is really two time samples
         //so that the information packs efficiently into 
         //the base digicollection class

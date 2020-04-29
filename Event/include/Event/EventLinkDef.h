@@ -34,6 +34,7 @@
 #pragma link C++ class ldmx::SimParticle+;
 #pragma link C++ class ldmx::TriggerResult+;
 #pragma link C++ class ldmx::TrigScintHit+; 
+#pragma link C++ class ldmx::TrigScintDigiCollection+;
 #pragma link C++ class ldmx::TrackerVetoResult+;
 #pragma link C++ class ldmx::ClusterAlgoResult+;
 #pragma link C++ class ldmx::PnWeightResult+;

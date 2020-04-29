@@ -60,6 +60,7 @@ namespace ldmx {
         PnWeightResult,
         TrackerVetoResult,
         TriggerResult,
+        EcalDigiCollection,
         TrigScintHit,
         std::vector < CalorimeterHit >,
         std::vector < EcalCluster >,
