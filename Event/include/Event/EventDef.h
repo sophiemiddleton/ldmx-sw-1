@@ -28,6 +28,7 @@
 #include "Event/TrackerVetoResult.h"
 #include "Event/TriggerResult.h"
 #include "Event/TrigScintHit.h" 
+#include "Event/TrigScintDigiCollection.h"
 
 #include <variant>
 
@@ -60,7 +61,7 @@ namespace ldmx {
         PnWeightResult,
         TrackerVetoResult,
         TriggerResult,
-        EcalDigiCollection,
+        TrigScintDigiCollection,
         TrigScintHit,
         std::vector < CalorimeterHit >,
         std::vector < EcalCluster >,
