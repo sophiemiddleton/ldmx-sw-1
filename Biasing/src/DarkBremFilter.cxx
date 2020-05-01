@@ -117,13 +117,20 @@ namespace ldmx {
             << track->GetTrackID() << " " << track->GetParticleDefinition()->GetPDGEncoding()
             << std::endl;
         */
+
+        //add generation to UserTrackInformation
+        UserTrackInformation* userInfo 
+              = dynamic_cast<UserTrackInformation*>(track->GetUserInformation());
+
+        userInfo->setGeneration( currentGen_ );
         
         if ( track->GetParticleDefinition() == G4APrime::APrime() ) {
 
             //make sure A' is persisted into output file
-            UserTrackInformation* userInfo 
-              = dynamic_cast<UserTrackInformation*>(track->GetUserInformation());
             userInfo->setSaveFlag(true); 
+            //we pushed A' through a generation early to make sure it gets
+            // processed before the final check, so its generation is later
+            userInfo->setGeneration( currentGen_+1 );
 
             //check if A' was made in the desired volume
             if ( not inDesiredVolume(track) ) {
@@ -136,13 +143,12 @@ namespace ldmx {
                 }
                 G4RunManager::GetRunManager()->AbortEvent();
             } else {
-                ///* info about where A' was produced
+                // info about where A' was produced
                 if ( G4RunManager::GetRunManager()->GetVerboseLevel() > 1 ) {
                     std::cout << "[ DarkBremFilter ]: "
                         << "A' was produced inside of the requested volume. Yay!" 
                         << std::endl;
                 }
-                //*/
             }
 
         }//track is A'

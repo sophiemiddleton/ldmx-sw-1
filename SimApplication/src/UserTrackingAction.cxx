@@ -73,6 +73,8 @@ namespace ldmx {
             if (primaryInfo != NULL) {
                 traj->setGenStatus(((UserPrimaryParticleInformation*) primaryInfo)->getHepEvtStatus());
             }
+        } else {
+            traj->setGenStatus( ((UserTrackInformation*)track->GetUserInformation())->getGeneration() );
         }
 
         // Map track ID to trajectory.
