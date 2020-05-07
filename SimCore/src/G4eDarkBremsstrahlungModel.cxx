@@ -200,21 +200,21 @@ void G4eDarkBremsstrahlungModel::SetMadGraphDataLibrary(std::string path) {
     //  - LHE files are events generated with the correct mass point
     //TODO automatically select LHE files of the correct mass point?
 
-    //TODO safer C++ way to look through a directory's contents
-    DIR *dir;
-    dir = opendir(path.c_str()); 
-    struct dirent *directory;
     bool foundOneFile = false;
-    if(dir) {
-        while((directory = readdir(dir)) != NULL) {
-            std::string fname = path + std::string(directory->d_name);
-            if(fname.substr(fname.find_last_of(".")+1) == "lhe") {
-                //Parse files that end in ".lhe"
-                ParseLHE(fname);
+    DIR *dir; //handle to opened directory
+    struct dirent *ent; //handle to entry inside directory
+    if ((dir = opendir( path.c_str() )) != NULL) {
+        //directory can be opened
+        while ((ent = readdir (dir)) != NULL) {
+            std::string fp = path + '/' + std::string( ent->d_name );
+            if ( fp.substr(fp.find_last_of('.')+1) == "lhe" ) {
+                //file ends in '.lhe'
+                ParseLHE( fp );
                 foundOneFile = true;
             }
         }
-    } 
+        closedir (dir);
+    }
 
     if ( not foundOneFile ) {
         EXCEPTION_RAISE(
@@ -224,6 +224,15 @@ void G4eDarkBremsstrahlungModel::SetMadGraphDataLibrary(std::string path) {
     }
 
     MakePlaceholders(); //Setup the placeholder offsets for getting data.
+
+    if ( G4RunManager::GetRunManager()->GetVerboseLevel() > 0 ) {
+        std::cout << "[ G4eDarkBremsstrahlungModel ] : MadGraph Library of Dark Brem Vertices: " << std::endl;
+        for ( const auto &kV : madGraphData_ ) {
+            std::cout << "                               : "
+                << std::setw(8) << kV.first << " GeV Beam -> "
+                << std::setw(6) << kV.second.size() << " Events" << std::endl;
+        }
+    }
 
     return;
 }
@@ -304,7 +313,7 @@ void G4eDarkBremsstrahlungModel::SetParticle(const G4ParticleDefinition* p) {
 void G4eDarkBremsstrahlungModel::ParseLHE (std::string fname) {
     //TODO: use already written LHE parser?
     if ( G4RunManager::GetRunManager()->GetVerboseLevel() > 0 ) {
-        std::cout << "[ G4eDarkBremsstrahlungModel ] : Parsing LHE file '" << fname << "'" << std::endl;
+        std::cout << "[ G4eDarkBremsstrahlungModel ] : Parsing LHE file '" << fname << "'... ";
     }
     std::ifstream ifile;
     ifile.open(fname.c_str());
@@ -356,10 +365,7 @@ void G4eDarkBremsstrahlungModel::ParseLHE (std::string fname) {
     //Add the energy to the list, with a random offset between 0 and the total number of entries.
     ifile.close();
     if ( G4RunManager::GetRunManager()->GetVerboseLevel() > 0 ) {
-        printf( "[ G4eDarkBremsstrahlungModel ] : Parsed LHE file '%s':\n", fname.c_str() );
-        for ( const auto &kV : madGraphData_ ) {
-            printf( "                               : %6.4f GeV Beam -> %lu Events\n", kV.first , kV.second.size() );
-        }
+        std::cout << "done" << std::endl;
     }
 }
 
