@@ -68,11 +68,11 @@ namespace ldmx {
             double aprimeMass_;
 
             /**
-             * Path to LHE file containing MadGraph simulated Dark Brems
+             * Path to directory LHE files containing MadGraph simulated Dark Brems
              *
              * Mass of A' in this file has to match passed A'
              */
-            std::string madGraphFilePath_;
+            std::string madGraphLibrary_;
 
             /**
              * Set mode of interpretation for MadGraph events

@@ -21,7 +21,7 @@ namespace ldmx {
 
         aprimeMass_       = params.getParameter<double     >( "APrimeMass"                );
         int bremMethodInt = params.getParameter<int        >( "darkbrem.method"           );
-        madGraphFilePath_ = params.getParameter<std::string>( "darkbrem.madgraphfilepath" );
+        madGraphLibrary_  = params.getParameter<std::string>( "darkbrem.madgraphlibrary"  );
         globalXsecFactor_ = params.getParameter<double     >( "darkbrem.globalxsecfactor" );
 
         //prevent negative or shrinking xsec factors
@@ -49,11 +49,11 @@ namespace ldmx {
     void APrimePhysics::ConstructProcess() {
 
         //add process to electron if LHE file has been provided
-        if ( not madGraphFilePath_.empty() ) {
+        if ( not madGraphLibrary_.empty() ) {
             G4eDarkBremsstrahlung *theDarkBremProcess = new G4eDarkBremsstrahlung;
             theDarkBremProcess->SetCrossSectionBiasingFactor(globalXsecFactor_);
             theDarkBremProcess->SetMethod(bremMethod_);
-            theDarkBremProcess->SetMadGraphDataFile(madGraphFilePath_);
+            theDarkBremProcess->SetMadGraphDataLibrary(madGraphLibrary_);
     
         	G4Electron::ElectronDefinition()->GetProcessManager()->AddProcess(
                     theDarkBremProcess /*process to add - G4ProcessManager cleans up processes*/

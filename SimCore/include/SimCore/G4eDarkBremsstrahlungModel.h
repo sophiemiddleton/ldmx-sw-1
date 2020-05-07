@@ -81,10 +81,10 @@ class G4eDarkBremsstrahlungModel : public G4VEmModel {
         void SetMethod(DarkBremMethod method);
 
         /**
-         * Set the data file for the dark brem events to be scaled.
+         * Set the library of dark brem events to be scaled.
          * @param file path to LHE file
          */
-        void SetMadGraphDataFile(std::string file);
+        void SetMadGraphDataLibrary(std::string path);
 
     protected:
 

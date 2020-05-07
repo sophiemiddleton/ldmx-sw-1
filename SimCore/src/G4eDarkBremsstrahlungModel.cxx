@@ -193,31 +193,33 @@ void G4eDarkBremsstrahlungModel::SetMethod(DarkBremMethod method ) {
     return;
 }
  
-void G4eDarkBremsstrahlungModel::SetMadGraphDataFile(std::string file) {
+void G4eDarkBremsstrahlungModel::SetMadGraphDataLibrary(std::string path) {
 
-    //TODO do we need to read all LHE files in a directory? Can it just be one LHE file?
-    //Read all of the lhe files in the Resources/ directory. Assumes that they 
-    //are of the correct mass, need to implement method of separating masses 
-    //(either filenames, or skipping events with incorrect masses).
-//    DIR *dir;
-//    dir = opendir("Resources/"); 
-//    struct dirent *directory;
-//    if(dir) {
-//        while((directory = readdir(dir)) != NULL) {
-//            std::string fname = "Resources/" + std::string(directory->d_name);
-//            //Parse files that end in ".lhe"
-//            if(fname.substr(fname.find_last_of(".")+1) == "lhe") {ParseLHE(fname);}   
-//        }
-//    }
+    //Assumptions:
+    //  - Directory passed is a flat directory (no sub directories) containing LHE files
+    //  - LHE files are events generated with the correct mass point
+    //TODO automatically select LHE files of the correct mass point?
 
-    if( file.substr(file.find_last_of(".")+1) == "lhe" ) {
-        //is an lhe file
-        ParseLHE(file);
-    } else {
+    //TODO safer C++ way to look through a directory's contents
+    DIR *dir;
+    dir = opendir(path.c_str()); 
+    struct dirent *directory;
+    bool foundOneFile = false;
+    if(dir) {
+        while((directory = readdir(dir)) != NULL) {
+            std::string fname = path + std::string(directory->d_name);
+            if(fname.substr(fname.find_last_of(".")+1) == "lhe") {
+                //Parse files that end in ".lhe"
+                ParseLHE(fname);
+                foundOneFile = true;
+            }
+        }
+    } 
+
+    if ( not foundOneFile ) {
         EXCEPTION_RAISE(
-                "LHEFile",
-                "The passed file path '" + file
-                + "' does not end with 'lhe', so we are assuming it is not an LHE file."
+                "DirDNE",
+                "Directory '" + path + "' was unable to be opened or no '.lhe' files were found inside of it."
                 );
     }
 

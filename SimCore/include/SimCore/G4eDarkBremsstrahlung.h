@@ -53,8 +53,8 @@ class G4eDarkBremsstrahlung : public G4VEnergyLossProcess {
         /** Pass the method for this process to the model */
         void SetMethod(G4eDarkBremsstrahlungModel::DarkBremMethod method);
 
-        /** Pass LHE file of dark brem events to the model */
-        void SetMadGraphDataFile(std::string file);
+        /** Pass LHE library of dark brem events to the model */
+        void SetMadGraphDataLibrary(std::string path);
  
     protected:
   
@@ -76,8 +76,8 @@ class G4eDarkBremsstrahlung : public G4VEnergyLossProcess {
         /** Method that was passed to the model */
         G4eDarkBremsstrahlungModel::DarkBremMethod method_{G4eDarkBremsstrahlungModel::DarkBremMethod::Undefined};
 
-        /** Mad Graph file passed to model */
-        std::string madGraphFile_;
+        /** Mad Graph library passed to model */
+        std::string madGraphLibrary_;
   
 };
 
