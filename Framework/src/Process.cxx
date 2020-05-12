@@ -102,6 +102,7 @@ namespace ldmx {
                     NtupleManager::getInstance()->clear(); 
                     
                     outFile.nextEvent( eventAborted ? false : m_storageController.keepEvent() /*ignore storage control if event aborted*/);
+
                     theEvent.Clear();
 
                     if ( not eventAborted or numTries >= maxTries_ ) {
@@ -166,7 +167,6 @@ namespace ldmx {
                             for ( auto rule : dropKeepRules_ ) outFile->addDrop(rule);
 
                         } else {
-
                             //all other input files
                             outFile->updateParent( &inFile );
                             masterFile = outFile;
@@ -243,7 +243,7 @@ namespace ldmx {
 
                     inFile.close();
 
-                    // Reset the event in case of single output mode.
+                    // Reset the event in case of multiple input files
                     theEvent.onEndOfFile();
 
                     if ( outFile and !singleOutput ) {

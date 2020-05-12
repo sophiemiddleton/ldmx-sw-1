@@ -75,8 +75,7 @@ namespace ldmx {
              *      keep   ==> any branch with name matching exp is read in from the input (if exists) and written to output (if exists)
              *      drop   ==> any branch with name matching exp is read in from the input (if exists) and NOT written to output
              *
-             * The default behavior for branches read in from the input file is drop.
-             * The default behavior for branches added during processing is keep.
+             * The default behavior for all branches is keep.
              *
              * ROOT uses the internal TRegexp to match branch names to the passed
              * expression and set the status of the branch (whether it will be read or not).
@@ -85,20 +84,18 @@ namespace ldmx {
              * Additionally, the rules you pass are analyzed in succession, so you can go from something more general
              * to something more specific.
              *
-             * For example, to keep all SimHits except EcalSimHits, you could
-             *      keep .*SimHits.*
+             * For example to drop all EcalSimHits.*
              *      drop EcalSimHits.*
              *
-             * @note In order to make sure that the output tree doesn't copy over information from the input tree
-             * in the "drop" case, we need to clone the tree when any "drop" command is passed. This means that
-             * using "ignore" or "keep" after a "drop" leads to undefined behavior.
+             * or drop scoring plane collections
+             *      drop .*ScoringPlane.*
+             *
+             * or drop scoring plane collections but keep EcalScoringPlane collection
+             *      drop .*ScoringPlane.*
+             *      keep EcalScoringPlane.*
              *
              * @note The Event::getImpl overrides any ignore rules for the input file in order to avoid any seg faults.
              * The items accessed will still be dropped.
-             *
-             * @note Following a "drop <collection>" by a "keep <collection>" will drop collections matching <collection>.
-             *
-             * @note Following a "drop <collection>" by a "ignore <collection>" will ignore collections matching <collection>.
              *
              * @param rule The rule for dropping collections.
              */
@@ -203,6 +200,23 @@ namespace ldmx {
 
             /** Pointer to run header from input file. */
             RunHeader* runHeader_{nullptr};
+
+            /**
+             * Pre-clone rules.
+             *
+             * The series of rules to call before cloning/copying the
+             * parent tree.
+             */
+            std::vector< std::pair< std::string , bool > > preCloneRules_;
+
+            /** 
+             * Vector of drop rules that have been parsed and
+             * need to be used to reactivate these branches on the input tree
+             *
+             * The branches were initial deactivated so they don't get cloned 
+             * to output tree.
+             */
+            std::vector< std::string > reactivateRules_;
 
             /** Map of run numbers to RunHeader objects read from the input file. */
             std::map<int, RunHeader*> runMap_;
