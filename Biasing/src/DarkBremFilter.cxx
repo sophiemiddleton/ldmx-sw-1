@@ -19,15 +19,9 @@ namespace ldmx {
     DarkBremFilter::DarkBremFilter(const std::string& name, Parameters& parameters)
         : UserAction(name, parameters) {
 
-        std::string desiredVolume = parameters.getParameter< std::string >("volume");
-        verbosity_ = parameters.getParameter< int >("verbosity");
-        nGensFromPrimary_ = parameters.getParameter< int >("nGensFromPrimary");
-
-        //re-set parameters to reasonable defaults
-        //  getParameter returns compiler minimum if parameter is not provided
-        if ( verbosity_ < 0 ) verbosity_ = 0;
-        if ( desiredVolume.empty() ) desiredVolume = "target";
-        if ( nGensFromPrimary_ < 0 ) nGensFromPrimary_ = 0;
+        std::string desiredVolume = parameters.getParameter< std::string >("volume","target");
+        nGensFromPrimary_ = parameters.getParameter< int >("nGensFromPrimary",0);
+        minApEnergy_ = parameters.getParameter< double >("minApEnergy",0.);
  
         //TODO check if this needs to be updated when v12 geo updates are merged in
         for (G4LogicalVolume* volume : *G4LogicalVolumeStore::GetInstance()) {
@@ -132,13 +126,14 @@ namespace ldmx {
             // processed before the final check, so its generation is later
             userInfo->setGeneration( currentGen_+1 );
 
-            //check if A' was made in the desired volume
-            if ( not inDesiredVolume(track) ) {
+            //check if A' was made in the desired volume and has the minimum energy
+            if ( track->GetTotalEnergy() < minApEnergy_ or not inDesiredVolume(track) ) {
                 //abort event if A' wasn't in correct volume
                 if ( G4RunManager::GetRunManager()->GetVerboseLevel() > 1 ) {
                     std::cout << "[ DarkBremFilter ]: "
-                        << "A' wasn't produced inside of requested volume, aborting event." 
-                        << " A' was produced in '" << track->GetLogicalVolumeAtVertex()->GetName() << "'."
+                        << "A' wasn't produced inside of requested volume or was below requested energy, aborting event." 
+                        << " A' was produced in '" << track->GetLogicalVolumeAtVertex()->GetName() << "' and had energy "
+                        << track->GetTotalEnergy() << " MeV."
                         << std::endl;
                 }
                 G4RunManager::GetRunManager()->AbortEvent();

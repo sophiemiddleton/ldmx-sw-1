@@ -75,6 +75,7 @@ def target_ap_filter():
 
     target_ap_filter = simcfg.UserAction("target_ap_filter", "ldmx::DarkBremFilter")
     target_ap_filter.parameters['volume'] = 'target'
+    target_ap_filter.parameters['minApEnergy'] = 0.
     return target_ap_filter
 
 def tagger_veto_filter(): 

@@ -127,16 +127,11 @@ namespace ldmx {
             bool inDesiredVolume(const G4Track* ) const;
 
         private:
-            
-            /** 
-             * Level of verbosity for this filter
-             *
-             * Parameter Name: 'verbosity'
-             */
-            int verbosity_;
 
             /** 
              * The volumes that the filter will be applied to.
+             *
+             * Default: 'target'
              *
              * Parameter Name: 'volume'
              *  Searched for in PhysicalVolumeStore
@@ -152,6 +147,15 @@ namespace ldmx {
              * Parameter Name: 'nGensFromPrimary'
              */
             int nGensFromPrimary_;
+
+            /**
+             * Minimum energy [MeV] that the A' should have to keep the event.
+             * 
+             * Default: 0 (allow all energies)
+             *
+             * Parameter Name: 'minApEnergy'
+             */
+            double minApEnergy_;
 
             /**
              * Have we found the A' yet?
