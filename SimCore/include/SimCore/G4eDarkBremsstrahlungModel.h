@@ -29,12 +29,12 @@ class G4eDarkBremsstrahlungModel : public G4VEmModel {
         /**
          * @enum DarkBremMethod
          *
-         * Possible methods to dark brem inside of this model.
+         * Possible methods to use the dark brem vertices from the imported library inside of this model.
          */
         enum DarkBremMethod{
-            ForwardOnly = 1, /// Use actual electron energy and get pT from LHE (such that pT^2+me^2 < Eacc^2)
-            CMScaling, /// Boost LHE vertex momenta to the actual electron energy
-            Undefined /// Use LHE vertex as is
+            ForwardOnly = 1, ///> Use actual electron energy and get pT from LHE (such that pT^2+me^2 < Eacc^2)
+            CMScaling, ///> Boost LHE vertex momenta to the actual electron energy
+            Undefined ///> Use LHE vertex as is
         };
 
         /**
@@ -126,11 +126,11 @@ class G4eDarkBremsstrahlungModel : public G4VEmModel {
          * \f$m_{p}\f$ = mass of proton
          */
         struct Chi {
-            double A; /// atomic number
-            double Z; /// atomic mass
-            double E0; /// incoming beam energy [GeV]
-            double MA; /// A' mass [GeV]
-            double Mel; /// electron mass [GeV]
+            double A; ///> atomic number
+            double Z; ///> atomic mass
+            double E0; ///> incoming beam energy [GeV]
+            double MA; ///> A' mass [GeV]
+            double Mel; ///> electron mass [GeV]
 
             /**
              * Access function in style required by boost::numeric::odeint
@@ -156,9 +156,9 @@ class G4eDarkBremsstrahlungModel : public G4VEmModel {
          * \f$E_0\f$ = incoming energy of electron in GeV
          */
         struct DiffCross {
-            double E0; /// incoming beam energy [GeV]
-            double MA; /// A' mass [GeV]
-            double Mel; /// electron mass [GeV]
+            double E0; ///> incoming beam energy [GeV]
+            double MA; ///> A' mass [GeV]
+            double Mel; ///> electron mass [GeV]
 
             /**
              * Access function in style required by boost::numeric::odeint
@@ -174,9 +174,9 @@ class G4eDarkBremsstrahlungModel : public G4VEmModel {
          * Data frame to store mad graph data read in from LHE files.
          */
         struct OutgoingKinematics {
-            TLorentzVector electron; /// 4-momentum of electron in center of momentum frame for electron-A' system
-            TLorentzVector centerMomentum; /// 4-vector pointing to center of momentum frame
-            G4double E; /// energy of electron before brem (used as key in mad graph data map)
+            TLorentzVector electron; ///> 4-momentum of electron in center of momentum frame for electron-A' system
+            TLorentzVector centerMomentum; ///> 4-vector pointing to center of momentum frame
+            G4double E; ///> energy of electron before brem (used as key in mad graph data map)
         };
 
         /**
@@ -197,7 +197,10 @@ class G4eDarkBremsstrahlungModel : public G4VEmModel {
         void ParseLHE(std::string fname);
       
         /**
-         * Fill vector of energies with the same number of items as the madgraph data.
+         * Fill vector of currentDataPoints_ with the same number of items as the madgraph data.
+         *
+         * Randomly choose a starting point so that the simulation run isn't dependent on
+         * the order of LHE vertices in the library.
          */
         void MakePlaceholders();
 
@@ -269,7 +272,11 @@ class G4eDarkBremsstrahlungModel : public G4VEmModel {
 
     private:
 
-        /** maximum number of iterations to check before giving up on an event */
+        /** 
+         * maximum number of iterations to check before giving up on an event 
+         *
+         * TODO make configurable and/or optimize somehow
+         */
         unsigned int maxIterations_{10000};
 
         /** mass of the A Prime [GeV] */
@@ -285,6 +292,8 @@ class G4eDarkBremsstrahlungModel : public G4VEmModel {
          * should we always create a totally new electron when we dark brem? 
          *
          * TODO make this configurable? I (Tom E) can't think of a reason NOT to have it...
+         * The alternative is to allow Geant4 to decide when to make a new particle
+         * by checking if the resulting kinetic energy is below some threshold.
          */
         bool alwaysCreateNewElectron_{true};
 
@@ -292,6 +301,8 @@ class G4eDarkBremsstrahlungModel : public G4VEmModel {
          * Storage of data from mad graph 
          *
          * Maps incoming electron energy to various options for outgoing kinematics.
+         * This is a hefty map and is what stores **all** of the vertices
+         * imported from the LHE library of dark brem vertices.
          */
         std::map< double , std::vector < OutgoingKinematics > > madGraphData_;
 

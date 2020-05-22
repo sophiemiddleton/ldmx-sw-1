@@ -127,8 +127,13 @@ void G4eDarkBremsstrahlungModel::SampleSecondaries(std::vector<G4DynamicParticle
 
             if(i > maxIterations_) {
                 std::cout << "[ G4eDarkBremsstrahlungModel ] : "
-                    << "Did not manage to simulate with E0 = " << E0
-                    << " and EAcc = " << EAcc << std::endl;
+                    << "Could not produce a realistic vertex with library energy " 
+                    << data.electron.E() << " MeV."
+                    << std::endl;
+                std::cout << "                               : "
+                    << "Consider expanding your libary of A' vertices to include a beam energy closer to "
+                    << E0 << " MeV."
+                    << std::endl;
                 break;
             }
         }
