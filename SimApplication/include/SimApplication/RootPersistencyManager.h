@@ -113,7 +113,25 @@ namespace ldmx {
              */
             void setCurrentEvent(Event* event) { event_ = event; }
 
-        public:
+            /**
+             * Set the number of events began and completed.
+             *
+             * These two numbers may or may not be equal
+             * depending on if the simulation ran with any filters
+             * that would abort events early.
+             *
+             * These numbers are helpful for evaluating filtering
+             * performance, so we put them both in the RunHeader.
+             *
+             * @param[in] began number of events that were started
+             * @param[in] completed number of events that were completed without an abort signal
+             */
+            void setNumEvents(int began, int completed) {
+                eventsBegan_ = began;
+                eventsCompleted_ = completed;
+            }
+
+        private:
 
             /**
              * Build an output event from the current Geant4 event.
@@ -165,6 +183,12 @@ namespace ldmx {
 
             /// Run number
             int runNumber_{0}; 
+
+            /// Number of events started
+            int eventsBegan_{-1};
+
+            /// Number of events completed without being aborted (due to filters)
+            int eventsCompleted_{-1};
 
             /// The output file. 
             EventFile &file_;

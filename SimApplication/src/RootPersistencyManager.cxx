@@ -63,7 +63,7 @@ namespace ldmx {
     G4bool RootPersistencyManager::Store(const G4Run* aRun) {
       
         // NOTE: This method is called once the run is terminated through 
-        // the run manager.  
+        // the run manager. (G4RunManager::RunTermination) 
 
         // Get the detector header from the user detector construction
         auto detector 
@@ -73,7 +73,8 @@ namespace ldmx {
         RunHeader runHeader( runNumber_ , detector->getDetectorHeader()->getName(), description_ );
 
         // Set parameter value with number of events processed.
-        runHeader.setIntParameter("Event count", aRun->GetNumberOfEvent());
+        runHeader.setIntParameter("Event Count", eventsCompleted_ );
+        runHeader.setIntParameter("Events Began", eventsBegan_ );
 
         // Set a string parameter with the Geant4 SHA-1.
         G4String g4Version{G4RunManagerKernel::GetRunManagerKernel()->GetVersionString()};

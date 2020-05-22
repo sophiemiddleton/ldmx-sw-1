@@ -212,8 +212,12 @@ namespace ldmx {
         // level > 0.  
         runManager_->TerminateEventLoop();
 
+        // Pass the **real** number of events to the persistency manager
+        persistencyManager_->setNumEvents( numEventsBegan_ , numEventsCompleted_ );
+
         // Persist any remaining events, call the end of run action and 
         // terminate the Geant4 kernel. 
+        // This is where RootPersistencyManager::Store(G4Run*) is called
         runManager_->RunTermination();
 
         // Cleanup persistency manager
