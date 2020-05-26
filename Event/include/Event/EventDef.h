@@ -15,6 +15,7 @@
 #include "Event/FindableTrackResult.h"
 #include "Event/HcalHit.h"
 #include "Event/HcalVetoResult.h"
+#include "Event/HcalDigiCollection.h"
 #include "Event/NonFidEcalVetoResult.h"
 #include "Event/PnWeightResult.h"
 #include "Event/ProductTag.h"
@@ -53,6 +54,7 @@ namespace ldmx {
         EcalDigiCollection,
         EcalVetoResult,
         EventHeader,
+        HcalDigiCollection,        
         HcalVetoResult,
         NonFidEcalVetoResult,
         PnWeightResult,

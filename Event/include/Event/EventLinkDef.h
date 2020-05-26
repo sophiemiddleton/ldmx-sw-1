@@ -20,6 +20,7 @@
 #pragma link C++ class ldmx::CalorimeterHit+;
 #pragma link C++ class ldmx::HcalHit+;
 #pragma link C++ class ldmx::HcalVetoResult+;
+#pragma link C++ class ldmx::HcalDigiCollection+;
 #pragma link C++ class ldmx::EcalHit+;
 #pragma link C++ class ldmx::EcalDigiCollection+;
 #pragma link C++ class ldmx::EcalVetoResult+;

@@ -28,6 +28,7 @@ namespace ldmx {
     const std::string EventConstants::ECAL_DIGI_COLLECTION = "ldmx::EcalDigiCollection";
     const std::string EventConstants::ECAL_CLUSTER = "ldmx::EcalCluster";
     const std::string EventConstants::HCAL_HIT = "ldmx::HcalHit";
+    const std::string EventConstants::HCAL_DIGI_COLLECTION = "ldmx::HcalDigiCollection";    
     const std::string EventConstants::SIM_PARTICLE = "ldmx::SimParticle";
     const std::string EventConstants::SIM_CALORIMETER_HIT = "ldmx::SimCalorimeterHit";
     const std::string EventConstants::SIM_TRACKER_HIT = "ldmx::SimTrackerHit";

@@ -1,5 +1,5 @@
 /**
- * @file EcalDigiProducer.h
+ * @file HcalDigiProducer.h
  * @brief Class that performs basic ECal digitization
  * @author Owen Colegrove, UCSB
  * @author Omar Moreno, SLAC National Accelerator Laboratory
@@ -37,10 +37,10 @@
 namespace ldmx {
 
     /**
-     * @class EcalDigiProducer
+     * @class HcalDigiProducer
      * @brief Performs basic ECal digitization
      */
-    class EcalDigiProducer : public Producer {
+    class HcalDigiProducer : public Producer {
 
         public:
 
@@ -48,13 +48,13 @@ namespace ldmx {
              * Constructor
              * Makes unique noise generator and injector for this class
              */
-            EcalDigiProducer(const std::string& name, Process& process);
+            HcalDigiProducer(const std::string& name, Process& process);
 
             /**
              * Destructor
              * Deletes digi collection if it has been created
              */
-            virtual ~EcalDigiProducer();
+            virtual ~HcalDigiProducer();
 
             /**
              * Configure this producer from the python configuration.
@@ -98,7 +98,7 @@ namespace ldmx {
              * @param digiToAdd vector of EcalDigiSamples that will be filled with constructed digis
              * @return true if digiToAdd was actually filled with something
              */
-            bool constructDigis(const std::vector<double> &energies, const std::vector<double> &times, std::vector<EcalDigiSample> &digiToAdd);
+            bool constructDigis(const std::vector<double> &energies, const std::vector<double> &times, std::vector<HcalDigiSample> &digiToAdd);
 
 
             //Universal Constants
