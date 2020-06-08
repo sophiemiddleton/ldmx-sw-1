@@ -56,6 +56,7 @@ void G4eDarkBremsstrahlung::InitialiseEnergyLossProcess(const G4ParticleDefiniti
         this->EmModel(0)->SetHighEnergyLimit(energyLimit);
         dynamic_cast<G4eDarkBremsstrahlungModel*>(this->EmModel(0))->SetMethod( method_ );
         dynamic_cast<G4eDarkBremsstrahlungModel*>(this->EmModel(0))->SetMadGraphDataLibrary( madGraphLibrary_ );
+        dynamic_cast<G4eDarkBremsstrahlungModel*>(this->EmModel(0))->SetThreshold( threshold_ );
         
         G4VEmFluctuationModel* fm = 0;
         //adds model to ModelManager which handles initialisation procedures and cleaning up pointers

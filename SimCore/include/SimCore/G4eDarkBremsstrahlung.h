@@ -55,6 +55,9 @@ class G4eDarkBremsstrahlung : public G4VEnergyLossProcess {
 
         /** Pass LHE library of dark brem events to the model */
         void SetMadGraphDataLibrary(std::string path);
+
+        /** Set threshold for non-zero cross section [GeV] */
+        void SetThreshold(double thresh) { threshold_ = thresh; }
  
     protected:
   
@@ -78,6 +81,9 @@ class G4eDarkBremsstrahlung : public G4VEnergyLossProcess {
 
         /** Mad Graph library passed to model */
         std::string madGraphLibrary_;
+
+        /** Threshold for non-zero xsec [GeV] */
+        double threshold_;
   
 };
 

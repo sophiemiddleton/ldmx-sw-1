@@ -86,6 +86,15 @@ class G4eDarkBremsstrahlungModel : public G4VEmModel {
          */
         void SetMadGraphDataLibrary(std::string path);
 
+        /**
+         * Set threshold for the xsec to be non-zero.
+         *
+         * Uses the maximum of the input and twice the A' mass.
+         *
+         * @param threshold in GeV
+         */
+        void SetThreshold(double thresh) { threshold_ = std::max( thresh , 2.*MA_ ); }
+
     protected:
 
         /**
@@ -281,6 +290,9 @@ class G4eDarkBremsstrahlungModel : public G4VEmModel {
 
         /** mass of the A Prime [GeV] */
         double MA_;
+
+        /** Threshold for non-zero xsec [GeV] */
+        double threshold_;
 
         /** mass of an electron [GeV] */
         double Mel_;

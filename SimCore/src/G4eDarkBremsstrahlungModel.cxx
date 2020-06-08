@@ -422,8 +422,8 @@ G4double G4eDarkBremsstrahlungModel::ComputeCrossSectionPerAtom(
 
     E0 = E0 / CLHEP::GeV; //Change energy to GeV.
 
-    if(E0 < 2.*MA_) return 0.; //can't produce a prime
-    
+    if(E0 < threshold_) return 0.; //can't produce a prime
+
     //begin: chi-formfactor calculation
     Chi chiformfactor;
     //  set parameters
