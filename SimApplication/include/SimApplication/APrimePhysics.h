@@ -85,6 +85,11 @@ namespace ldmx {
             double globalXsecFactor_{1};
 
             /**
+             * Threshold for non-zero xsec [GeV]
+             */
+            double threshold_;
+
+            /**
              * Definition of the APrime particle.
              */
             G4ParticleDefinition* aprimeDef_;
