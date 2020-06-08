@@ -93,15 +93,17 @@ void G4eDarkBremsstrahlungModel::SampleSecondaries(std::vector<G4DynamicParticle
                                                   G4double tmin,
                                                   G4double maxEnergy) {
 
-    //Deactivate the process after one dark brem. Needs to be reactivated in the end of event action. 
-    //If this is in the stepping action instead, more than one brem can occur within each step.
-    G4bool state = false;
-    G4String pname = "biasWrapper(eDBrem)";
-    G4ProcessTable* ptable = G4ProcessTable::GetProcessTable();
-    ptable->SetProcessActivation(pname,state);
-
-    if ( G4RunManager::GetRunManager()->GetVerboseLevel() > 1 ) {
-        std::cout << "[ G4eDarkBremsstrahlungModel ] : A dark brem occurred!" << std::endl;
+    if ( onlyOnePerEvent_ ) {
+        //Deactivate the process after one dark brem. Needs to be reactivated in the end of event action. 
+        //If this is in the stepping action instead, more than one brem can occur within each step.
+        G4bool state = false;
+        G4String pname = "biasWrapper(eDBrem)";
+        G4ProcessTable* ptable = G4ProcessTable::GetProcessTable();
+        ptable->SetProcessActivation(pname,state);
+    
+        if ( G4RunManager::GetRunManager()->GetVerboseLevel() > 1 ) {
+            std::cout << "[ G4eDarkBremsstrahlungModel ] : A dark brem occurred!" << std::endl;
+        }
     }
 
     G4double E0 = primary->GetTotalEnergy();

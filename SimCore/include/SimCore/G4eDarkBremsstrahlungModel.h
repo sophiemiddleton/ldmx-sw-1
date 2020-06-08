@@ -297,6 +297,18 @@ class G4eDarkBremsstrahlungModel : public G4VEmModel {
          */
         bool alwaysCreateNewElectron_{true};
 
+        /**
+         * Only allow the dark brem to happen once per event.
+         *
+         * This allows for the dark brem process to be de-activated when SampleSecondaries is called.
+         *
+         * The dark brem process is _always_ re-activated in the RunManager::TerminateOneEvent method.
+         * This reactivation has no effect when the process is already active.
+         *
+         * TODO make this configurable so the user can decide
+         */
+        bool onlyOnePerEvent_{false};
+
         /** 
          * Storage of data from mad graph 
          *
