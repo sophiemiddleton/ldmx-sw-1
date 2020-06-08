@@ -52,6 +52,10 @@ namespace ldmx {
 
             /**
              * Get the event header.
+             *
+             * This returns the header by reference, so
+             * it should only be used when changing the event header.
+             *
              * @return A reference to the event header.
              */
             EventHeader &getEventHeader() {
@@ -66,6 +70,13 @@ namespace ldmx {
                 return eventHeader_.getEventNumber();
             }
 
+            /**
+             * Get the event weight
+             * @return the event weight
+             */
+            float getEventWeight() const {
+                return eventHeader_.getWeight();
+            }
             /**
              * Print event bus
              *

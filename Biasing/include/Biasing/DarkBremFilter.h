@@ -115,7 +115,6 @@ namespace ldmx {
              */
             void PostUserTrackingAction(const G4Track* ) final override;
 
-
         private:
 
             /**

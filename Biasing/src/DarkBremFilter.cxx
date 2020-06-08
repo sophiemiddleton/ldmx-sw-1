@@ -11,6 +11,7 @@
 
 #include "SimCore/G4APrime.h" //checking if particles match A'
 #include "SimCore/UserTrackInformation.h" //make sure A' is saved
+#include "SimApplication/UserEventInformation.h"
 
 #include "G4LogicalVolumeStore.hh" //for the store
 
@@ -126,6 +127,12 @@ namespace ldmx {
             // processed before the final check, so its generation is later
             userInfo->setGeneration( currentGen_+1 );
 
+            auto event{G4EventManager::GetEventManager()};
+            if ( !event->GetUserInformation() ) {
+                event->SetUserInformation(new UserEventInformation);
+            }
+            static_cast<UserEventInformation*>(event->GetUserInformation())->setWeight( track->GetWeight() );
+
             //check if A' was made in the desired volume and has the minimum energy
             if ( track->GetTotalEnergy() < minApEnergy_ or not inDesiredVolume(track) ) {
                 //abort event if A' wasn't in correct volume
@@ -137,14 +144,7 @@ namespace ldmx {
                         << std::endl;
                 }
                 G4RunManager::GetRunManager()->AbortEvent();
-            } else {
-                // info about where A' was produced
-                if ( G4RunManager::GetRunManager()->GetVerboseLevel() > 1 ) {
-                    std::cout << "[ DarkBremFilter ]: "
-                        << "A' was produced inside of the requested volume. Yay!" 
-                        << std::endl;
-                }
-            }
+            } 
 
         }//track is A'
 
