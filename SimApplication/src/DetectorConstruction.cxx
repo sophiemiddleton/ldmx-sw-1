@@ -66,15 +66,16 @@ namespace ldmx {
             for (G4LogicalVolume* volume : *G4LogicalVolumeStore::GetInstance()) {
                 G4String volumeName = volume->GetName();
                 //std::cout << "[ DetectorConstruction ]: " << "Volume: " << volume->GetName() << std::endl;
-                if ((biasingVolume.compare("ecal") == 0) 
-                        && (volumeName.contains("Wthick") 
+                if ((biasingVolume.compare("ecal") == 0)) {
+                    if ( (volumeName.contains("Wthick") 
                             || volumeName.contains("Si")
                             || volumeName.contains("W")) 
                         && volumeName.contains("volume")) {
-                    xsecBiasing->AttachTo(volume);
-                    G4cout << "[ DetectorConstruction ]: " << "Attaching biasing operator " 
-                              << xsecBiasing->GetName() << " to volume " 
-                              << volume->GetName() << G4endl;
+                        xsecBiasing->AttachTo(volume);
+                        G4cout << "[ DetectorConstruction ]: " << "Attaching biasing operator " 
+                               << xsecBiasing->GetName() << " to volume " 
+                               << volume->GetName() << G4endl;
+                    }
                 } else if (volumeName.contains(biasingVolume)) {
                     xsecBiasing->AttachTo(volume);
                     G4cout << "[ DetectorConstruction ]: " 

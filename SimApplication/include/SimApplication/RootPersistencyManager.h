@@ -175,14 +175,8 @@ namespace ldmx {
 
         private:
 
-            /* 
-             * Description of the current run.  The description is persisted 
-             * in the run header. 
-             */ 
-            std::string description_{""};
-
-            /// Run number
-            int runNumber_{0}; 
+            /// Parameters passed from the Configuration
+            Parameters parameters_;
 
             /// Number of events started
             int eventsBegan_{-1};
