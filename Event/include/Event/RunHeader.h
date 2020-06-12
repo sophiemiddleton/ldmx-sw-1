@@ -94,12 +94,24 @@ namespace ldmx {
             void setRunEnd(const int runEnd) { runEnd_ = runEnd; }
 
             /**
+             * Check if an int parameter exists
+             *
+             * @param name The name of the parameter
+             * @return true if parameter exists in map
+             */
+            bool hasIntParameter(const std::string& name) const { 
+                return intParameters_.find(name) != intParameters_.end(); 
+            }
+
+            /**
              * Get an int parameter value.
              *
              * @param name The name of the parameter.
              * @return The parameter value.
              */
-            int getIntParameter(const std::string& name) { return intParameters_[name]; }
+            int getIntParameter(const std::string& name) const { 
+                return intParameters_.at(name); 
+            }
 
             /**
              * Set an int parameter value.
@@ -113,13 +125,23 @@ namespace ldmx {
             }
 
             /**
+             * Check if an float parameter exists
+             *
+             * @param name The name of the parameter
+             * @return true if parameter exists in map
+             */
+            bool hasFloatParameter(const std::string& name) const { 
+                return floatParameters_.find(name) != floatParameters_.end();
+            }
+
+            /**
              * Get a float parameter value.
              * 
              * @param name The name of the parameter.
              * @return value The parameter value.
              */
-            float getFloatParameter(const std::string& name) {
-                return floatParameters_[name];
+            float getFloatParameter(const std::string& name) const {
+                return floatParameters_.at(name);
             }
 
             /**
@@ -138,8 +160,18 @@ namespace ldmx {
              * @param name The name of the parameter.
              * @return value The parameter value.
              */
-            std::string getStringParameter(const std::string& name) {
-                return stringParameters_[name];
+            std::string getStringParameter(const std::string& name) const {
+                return stringParameters_.at(name);
+            }
+
+            /**
+             * Check if an string parameter exists
+             *
+             * @param name The name of the parameter
+             * @return true if parameter exists in map
+             */
+            bool hasStringParameter(const std::string& name) const { 
+                return stringParameters_.find(name) != stringParameters_.end();
             }
 
             /**
