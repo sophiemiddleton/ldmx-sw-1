@@ -129,6 +129,22 @@ namespace ldmx {
              */
             std::map< std::string, std::any > getParameters(PyObject* dictionary); 
             
+            /**
+             * Check that the parameters extracted from the configuration are 
+             * valid. 
+             *
+             * This will be done by looping through all of the parameters 
+             * extracted from the python configuration and checking if they
+             * are in the list of valid parameters for that processor.  If 
+             * the parameter isn't in the list, an exception is thrown.
+             *
+             * @param[in] validParameters List of valid parameters used by the 
+             *      processor that will be configured. 
+             * @param[in] parameters The parameters extracted from the 
+             *      configuration.
+             */
+            void parameterCheck(std::vector< std::string > validParameters, Parameters& parameters); 
+
 
             /** The label for this processing pass. */
             std::string passname_;

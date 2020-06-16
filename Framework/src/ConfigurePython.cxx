@@ -346,8 +346,8 @@ namespace ldmx {
         process->setLogFrequency(logFrequency_); 
 
         std::for_each(libraries_.begin(), libraries_.end(), 
-                [](auto& lib) { EventProcessorFactory::getInstance().loadLibrary(lib);}
-                ); 
+                [](auto& lib) { EventProcessorFactory::getInstance().loadLibrary(lib); }
+        ); 
 
         for (auto proc : sequence_) {
             EventProcessor* ep = EventProcessorFactory::getInstance().createEventProcessor(proc.className_, proc.instanceName_, *process);
@@ -362,6 +362,11 @@ namespace ldmx {
                     histograms->create<TH1F>(hist.name_, hist.xLabel_, hist.bins_, hist.xmin_, hist.xmax_); 
                 } 
             }
+
+            // Before configuring a processor, check that the parameters being
+            // passed to the processor are valid.
+            parameterCheck(ep->getParameters(), proc.params_); 
+
             ep->configure(proc.params_);
             process->addToSequence(ep);
         }
@@ -471,5 +476,17 @@ namespace ldmx {
         } //loop through python dictionary
 
         return params; 
+    }
+
+    void ConfigurePython::parameterCheck(std::vector< std::string > validParameters, Parameters& parameters) {
+        
+        // Loop through the list of parameters extracted from the configuration
+        // and check that they are valid parameters.
+        for (auto const& [name, value] : parameters.getParameters()) { 
+            if( auto result{std::find( std::begin(validParameters), std::end(validParameters), name)}; 
+                    result == std::end(validParameters)) { 
+                EXCEPTION_RAISE("InvalidParameter", "The parameter " + name + " is invalid.");
+            }
+        }
     }
 } //ldmx
