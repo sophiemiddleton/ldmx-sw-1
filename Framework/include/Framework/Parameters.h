@@ -44,6 +44,14 @@ namespace ldmx {
             }
 
             /**
+             * Retrieve the parameter map.
+             *
+             * @return The map containing the mapping between parameter name and
+             *      its value.
+             */
+            std::map< std::string, std::any > getParameters() const { return parameters_; }
+
+            /**
              * Retrieve the parameter of the given name.  
              *
              * If the parameter isn't found and a default is specified, that is
