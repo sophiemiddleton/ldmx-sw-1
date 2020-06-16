@@ -163,7 +163,15 @@ namespace ldmx {
              * @param classtype The class type of the processor (1 for Producer, 2 for Analyzer).
              */
             static void declare(const std::string& classname, int classtype, EventProcessorMaker*);
-      
+
+            /**
+             * Get the list of parameters used by this class.
+             *
+             * @return The list of parameters used by this class.
+             */
+            std::vector< std::string > getParameters() { return validParameters_; }
+
+
         protected:
 
             /**
@@ -173,6 +181,20 @@ namespace ldmx {
              */
             void abortEvent() { throw AbortEventException(); }
 
+            /**
+             * Register the parameters used by this processor.  
+             *
+             * This will be used to check that the parameters passed to a 
+             * processor are actually valid prior to configuring.   This will
+             * also allow the option of printing the parameters to the screen
+             * in case a user wants to understand what is needed to configure
+             * a processor. 
+             *
+             * @param[in] parameter Name of the parameter to register.
+             */
+            void registerParameter(std::string parameter) { validParameters_.push_back(parameter); }
+
+
             /** Handle to the Process. */
             Process& process_;
 
@@ -180,6 +202,9 @@ namespace ldmx {
 
             /** The name of the EventProcessor. */
             std::string name_;
+
+            // List of valid parameters needed by this processor.
+            std::vector< std::string > validParameters_{}; 
 
             /** Histogram directory */
             TDirectory* histoDir_{0};
