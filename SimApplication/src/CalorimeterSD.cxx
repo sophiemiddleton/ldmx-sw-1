@@ -24,6 +24,7 @@ namespace ldmx {
     }
 
     CalorimeterSD::~CalorimeterSD() {
+        delete hitsCollection_;
     }
 
     void CalorimeterSD::Initialize(G4HCofThisEvent* hce) {
