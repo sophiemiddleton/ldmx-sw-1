@@ -55,7 +55,7 @@ namespace ldmx {
                 }
                 std::string outputFileName = outputFiles_.at(0);
                 
-                EventFile outFile(outputFileName, true);
+                EventFile outFile(outputFileName, compressionSetting_);
 
                 for (auto module : sequence_) module->onFileOpen(outFile);
 
@@ -98,8 +98,8 @@ namespace ldmx {
                     }
 
                     //fill any Ntuples that have been created
-                    if ( not eventAborted ) NtupleManager::getInstance()->fill(); 
-                    NtupleManager::getInstance()->clear(); 
+                    if ( not eventAborted ) NtupleManager::getInstance().fill(); 
+                    NtupleManager::getInstance().clear(); 
                     
                     outFile.nextEvent( eventAborted ? false : m_storageController.keepEvent() /*ignore storage control if event aborted*/);
 
@@ -150,7 +150,7 @@ namespace ldmx {
                         // 2) this is the first input file
                         if ( !singleOutput or ifile == 0 ) {
                             //setup new output file
-                            outFile = new EventFile(outputFiles_[ifile], &inFile, singleOutput );
+                            outFile = new EventFile(outputFiles_[ifile], &inFile, singleOutput, compressionSetting_ );
                             ifile++;
 
                             //setup theEvent we will iterate over
@@ -222,8 +222,8 @@ namespace ldmx {
                             }
                         }
 
-                        if ( not eventAborted ) NtupleManager::getInstance()->fill(); 
-                        NtupleManager::getInstance()->clear(); 
+                        if ( not eventAborted ) NtupleManager::getInstance().fill(); 
+                        NtupleManager::getInstance().clear(); 
 
                         n_events_processed++;
                     } //loop through events

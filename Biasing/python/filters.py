@@ -1,4 +1,5 @@
-""" Examples of how each filter is configured for biased MC generation. 
+""" @package filters
+Examples of how each filter is configured for biased MC generation. 
 
     The configurations below reflect the nominal values currently being used 
     for large scale production.  When debugging, it's best to create these
@@ -23,7 +24,7 @@ def target_brem_filter():
     """
     target_brem_filter = simcfg.UserAction("target_brem_filter", "ldmx::TargetBremFilter")
     target_brem_filter.parameters['recoil_max_p_threshold'] = 1500.
-    target_brem_filter.parameters['recoil_min_energy_threshold'] = 2500.
+    target_brem_filter.parameters['brem_min_energy_threshold'] = 2500.
     return target_brem_filter
 
 def ecal_pn_filter():

@@ -1,6 +1,11 @@
 
 #include "DQM/PhotoNuclearDQM.h" 
 
+/*~~~~~~~~~~~~~~~~*/
+/*   C++ StdLib   */
+/*~~~~~~~~~~~~~~~~*/
+#include <algorithm> 
+
 //----------//
 //   ROOT   //
 //----------//
@@ -17,7 +22,6 @@
 #include "Event/HcalVetoResult.h"
 #include "Event/SimParticle.h"
 #include "Event/TrackerVetoResult.h"
-#include "Framework/HistogramPool.h"
 #include "Tools/AnalysisUtils.h"
 
 namespace ldmx { 
@@ -29,9 +33,6 @@ namespace ldmx {
 
     void PhotoNuclearDQM::onProcessStart() {
       
-        // Get an instance of the histogram pool  
-        histograms_ = HistogramPool::getInstance();    
-
         std::vector<std::string> labels = {"", 
             "Nothing hard", // 0  
             "1 n", // 1
@@ -58,9 +59,9 @@ namespace ldmx {
         };
 
         std::vector<TH1*> hists = { 
-            histograms_->get("event_type"),
-            histograms_->get("event_type_500mev"),
-            histograms_->get("event_type_2000mev"),
+            histograms_.get("event_type"),
+            histograms_.get("event_type_500mev"),
+            histograms_.get("event_type_2000mev"),
 
         };
 
@@ -82,9 +83,9 @@ namespace ldmx {
         };
 
         hists = {
-            histograms_->get("event_type_compact"),
-            histograms_->get("event_type_compact_500mev"),
-            histograms_->get("event_type_compact_2000mev"),
+            histograms_.get("event_type_compact"),
+            histograms_.get("event_type_compact_500mev"),
+            histograms_.get("event_type_compact_2000mev"),
         };
 
         for (int ilabel{1}; ilabel < labels.size(); ++ilabel) { 
@@ -92,31 +93,6 @@ namespace ldmx {
                 hist->GetXaxis()->SetBinLabel(ilabel, labels[ilabel-1].c_str());
             }
         }
-
-        // Move into the ECal PN directory
-        getHistoDirectory();
-
-        histograms_->create<TH2F>("h_ke_h_theta", 
-                            "Kinetic Energy Hardest Photo-nuclear Particle (MeV)",
-                            400, 0, 4000, 
-                            "#theta of Hardest Photo-nuclear Particle (Degrees)",
-                            360, 0, 180);
-
-        histograms_->create<TH2F>("1n_ke:2nd_h_ke", 
-                            "Kinetic Energy of Leading Neutron (MeV)",
-                            400, 0, 4000, 
-                            "Kinetic Energy of 2nd Hardest Particle",
-                            400, 0, 4000);
-        histograms_->create<TH2F>("1kp_ke:2nd_h_ke", 
-                            "Kinetic Energy of Leading Charged Kaon (MeV)",
-                            400, 0, 4000, 
-                            "Kinetic Energy of 2nd Hardest Particle",
-                            400, 0, 4000);
-        histograms_->create<TH2F>("1k0_ke:2nd_h_ke", 
-                            "Kinetic Energy of Leading K0 (MeV)",
-                            400, 0, 4000, 
-                            "Kinetic Energy of 2nd Hardest Particle",
-                            400, 0, 4000);
 
         std::vector<std::string> n_labels = {"", "",
             "nn", // 1
@@ -126,50 +102,46 @@ namespace ldmx {
             ""
         };
 
-        TH1* hist = histograms_->get("1n_event_type"); 
+        TH1* hist = histograms_.get("1n_event_type"); 
         for (int ilabel{1}; ilabel < n_labels.size(); ++ilabel) { 
             hist->GetXaxis()->SetBinLabel(ilabel, n_labels[ilabel-1].c_str());
         }
 
-        histograms_->create< TH2F >("recoil_vertex_x:recoil_vertex_y", 
-                                    "Recoil electron vertex x (mm)", 
-                                    160, -40, 40, 
-                                    "Recoil electron vertex y (mm)", 
-                                    320, -80, 80);
     }
 
     void PhotoNuclearDQM::configure(Parameters& parameters) { }
 
     void PhotoNuclearDQM::analyze(const Event& event) {
 
-
-        // Get the collection of simulated particles from the event
+        // Get the particle map from the event.  If the particle map is empty,
+        // don't process the event.
         auto particleMap{event.getMap<int,SimParticle>("SimParticles")};
+        if (particleMap.size() == 0) return; 
 
         // Get the recoil electron
         auto [ trackID, recoil ] = Analysis::getRecoil(particleMap);
 
-        histograms_->get("recoil_vertex_x")->Fill(recoil->getVertex()[0]); 
-        histograms_->get("recoil_vertex_y")->Fill(recoil->getVertex()[1]); 
-        histograms_->get("recoil_vertex_z")->Fill(recoil->getVertex()[2]);
-        histograms_->get("recoil_vertex_x:recoil_vertex_y")->Fill( 
+        histograms_.fill("recoil_vertex_x",recoil->getVertex()[0]); 
+        histograms_.fill("recoil_vertex_y",recoil->getVertex()[1]); 
+        histograms_.fill("recoil_vertex_z",recoil->getVertex()[2]);
+        histograms_.fill("recoil_vertex_x:recoil_vertex_y", 
                          recoil->getVertex()[0], 
                          recoil->getVertex()[1]);  
 
         // Use the recoil electron to retrieve the gamma that underwent a 
         // photo-nuclear reaction.
-        auto pnGamma{Analysis::getRecoilPNGamma(event.getMap<int, SimParticle>("SimParticles"))};
+        auto pnGamma{Analysis::getPNGamma(particleMap, recoil, 2500.)};
         if (pnGamma == nullptr) { 
             std::cout << "[ PhotoNuclearDQM ]: PN Daughter is lost, skipping." << std::endl;
             return;
         }
 
-        histograms_->get("pn_particle_mult")->Fill(pnGamma->getDaughters().size());
-        histograms_->get("pn_gamma_energy")->Fill(pnGamma->getEnergy()); 
-        histograms_->get("pn_gamma_int_z")->Fill(pnGamma->getEndPoint()[2]); 
-        histograms_->get("pn_gamma_vertex_x")->Fill(pnGamma->getVertex()[0]);  
-        histograms_->get("pn_gamma_vertex_y")->Fill(pnGamma->getVertex()[1]);  
-        histograms_->get("pn_gamma_vertex_z")->Fill(pnGamma->getVertex()[2]);  
+        histograms_.fill("pn_particle_mult",pnGamma->getDaughters().size());
+        histograms_.fill("pn_gamma_energy",pnGamma->getEnergy()); 
+        histograms_.fill("pn_gamma_int_z",pnGamma->getEndPoint()[2]); 
+        histograms_.fill("pn_gamma_vertex_x",pnGamma->getVertex()[0]);  
+        histograms_.fill("pn_gamma_vertex_y",pnGamma->getVertex()[1]);  
+        histograms_.fill("pn_gamma_vertex_z",pnGamma->getVertex()[2]);  
 
         double lke{-1},   lt{-1}; 
         double lpke{-1},  lpt{-1};
@@ -180,27 +152,27 @@ namespace ldmx {
 
         // Loop through all of the PN daughters and extract kinematic 
         // information.
-        for (int &daughterTrackID : pnGamma->getDaughters() ) {
+        for (const auto& daughterTrackID : pnGamma->getDaughters() ) {
 
             //skip daughters that weren't saved
-            if ( particleMap.count( daughterTrackID ) == 0 ) { continue; }
+            if ( particleMap.count( daughterTrackID ) == 0 ) continue; 
 
-            const SimParticle* daughter = &(particleMap.at(daughterTrackID));
+            auto daughter{&(particleMap.at(daughterTrackID))};
 
             // Get the PDG ID
-            int pdgID = daughter->getPdgID();
+            auto pdgID{daughter->getPdgID()};
 
             // Ignore photons and nuclei
             if (pdgID == 22 || pdgID > 10000) continue;
 
             // Calculate the kinetic energy
-            double ke = daughter->getEnergy() - daughter->getMass();
+            double ke{daughter->getEnergy() - daughter->getMass()};
 
-            std::vector<double> vec = daughter->getMomentum(); 
+            std::vector<double> vec{daughter->getMomentum()}; 
             TVector3 pvec(vec[0], vec[1], vec[2]); 
 
             //  Calculate the polar angle
-            double theta = pvec.Theta()*(180/3.14159);
+            auto theta{pvec.Theta()*(180/3.14159)};
  
             if (lke < ke) { lke = ke; lt = theta; }  
             
@@ -216,35 +188,36 @@ namespace ldmx {
             pnDaughters.push_back(daughter); 
         }
 
-        histograms_->get("hardest_ke")->Fill(lke); 
-        histograms_->get("hardest_theta")->Fill(lt);
-        histograms_->get("h_ke_h_theta")->Fill(lke, lt); 
-        histograms_->get("hardest_p_ke")->Fill(lpke); 
-        histograms_->get("hardest_p_theta")->Fill(lpt); 
-        histograms_->get("hardest_n_ke")->Fill(lnke); 
-        histograms_->get("hardest_n_theta")->Fill(lnt); 
-        histograms_->get("hardest_pi_ke")->Fill(lpike); 
-        histograms_->get("hardest_pi_theta")->Fill(lpit); 
+        histograms_.fill("hardest_ke",lke); 
+        histograms_.fill("hardest_theta",lt);
+        histograms_.fill("h_ke_h_theta",lke, lt); 
+        histograms_.fill("hardest_p_ke",lpke); 
+        histograms_.fill("hardest_p_theta",lpt); 
+        histograms_.fill("hardest_n_ke",lnke); 
+        histograms_.fill("hardest_n_theta",lnt); 
+        histograms_.fill("hardest_pi_ke",lpike); 
+        histograms_.fill("hardest_pi_theta",lpit); 
 
         // Classify the event
-        int eventType = classifyEvent(pnGamma, particleMap, 200); 
-        int eventType500MeV = classifyEvent(pnGamma, particleMap, 500); 
-        int eventType2000MeV = classifyEvent(pnGamma, particleMap, 2000);
+        auto eventType{classifyEvent(pnDaughters, 200)};
+        auto eventType500MeV{classifyEvent(pnDaughters, 500)};
+        auto eventType2000MeV{classifyEvent(pnDaughters, 2000)};
 
-        int eventTypeComp = classifyCompactEvent(pnGamma, particleMap, 200);  
-        int eventTypeComp500MeV = classifyCompactEvent(pnGamma, particleMap, 500);  
-        int eventTypeComp2000MeV = classifyCompactEvent(pnGamma, particleMap, 2000);  
+        auto eventTypeComp{classifyCompactEvent(pnGamma, pnDaughters, 200)}; 
+        auto eventTypeComp500MeV{classifyCompactEvent(pnGamma, pnDaughters, 200)}; 
+        auto eventTypeComp2000MeV{classifyCompactEvent(pnGamma, pnDaughters, 200)}; 
 
-        histograms_->get("event_type")->Fill(eventType);
-        histograms_->get("event_type_500mev")->Fill(eventType500MeV);
-        histograms_->get("event_type_2000mev")->Fill(eventType2000MeV);
+        histograms_.fill("event_type",eventType);
+        histograms_.fill("event_type_500mev",eventType500MeV);
+        histograms_.fill("event_type_2000mev",eventType2000MeV);
 
-        histograms_->get("event_type_compact")->Fill(eventTypeComp);
-        histograms_->get("event_type_compact_500mev")->Fill(eventTypeComp500MeV);
-        histograms_->get("event_type_compact_2000mev")->Fill(eventTypeComp2000MeV);
+        histograms_.fill("event_type_compact",eventTypeComp);
+        histograms_.fill("event_type_compact_500mev",eventTypeComp500MeV);
+        histograms_.fill("event_type_compact_2000mev",eventTypeComp2000MeV);
 
         double slke{-9999};
-        double nEnergy{-9999}, energyDiff{-9999}, energyFrac{-9999}; 
+        double nEnergy{-9999}, energyDiff{-9999}, energyFrac{-9999};
+         
         if (eventType == 1 || eventType == 17 || eventType == 16 || eventType == 18 || eventType == 2) {
 
             std::sort (pnDaughters.begin(), pnDaughters.end(), [] (const auto& lhs, const auto& rhs) 
@@ -256,66 +229,63 @@ namespace ldmx {
            
 
             nEnergy = pnDaughters[0]->getEnergy() - pnDaughters[0]->getMass(); 
-            slke = pnDaughters[1]->getEnergy() - pnDaughters[1]->getMass();
+            slke = -9999; 
+            if (pnDaughters.size() > 1) slke = pnDaughters[1]->getEnergy() - pnDaughters[1]->getMass();
             energyDiff = pnGamma->getEnergy() - nEnergy; 
             energyFrac = nEnergy/pnGamma->getEnergy(); 
 
             if (eventType == 1) { 
-                histograms_->get("1n_ke:2nd_h_ke")->Fill(nEnergy, slke);
-                histograms_->get("1n_neutron_energy")->Fill(nEnergy);  
-                histograms_->get("1n_energy_diff")->Fill(energyDiff);
-                histograms_->get("1n_energy_frac")->Fill(energyFrac); 
+                histograms_.fill("1n_ke:2nd_h_ke",nEnergy, slke);
+                histograms_.fill("1n_neutron_energy",nEnergy);  
+                histograms_.fill("1n_energy_diff",energyDiff);
+                histograms_.fill("1n_energy_frac",energyFrac); 
             } else if (eventType == 2) { 
-                histograms_->get("2n_n2_energy")->Fill(slke); 
+                histograms_.fill("2n_n2_energy",slke); 
                 auto energyFrac2n = (nEnergy + slke)/pnGamma->getEnergy();
-                histograms_->get("2n_energy_frac")->Fill(energyFrac2n);
-                histograms_->get("2n_energy_other")->Fill(pnGamma->getEnergy() - energyFrac2n); 
+                histograms_.fill("2n_energy_frac",energyFrac2n);
+                histograms_.fill("2n_energy_other",pnGamma->getEnergy() - energyFrac2n); 
                   
             } else if (eventType == 17) { 
-                histograms_->get("1kp_ke:2nd_h_ke")->Fill(nEnergy, slke);
-                histograms_->get("1kp_energy")->Fill(nEnergy);  
-                histograms_->get("1kp_energy_diff")->Fill(energyDiff);
-                histograms_->get("1kp_energy_frac")->Fill(energyFrac); 
+                histograms_.fill("1kp_ke:2nd_h_ke",nEnergy, slke);
+                histograms_.fill("1kp_energy",nEnergy);  
+                histograms_.fill("1kp_energy_diff",energyDiff);
+                histograms_.fill("1kp_energy_frac",energyFrac); 
             } else if (eventType == 16 || eventType == 18) { 
-                histograms_->get("1k0_ke:2nd_h_ke")->Fill(nEnergy, slke);
-                histograms_->get("1k0_energy")->Fill(nEnergy);  
-                histograms_->get("1k0_energy_diff")->Fill(energyDiff);
-                histograms_->get("1k0_energy_frac")->Fill(energyFrac); 
+                histograms_.fill("1k0_ke:2nd_h_ke",nEnergy, slke);
+                histograms_.fill("1k0_energy",nEnergy);  
+                histograms_.fill("1k0_energy_diff",energyDiff);
+                histograms_.fill("1k0_energy_frac",energyFrac); 
             }
 
-            int nPdgID = abs(pnDaughters[1]->getPdgID());
-            int nEventType = -10; 
+            auto nPdgID{abs(pnDaughters[0]->getPdgID())};
+            auto nEventType{-10}; 
             if (nPdgID == 2112) nEventType = 1; 
             else if (nPdgID == 2212) nEventType = 2; 
             else if (nPdgID == 211) nEventType = 3;
             else if (nPdgID == 111) nEventType = 4; 
        
-            histograms_->get("1n_event_type")->Fill(nEventType); 
+            histograms_.fill("1n_event_type",nEventType); 
 
-        } 
+        }
     }
 
-    int PhotoNuclearDQM::classifyEvent(const SimParticle* particle, const std::map<int,SimParticle> &particleMap, double threshold) {
+    int PhotoNuclearDQM::classifyEvent(const std::vector< const SimParticle*> daughters, double threshold) {
 
         short n{0}, p{0}, pi{0}, pi0{0}, exotic{0}, k0l{0}, kp{0}, k0s{0}, 
               lambda{0};
 
         // Loop through all of the PN daughters and extract kinematic 
         // information.
-        for (int daughterTrackID : particle->getDaughters() ) {
-
-            if ( particleMap.count( daughterTrackID ) == 0 ) continue; //daughter wasn't stored
-
-            const SimParticle &daughter = particleMap.find(daughterTrackID)->second;
+        for (const auto& daughter : daughters ) {
 
             // Calculate the kinetic energy
-            double ke = daughter.getEnergy() - daughter.getMass();
+            auto ke{daughter->getEnergy() - daughter->getMass()};
             
             // If the kinetic energy is below threshold, continue
             if (ke <= threshold) continue;
 
             // Get the PDG ID
-            int pdgID = abs(daughter.getPdgID());
+            auto pdgID{abs(daughter->getPdgID())};
 
             if (pdgID == 2112) n++;
             else if (pdgID == 2212) p++;
@@ -397,30 +367,26 @@ namespace ldmx {
         return 20;
     }
 
-    int PhotoNuclearDQM::classifyCompactEvent(const SimParticle* particle, const std::map<int,SimParticle> &particleMap, double threshold) {
+    int PhotoNuclearDQM::classifyCompactEvent(const SimParticle* pnGamma, const std::vector< const SimParticle*> daughters, double threshold) {
    
         short n{0}, n_t{0}, k0l{0}, kp{0}, k0s{0}, soft{0};
 
         // Loop through all of the PN daughters and extract kinematic 
         // information.
-        for (int daughterTrackID : particle->getDaughters() ) {
-
-            if ( particleMap.count( daughterTrackID) == 0 ) continue; //daughter wasn't stored
-
-            const SimParticle &daughter = particleMap.find( daughterTrackID )->second;
+        for (const auto& daughter : daughters ) {
 
             // Calculate the kinetic energy
-            double ke = daughter.getEnergy() - daughter.getMass();
+            auto ke{daughter->getEnergy() - daughter->getMass()};
             
             // Get the PDG ID
-            int pdgID = abs(daughter.getPdgID());
+            auto pdgID{abs(daughter->getPdgID())};
 
             if (ke < 500) { 
                 soft++;
                 continue; 
             } 
             
-            if (ke >= 0.8*particle->getEnergy()) {
+            if (ke >= 0.8*pnGamma->getEnergy()) {
                 if (pdgID == 2112) n++;
                 else if (pdgID == 130) k0l++; 
                 else if (pdgID == 321) kp++; 
@@ -437,10 +403,57 @@ namespace ldmx {
         if (kp != 0) return 1; 
         if (neutral_kaons != 0) return 2; 
         if (n_t == 2) return 3; 
-        if (soft == particle->getDaughters().size()) return 4; 
+        if (soft == daughters.size()) return 4; 
 
         return 5; 
     
+    }
+
+    void PhotoNuclearDQM::printParticleTree(std::map< int, SimParticle > particleMap) { 
+    
+        std::vector< int > printedParticles; 
+
+        // Loop through the particle map 
+        for ( auto const& [trackID, simParticle] : particleMap ) { 
+
+            // Print the particle only if it has daughters
+            if ((simParticle.getDaughters().size() != 0) 
+                    & (std::find(printedParticles.begin(), 
+                                 printedParticles.end(), trackID) == printedParticles.end())) {
+                simParticle.Print();
+                printedParticles.push_back(trackID); 
+                
+                // Print the daughters
+                std::vector < int > printedDaughters = printDaughters(particleMap, simParticle, 1);  
+                printedParticles.insert(printedParticles.end(), printedDaughters.begin(), printedDaughters.end()); 
+            }
+        } 
+    }
+
+    std::vector< int > PhotoNuclearDQM::printDaughters(std::map< int, SimParticle > particleMap, 
+            const SimParticle particle, int depth) { 
+      
+        std::vector< int > printedParticles; 
+ 
+        // Don't print anything if a particle doesn't have any daughters
+        if (particle.getDaughters().size() == 0) return printedParticles;
+
+        // Generate the prefix
+        std::string prefix{""}; 
+        for (auto i{0}; i < depth; ++i) prefix += "\t"; 
+        
+        // Loop through all of the daughter particles and print them
+        for (const auto& daughter : particle.getDaughters()) { 
+        
+            // Print the ith daughter particle
+            std::cout << prefix; 
+            particleMap[daughter].Print();
+            printedParticles.push_back(daughter); 
+
+            // Print the Daughters
+            std::vector< int > printedDaughters = printDaughters(particleMap, particleMap[daughter], depth + 1);
+            printedParticles.insert(printedParticles.end(), printedDaughters.begin(), printedDaughters.end()); 
+        }
     }
 
 } // ldmx

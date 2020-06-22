@@ -7,14 +7,10 @@
 #include "Framework/EventProcessor.h"
 #include "Framework/Parameters.h" 
 
-class TH1; 
-
 namespace ldmx { 
 
     // Forward declarations within the ldmx workspace
     class Event;
-    class HistogramPool; 
-    class Process;
     class SimParticle;
 
     class PhotoNuclearDQM : public Analyzer { 
@@ -47,14 +43,31 @@ namespace ldmx {
 
         private:
 
+            /**
+             * Print the particle tree.
+             * 
+             * @param[in] particleMap The map containing the SimParticles.
+             */
+            void printParticleTree(std::map< int, SimParticle > particleMap);
+
+            /**
+             * Print the daughters of a particle.
+             *
+             * @param[in] particleMap The map containing the SimParticles.
+             * @param[in] particle The particle whose daughters will be printed.
+             * @param[in] depth The tree depth.
+             *
+             * @return[out] A vector with the track IDs of particles that have 
+             *      already been printed.
+             */
+            std::vector< int > printDaughters(std::map< int, SimParticle > particleMap, const SimParticle particle, int depth);  
+
             /** Method used to classify events. */
-            int classifyEvent(const SimParticle* particle, const std::map<int,SimParticle> &particleMap, double threshold); 
+            int classifyEvent(const std::vector< const SimParticle* > daughters, double threshold); 
 
             /** Method used to classify events in a compact manner. */
-            int classifyCompactEvent(const SimParticle* particle, const std::map<int,SimParticle> &particleMap, double threshold); 
-
-            /// Singleton used to access histograms.
-            HistogramPool* histograms_{nullptr}; 
+            int classifyCompactEvent(const SimParticle* pnGamma, 
+                                     const std::vector< const SimParticle* > daughters, double threshold); 
 
     };    
     

@@ -8,11 +8,14 @@ set(CMAKE_CXX_STANDARD_REQUIRED ON)
 set(CMAKE_C_STANDARD 17)
 set(CMAKE_C_STANDARD_REQUIRED ON)
 
+if(NOT EXISTS /.dockerenv)
+  message(WARNING "You are not inside a docker container; you may be working in an untested environment.")
+endif()
+
 if(NOT CMAKE_BUILD_TYPE)
   set(CMAKE_BUILD_TYPE Release)
 endif()
 set(CMAKE_CXX_FLAGS_RELEASE "-O3")
-
 
 # option to print extra module information during CMake config
 option(MODULE_DEBUG "Print extra module information during CMake config" OFF)
@@ -37,17 +40,26 @@ message(STATUS "XercesC include dir found at: ${XercesC_INCLUDE_DIRS}")
 get_filename_component(XercesC_LIBRARY_DIR ${XercesC_LIBRARIES} DIRECTORY)
 
 # find Geant4 installation
-find_package(Geant4 REQUIRED ui_all vis_all)
+find_package(Geant4 REQUIRED ui_all vis_all gdml)
 message(STATUS "Geant4 found at: ${Geant4_DIR}")
 
 # find Python installation
-find_package(PythonLibs 2 REQUIRED EXACT)
+find_package(PythonLibs 3)
+if(NOT ${PYTHONLIBS_FOUND})
+  message(WARNING "Python2 support will be removed in upcoming ldmx-sw versions.")
+  find_package(PythonLibs 2 REQUIRED)
+endif()
 message(STATUS "Python lib found at: ${PYTHON_LIBRARIES}")
 message(STATUS "Python include dir found at: ${PYTHON_INCLUDE_DIRS}")
 get_filename_component(PYTHON_LIBRARY_DIR ${PYTHON_LIBRARIES} DIRECTORY)
 
 # find ROOT installation
-find_package(ROOT REQUIRED COMPONENTS Core RIO PyROOT Geom Eve Gui)
+option(BUILD_EVE "Build the event display application. This requires more components of ROOT." OFF)
+if(BUILD_EVE)
+    find_package(ROOT 6 REQUIRED COMPONENTS Core RIO PyROOT Geom Eve Gui)
+else()
+    find_package(ROOT 6 REQUIRED COMPONENTS Core RIO PyROOT)
+endif()
 message(STATUS "ROOT found at: ${ROOT_DIR}")
 
 # find boost headers
@@ -113,7 +125,8 @@ foreach(config_script ${config_scripts})
 endforeach()
 
 # install python init file for top-level LDMX module
-file(WRITE ${CMAKE_CURRENT_BINARY_DIR}/python/__init__.py "# python package")
+file(WRITE ${CMAKE_CURRENT_BINARY_DIR}/python/__init__.py 
+    "\"\"\"Python package to configure ldmx-sw\"\"\"")
 install(FILES ${CMAKE_CURRENT_BINARY_DIR}/python/__init__.py DESTINATION lib/python/LDMX)
 
 # install scripts to bin dir
@@ -121,38 +134,6 @@ file(GLOB script_files ${CMAKE_CURRENT_SOURCE_DIR}/scripts/*.sh ${CMAKE_CURRENT_
 foreach(script_file ${script_files}) 
     install(FILES ${script_file} DESTINATION bin PERMISSIONS OWNER_READ OWNER_WRITE OWNER_EXECUTE GROUP_READ GROUP_EXECUTE WORLD_READ WORLD_EXECUTE)
 endforeach()
-
-# configure and generate documentation using doxygen
-option(INSTALL_DOC "Set to ON to generate documentation using doxygen" OFF)
-message(STATUS "Doxygen documentation: ${INSTALL_DOC}")
-if(INSTALL_DOC)
-
-  # message that documentation is off for this build
-  message(STATUS "Doxygen documentation will be generated")
-
-  # find doxygen
-  find_program(DOXYGEN_EXECUTABLE doxygen ${PATH})
-  if(DOXYGEN_EXECUTABLE-NOTFOUND)
-      message(FATAL_ERROR "The doxygen executable was not found")
-  endif()
-
-  # find dot
-  #find_program(DOT_EXECUTABLE dot ${PATH})
-  #if(DOT_EXECUTABLE-NOTFOUND)
-  #    message(FATAL_ERROR "The dot executable was not found.")
-  #endif()
-  
-  # configure doxygen file
-  configure_file(${PROJECT_SOURCE_DIR}/docs/doxygen.conf.in ${PROJECT_SOURCE_DIR}/docs/doxygen.conf)
-
-  # generate the documentation
-  install(CODE 
-      "execute_process(COMMAND doxygen ${PROJECT_SOURCE_DIR}/docs/doxygen.conf WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR})")
-
-  # documentation generation target 
-  add_custom_target(doc COMMAND doxygen ${PROJECT_SOURCE_DIR}/docs/doxygen.conf)
-
-endif()
 
 # option for dumping full CMake env
 option(DUMP_CMAKE_VARIABLES OFF)
