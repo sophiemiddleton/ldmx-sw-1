@@ -24,6 +24,7 @@ namespace ldmx {
         madGraphLibrary_  = params.getParameter<std::string>( "darkbrem.madgraphlibrary"  );
         globalXsecFactor_ = params.getParameter<double     >( "darkbrem.globalxsecfactor" );
         threshold_        = params.getParameter<double     >( "darkbrem.threshold"        );
+        epsilon_          = params.getParameter<double     >( "darkbrem.epsilon"          );
 
         //prevent negative or shrinking xsec factors
         if ( globalXsecFactor_ < 1 ) globalXsecFactor_ = 1.;
@@ -56,6 +57,7 @@ namespace ldmx {
             theDarkBremProcess->SetMethod(bremMethod_);
             theDarkBremProcess->SetMadGraphDataLibrary(madGraphLibrary_);
             theDarkBremProcess->SetThreshold(threshold_);
+            theDarkBremProcess->SetEpsilon(epsilon_);
     
         	G4Electron::ElectronDefinition()->GetProcessManager()->AddProcess(
                     theDarkBremProcess /*process to add - G4ProcessManager cleans up processes*/

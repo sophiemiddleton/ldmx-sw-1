@@ -474,9 +474,8 @@ G4double G4eDarkBremsstrahlungModel::ComputeCrossSectionPerAtom(
     
     G4double GeVtoPb = 3.894E08;
     G4double alphaEW = 1.0/137.0;
-    G4double epsilBench = 1;
  
-    G4double cross = GeVtoPb*4.*alphaEW*alphaEW*alphaEW*epsilBench*epsilBench*ChiRes*DsDx*CLHEP::picobarn;
+    G4double cross = GeVtoPb*4.*alphaEW*alphaEW*alphaEW*epsilon_*epsilon_*ChiRes*DsDx*CLHEP::picobarn;
 
     if(cross < 0.) return 0.; //safety check all the math
 

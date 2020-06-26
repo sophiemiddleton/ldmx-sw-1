@@ -58,6 +58,9 @@ class G4eDarkBremsstrahlung : public G4VEnergyLossProcess {
 
         /** Set threshold for non-zero cross section [GeV] */
         void SetThreshold(double thresh) { threshold_ = thresh; }
+
+        /** Set epsilon for dark brem cross section calculation */
+        void SetEpsilon(double e) { epsilon_ = e; }
  
     protected:
   
@@ -84,6 +87,9 @@ class G4eDarkBremsstrahlung : public G4VEnergyLossProcess {
 
         /** Threshold for non-zero xsec [GeV] */
         double threshold_;
+
+        /** Epsilon for dark brem xsec calculation */
+        double epsilon_;
   
 };
 

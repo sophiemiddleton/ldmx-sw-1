@@ -95,6 +95,13 @@ class G4eDarkBremsstrahlungModel : public G4VEmModel {
          */
         void SetThreshold(double thresh) { threshold_ = std::max( thresh , 2.*MA_ ); }
 
+        /**
+         * Set the epsilon for the dark brem cross section calculation
+         *
+         * @sa ComputeCrossSectionPerAtom for how this is used.
+         */
+        void SetEpsilon(double e) { epsilon_ = e; }
+
     protected:
 
         /**
@@ -238,7 +245,7 @@ class G4eDarkBremsstrahlungModel : public G4VEmModel {
          * Integrate diffcross from 0 to \f$min(1-m_e/E_0,1-m_A/E_0)\f$
          *
          * Total cross section is given by
-         * \f[ \sigma = 4 \frac{pb}{GeV}\alpha_{EW}^3 \int \chi(t)dt \int \frac{d\sigma}{dx}(x)dx \f]
+         * \f[ \sigma = 4 \frac{pb}{GeV} \epsilon^2 \alpha_{EW}^3 \int \chi(t)dt \int \frac{d\sigma}{dx}(x)dx \f]
          *
          * @param E0 energy of beam (incoming particle)
          * @param Z atomic number of atom
@@ -288,16 +295,33 @@ class G4eDarkBremsstrahlungModel : public G4VEmModel {
          */
         unsigned int maxIterations_{10000};
 
-        /** mass of the A Prime [GeV] */
+        /** mass of the A Prime [GeV] 
+         *
+         * Configurable with 'APrimeMass'
+         */
         double MA_;
 
-        /** Threshold for non-zero xsec [GeV] */
+        /** Threshold for non-zero xsec [GeV] 
+         *
+         * Configurable with 'darkbrem.threshold'
+         */
         double threshold_;
+
+        /** Epsilon value to plug into xsec calculation 
+         *
+         * @sa ComputeCrossSectionPerAtom for how this is used
+         *
+         * Configurable with 'darkbrem.epsilon'
+         */
+        double epsilon_;
 
         /** mass of an electron [GeV] */
         double Mel_;
 
-        /** method for this model */
+        /** method for this model 
+         *
+         * Configurable with 'darkbrem.method'
+         */
         DarkBremMethod method_{DarkBremMethod::Undefined};
 
         /** 
@@ -327,6 +351,8 @@ class G4eDarkBremsstrahlungModel : public G4VEmModel {
          * Maps incoming electron energy to various options for outgoing kinematics.
          * This is a hefty map and is what stores **all** of the vertices
          * imported from the LHE library of dark brem vertices.
+         *
+         * Library is read in from configuration parameter 'darkbrem.madgraphlibrary'
          */
         std::map< double , std::vector < OutgoingKinematics > > madGraphData_;
 

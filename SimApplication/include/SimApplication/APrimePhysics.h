@@ -90,6 +90,11 @@ namespace ldmx {
             double threshold_;
 
             /**
+             * Epsilon for dark brem xsec calculation
+             */
+            double epsilon_;
+
+            /**
              * Definition of the APrime particle.
              */
             G4ParticleDefinition* aprimeDef_;
