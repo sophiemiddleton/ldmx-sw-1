@@ -1,8 +1,6 @@
 /**
  * @file HcalDigiCollection.h
- * @brief Class that represents a digitized hit in a calorimeter cell within the ECal
- * @author Cameron Bravo, SLAC National Accelerator Laboratory
- * @author Tom Eichlersmith, University of Minnesota
+ * @brief Class that represents a digitized hit in a calorimeter cell within the HCal
  */
 
 #ifndef EVENT_HCALDIGICOLLECTION_H_
@@ -20,7 +18,7 @@ namespace ldmx {
 
     /**
      * @struct HcalDigiSample
-     * @brief One sample of an Ecal digi channel
+     * @brief One sample of an Hcal digi channel
      *
      * Usually several samples are used for each channel to re-construct the hit.
      */
@@ -43,7 +41,7 @@ namespace ldmx {
 
     /**
      * @class HcalDigiCollection
-     * @brief Represents a collection of the ECal digi hits
+     * @brief Represents a collection of the HCal digi hits
      *
      * @note This class represents the digitized signal information
      * in the form of a series of samples for each channel of readout.
@@ -158,4 +156,4 @@ namespace ldmx {
 
 }
 
-#endif /* EVENT_ECALDIGI_H_ */
+#endif /* EVENT_HCALDIGI_H_ */

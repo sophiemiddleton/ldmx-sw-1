@@ -19,7 +19,6 @@ from LDMX.SimApplication import examples as ex
 from LDMX.Ecal.ecalDigis import ecalDigis
 from LDMX.Ecal.ecalRecon import ecalRecon
 from LDMX.Hcal.hcalDigis import hcalDigis
-# from LDMX.EventProc.hcalDigis import hcalDigis
 
 # tell the process what sequence to do the processors in
 p.sequence = [

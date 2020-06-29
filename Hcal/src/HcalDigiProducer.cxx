@@ -1,7 +1,6 @@
 /**
  * @file HcalDigiProducer.cxx
- * @brief Class that performs basic ECal digitization
- * @author Cameron Bravo, SLAC National Accelerator Laboratory
+ * @brief Class that performs basic HCal digitization - based on ECal digitization
  */
 
 #include "Hcal/HcalDigiProducer.h"
@@ -43,6 +42,8 @@ namespace ldmx {
         padCapacitance_  = ps.getParameter<double>("padCapacitance");
         nADCs_           = ps.getParameter<int>("nADCs");
         iSOI_            = ps.getParameter<int>("iSOI");
+	mev_per_mip_     = ps.getParameter<double>("mev_per_mip");
+        pe_per_mip_      = ps.getParameter<double>("pe_per_mip"); 
 
         // Calculate the noise RMS based on the properties of the readout pad
         noiseRMS_ = this->calculateNoise(padCapacitance_, noiseIntercept_, noiseSlope_);  
@@ -94,19 +95,17 @@ namespace ldmx {
 
     void HcalDigiProducer::produce(Event& event) {
 
-        //get simulated ecal hits from Geant4
-        //  the class EcalHitIO in the SimApplication module handles the translation from G4CalorimeterHits to SimCalorimeterHits
-        //  this class ensures that only one SimCalorimeterHit is generated per cell, but
-        //  multiple "contributions" are still handled within SimCalorimeterHit 
-        auto ecalSimHits{event.getCollection<SimCalorimeterHit>(EventConstants::ECAL_SIM_HITS)};
+        //Get simulated hcal hits from Geant4
+        auto hcalSimHits{event.getCollection<SimCalorimeterHit>(EventConstants::HCAL_SIM_HITS)}; //std::vector<SimCalorimeterHit> 
 
         //Empty collection to be filled
         HcalDigiCollection hcalDigis;
         hcalDigis.setNumSamplesPerDigi( nADCs_ ); 
         hcalDigis.setSampleOfInterestIndex( iSOI_ );
 
+	//Loop over sim hits
         std::set<int> simHitIDs;
-        for (auto const& simHit : ecalSimHits ) {
+        for (auto const& simHit : hcalSimHits ) {
 
             std::vector<double> energyDepositions, simulatedTimes;
             for ( int iContrib = 0; iContrib < simHit.getNumberOfContribs(); iContrib++ ) {
@@ -126,7 +125,7 @@ namespace ldmx {
 
         //put noise into some empty channels
         int numEmptyChannels = TOTAL_NUM_CHANNELS - hcalDigis.getNumDigis();
-        EcalDetectorID detID;
+        HcalID detID;
         auto noiseHitAmplitudes{noiseGenerator_->generateNoiseHits(numEmptyChannels)};
         for ( double noiseHit : noiseHitAmplitudes ) {
 
@@ -174,6 +173,7 @@ namespace ldmx {
             //total energy and average tiem of contribs inside timing window
             double energyInWindow = 0.0;
             double timeInWindow   = 0.0;
+	    double meanPEInWindow = 0.0;
             for ( int iContrib = 0; iContrib < energies.size(); iContrib++ ) {
 
                 if ( times.at(iContrib) < 0 or times.at(iContrib) > HcalDigiProducer::CLOCK_CYCLE*nADCs_ ) {
@@ -184,7 +184,10 @@ namespace ldmx {
                 energyInWindow += energies.at(iContrib);
                 timeInWindow   += energies.at(iContrib) * times.at(iContrib);
             }
-            if ( energyInWindow > 0. ) timeInWindow /= energyInWindow; //energy weighted average
+            if ( energyInWindow > 0. ) {
+	      timeInWindow /= energyInWindow; //energy weighted time average 
+	      meanPEInWindow = (energyInWindow / mev_per_mip_) * pe_per_mip_;
+	    }
 
             //put noise onto pulse parameters
             //TODO this is putting noise ontop of noise, is this a problem? (I don't think so, but maybe)
@@ -224,12 +227,6 @@ namespace ldmx {
                 tut = pulseFunc_.GetX(readoutThreshold_, timeInWindow, nADCs_*HcalDigiProducer::CLOCK_CYCLE);
 
             double tot = tut - toa;
-
-            /*
-            std::cout << std::setw(6)
-                << energyInWindow << " MeV at " << timeInWindow << " ns --> "
-                << tot << " TOT " << toa << " TOA " << tut << " TUT" << std::endl;
-            */
 
             //conversion from ns to clock counts (converting to int implicitly)
             int totalClockCounts = tot*(1024/HcalDigiProducer::CLOCK_CYCLE); 

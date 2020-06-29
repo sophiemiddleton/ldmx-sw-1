@@ -1,9 +1,6 @@
 /**
  * @file HcalDigiProducer.h
- * @brief Class that performs basic ECal digitization
- * @author Owen Colegrove, UCSB
- * @author Omar Moreno, SLAC National Accelerator Laboratory
- * @author Cameron Bravo, SLAC National Accelerator Laboratory
+ * @brief Class that performs basic HCal digitization
  */
 
 #ifndef HCAL_HCALDIGIPRODUCER_H_
@@ -26,10 +23,10 @@
 //----------//
 //   LDMX   //
 //----------//
-#include "Event/EcalDigiCollection.h"
+#include "Event/HcalDigiCollection.h"
 #include "Event/EventConstants.h"
 #include "Event/SimCalorimeterHit.h"
-#include "DetDescr/EcalDetectorID.h"
+#include "DetDescr/HcalID.h"
 #include "DetDescr/EcalHexReadout.h"
 #include "Framework/EventProcessor.h"
 #include "Tools/NoiseGenerator.h"
@@ -38,7 +35,7 @@ namespace ldmx {
 
     /**
      * @class HcalDigiProducer
-     * @brief Performs basic ECal digitization
+     * @brief Performs basic HCal digitization
      */
     class HcalDigiProducer : public Producer {
 
