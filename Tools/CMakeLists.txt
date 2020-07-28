@@ -6,6 +6,6 @@ endif()
 # Declare Tools module
 module(
   NAME Tools
-  DEPENDENCIES Framework Event  
+  DEPENDENCIES Framework Event DetDescr
   EXTERNAL_DEPENDENCIES ${_LDMX_TOOLS_EXTERNAL_DEPENDENCIES}
 )
