@@ -17,7 +17,7 @@
 //----------//
 //   LDMX   //
 //----------//
-#include "Event/SimParticle.h"
+#include "SimCore/SimParticle.h"
 
 //----------//
 //   ROOT   //

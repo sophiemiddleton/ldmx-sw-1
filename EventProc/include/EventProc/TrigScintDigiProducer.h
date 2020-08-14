@@ -21,7 +21,7 @@
 #include "DetDescr/TrigScintID.h"
 #include "Event/EventConstants.h"
 #include "Event/TrigScintHit.h"
-#include "Event/SimCalorimeterHit.h"
+#include "SimCore/SimCalorimeterHit.h"
 #include "Tools/NoiseGenerator.h"
 
 /*~~~~~~~~~~~~~~~*/

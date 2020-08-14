@@ -11,9 +11,9 @@
 #include "EventDisplay/DetectorGeometry.h"
 #include "Event/EcalHit.h"
 #include "Event/HcalHit.h"
-#include "Event/SimTrackerHit.h"
+#include "SimCore/SimTrackerHit.h"
 #include "Event/EcalCluster.h"
-#include "Event/SimParticle.h"
+#include "SimCore/SimParticle.h"
 
 #include "EventDisplay/EveDetectorGeometry.h"
 #include "EventDisplay/EveShapeDrawer.h"

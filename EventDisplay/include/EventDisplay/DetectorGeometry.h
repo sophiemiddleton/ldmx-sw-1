@@ -18,7 +18,7 @@
 //LDMX Framework
 #include "DetDescr/HcalID.h" //HcalSection enum
 #include "DetDescr/EcalHexReadout.h"
-#include "Event/SimTrackerHit.h" //recoil hits
+#include "SimCore/SimTrackerHit.h" //recoil hits
 #include "Event/HcalHit.h"
 #include "Event/EcalHit.h"
 

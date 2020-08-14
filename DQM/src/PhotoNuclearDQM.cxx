@@ -20,7 +20,7 @@
 #include "Framework/Event.h"
 #include "Event/HcalHit.h"
 #include "Event/HcalVetoResult.h"
-#include "Event/SimParticle.h"
+#include "SimCore/SimParticle.h"
 #include "Event/TrackerVetoResult.h"
 #include "Tools/AnalysisUtils.h"
 

@@ -13,8 +13,8 @@
 //----------//
 #include "Tools/AnalysisUtils.h"
 #include "Event/EventConstants.h"
-#include "Event/SimCalorimeterHit.h"
-#include "Event/SimParticle.h"
+#include "SimCore/SimCalorimeterHit.h"
+#include "SimCore/SimParticle.h"
 #include "Framework/EventProcessor.h"
 
 namespace ldmx { 

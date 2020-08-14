@@ -36,7 +36,7 @@
 //----------//
 #include "Tools/AnalysisUtils.h"
 #include "Event/PnWeightResult.h"
-#include "Event/SimParticle.h"
+#include "SimCore/SimParticle.h"
 #include "Framework/EventProcessor.h"
 #include "Framework/Parameters.h" 
 
