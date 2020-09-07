@@ -21,9 +21,9 @@ namespace ldmx {
     public:
 	
 	static const RawValue LAYER_MASK{0x3F}; // space for up to 64 layers
-	static const RawValue LAYER_SHIFT{17};
+	static const RawValue LAYER_SHIFT{34}; //34 layers, with 17 bi-layers
 	static const RawValue MODULE_MASK{0x1F}; // space for up to 32 modules/layer
-	static const RawValue MODULE_SHIFT{12};
+	static const RawValue MODULE_SHIFT{6};
 	static const RawValue CELL_MASK{0xFFF}; // space for 4096 cells/module (!)
 	static const RawValue CELL_SHIFT{0};
 	
