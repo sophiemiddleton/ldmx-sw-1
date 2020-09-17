@@ -87,10 +87,10 @@ namespace ldmx {
              */
             void getCellAbsolutePosition( EcalID id, double &x, double &y, double &z ) const {
                 //The xy pair means that for all z positions, the x and y positions all use layer 0, so need to change
-                std::tuple<double,double,double> xyz = this->getCellCenterAbsolute( EcalID(id.layer,id.module(),id.cell()) ); //changed
-                x = xyz.first; //changed
-                y = xyz.second; //changed
-                z = getZPosition(id.layer());
+                std::tuple<double,double,double> xyz = this->getCellCenterAbsolute( EcalID(id.layer(),id.module(),id.cell()) );
+                x = std::get<0>(xyz);
+                y = std::get<1>(xyz);
+                z = std::get<2>(xyz);
 
                 return;
             }
@@ -103,6 +103,9 @@ namespace ldmx {
              */
             double getZPosition(int layer) const {
                 return ecalFrontZ_ + layerZPositions_.at(layer);
+                //This is not consistent with ecal.gdml, where z position starts from the negative axis = (-0.5)*EcalThicknesss
+                //This should be changed to:
+                //return -ecalFrontZ_ + layerZPositions_.at(layer);
             }
 
 
@@ -112,14 +115,21 @@ namespace ldmx {
              * @param[in] moduleID id of the module
              * @return (x,y) coordinate pair for center of module
              */
-            std::tuple<double,double,double> getModuleCenter(int layerID, int moduleID) const { //changed, now return (x,y,z) tuple
-                return modulePositionMap_.at({layerID, moduleID});
+            std::tuple<double,double,double> getModuleCenter(int layerID, int moduleID) const {
+                return modulePositionMap_.at(EcalID(layerID, moduleID, 0));
             }
             
-        
+            
+            /**
+            * Get a layerID from an a z position
+            *
+            * @param[in] z z-coordinate for test position
+            * @`module.first` is the key {layerID, moduleID}, `module.first.first` is layerID
+            * @return layer ID that coordinate z is in
+            */
             int getLayerID(double z) const{
-                for(auto const& module : modulePositionMap_) {
-                    int layerID = module.first.second;
+                for(auto const& layer : modulePositionMap_) {
+                    int layerID = layer.first.layer();
                     return layerID;
                 }
             }
@@ -135,9 +145,9 @@ namespace ldmx {
                 int bestID = -1;
                 double bestDist = 1E6;
                 for(auto const& module : modulePositionMap_) {
-                    int mID   = module.first.second;
-                    double mX = module.second.first;
-                    double mY = module.second.second;
+                    int mID   = module.first.module();
+                    double mX = std::get<0>(module.second); //tuples cannot be accessed using .first
+                    double mY = std::get<1>(module.second);
                     double dist = sqrt( (x-mX)*(x-mX) + (y-mY)*(y-mY) );
                     if(dist < moduler_) return mID;
                     if(dist < bestDist) { bestID = mID; bestDist = dist; }
@@ -159,9 +169,8 @@ namespace ldmx {
              * @param y Any Y position [mm]
              * @return local cell ID to the module
              */
-            int getCellIDRelative(double x, double y, double z) const { //changed: z not actually used here? Is it necessary to specify FindBin in terms of the z position, i.e. FindBin as a function of z?
+            int getCellIDRelative(double x, double y) const { //Is it necessary to specify FindBin in terms of the z position, i.e. FindBin as a function of z?
                 int bin = ecalMap_.FindBin(x,y)-1; // NB FindBin indices starts from 1, our maps start from 0
-                //Is z needed to add in the FindBin ???
                 if(bin < 0) {
                     TString error_msg = TString("[EcalHexReadout::getCellIDRelative] Relative coordinates are outside module hexagon!") +
                                         TString::Format(" Is the gap used by EcalHexReadout (%.2f mm) and the minimum module radius (%.2f mm)",gap_,moduler_) +
@@ -201,10 +210,10 @@ namespace ldmx {
             EcalID getCellModuleID(double x, double y, double z) const {
                 int moduleID = getModuleID(x,y);
                 int layerID = getLayerID(z);
-                double relX = x - modulePositionMap_.at({layerID, moduleID}).first;
-                double relY = y - modulePositionMap_.at({layerID, moduleID}).second;
-                double relZ = modulePositionMap_.at({layerID, moduleID}).third
-                int cellID = getCellIDRelative(relX,relY,relZ);
+                double relX = x - std::get<0>(modulePositionMap_.at(EcalID(layerID,moduleID,0)));
+                double relY = y - std::get<1>(modulePositionMap_.at(EcalID(layerID,moduleID,0)));
+                double relZ = std::get<2>(modulePositionMap_.at(EcalID(layerID,moduleID,0)));
+                int cellID = getCellIDRelative(relX,relY);
                 return EcalID(layerID,moduleID,cellID);
             }
 
@@ -216,7 +225,7 @@ namespace ldmx {
              * @param cellModuleID EcalID where all we care about is module and cell
              * @return The XY position of the center of the cell.
              */
-            std::tuple<double,double,double> getCellCenterAbsolute(EcalID cellModuleID) const { //changed
+            std::tuple<double,double,double> getCellCenterAbsolute(EcalID cellModuleID) const {
                 return cellModulePositionMap_.at(EcalID(cellModuleID.layer(),cellModuleID.module(),cellModuleID.cell()));
                 //the key(index) for the map is now EcalID(cellModuleID.layer(),cellModuleID.module(),cellModuleID.cell()) instead of EcalID(0,cellModuleID.module(),cellModuleID.cell())
             }
@@ -260,8 +269,8 @@ namespace ldmx {
              * @return list of EcalID that are the inputs nearest neighbors
              */
             std::vector<EcalID> getNN(EcalID id) const {
-                auto list = NNMap_.at(EcalID(0,id.module(),id.cell()));
-                for (auto& flat : list) id = EcalID(id.layer(),flat.module(),flat.cell());
+                auto list = NNMap_.at(EcalID(id.layer(),id.module(),id.cell()));
+                for (auto& flat : list) id = EcalID(flat.layer(),flat.module(),flat.cell());
                 return list;
             }
 
@@ -286,8 +295,8 @@ namespace ldmx {
              * @return list of EcalID that are the inputs next-to-nearest neighbors
              */
             std::vector<EcalID> getNNN(EcalID id) const {
-                auto list = NNNMap_.at(EcalID(0,id.module(),id.cell()));
-                for (auto& flat : list) id = EcalID(id.layer(),flat.module(),flat.cell());
+                auto list = NNNMap_.at(EcalID(id.layer(),id.module(),id.cell()));
+                for (auto& flat : list) id = EcalID(flat.layer(),flat.module(),flat.cell());
                 return list;
             }
 
@@ -351,7 +360,7 @@ namespace ldmx {
             /**
              * Get a const reference to the full cell-module position map.
              */
-            const std::map<EcalID,std::tuple<double,double,double>>& getCellModulePositionMap() const { //changed
+            const std::map<EcalID,std::tuple<double,double,double>>& getCellModulePositionMap() const {
                 return cellModulePositionMap_;
             }
 
@@ -494,15 +503,14 @@ namespace ldmx {
             /// The layer Z postions are with respect to the front of the ECal [mm]
             std::vector<double> layerZPositions_;
         
-            /// Postion of module centers relative to world geometry (uses module ID as key)
-            std::map<std::pair<int,int>, std::tuple<double,double,double>> modulePositionMap_;
-            // Changed: now the first argument of the key is layerID, the second argument is ring module ID
-
+            /// Postion of module centers relative to world geometry (uses ECalID(layerID, moduleID, 0), setting cell ID = 0)
+            std::map<EcalID, std::tuple<double,double,double>> modulePositionMap_;
+        
             /// Position of cell centers relative to module (uses cell ID as key)
             std::map<int, std::pair<double,double>> cellPositionMap_;
 
-            /// Position of cell centers relative to world geometry (uses ID with real cell and module and layer as zero for key)
-            std::map<EcalID, std::tuple<double,double,double>> cellModulePositionMap_; //changed: key is with respect to every layer
+            /// Position of cell centers relative to world geometry (uses ECalID for key key)
+            std::map<EcalID, std::tuple<double,double,double>> cellModulePositionMap_;
 
             /// Map of cell ID to neighboring cells (uses ID with real cell and module and layer as zero for key)
             std::map<EcalID, std::vector<EcalID> > NNMap_;

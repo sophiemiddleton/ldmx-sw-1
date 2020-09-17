@@ -22,11 +22,11 @@ namespace ldmx {
         
         moduleR_ = moduler_*(2/sqrt(3));
         cellR_   = 2*moduler_/nCellRHeight_;
-        //cellR_ = 5; (5mm)
+        //cellR_ = 5; <5mm = calculated length of the flat side of a cell = (1/2)*(long diameter of the hexagonal cell)>
         cellr_   = (sqrt(3.)/2.)*cellR_;
         
-        layerShiftX_ = -cell_flat_dim*sqrt3;
-        layerShiftY_ = -cell_flat_dim;
+        layerShiftX_ = -cellR_*sqrt(3); //cellR_ = cell_flat_dim (used in ecal.gdml)
+        layerShiftY_ = -cellR_;
         
 
         if(verbose_>0){
@@ -45,7 +45,13 @@ namespace ldmx {
         if(verbose_>0){ std::cout << std::endl; }
     }
 
+
+
     void EcalHexReadout::buildModuleMap(){
+    /** modulePositionMap_
+    * Build the position map for center of each module in each layer.
+    * The second layer within each bi-layer of sections A,B,C and D is shifted.
+    */
         if(verbose_>0) {
             std::cout 
                 << std::endl 
@@ -60,37 +66,38 @@ namespace ldmx {
         //Preshower position remains the same
         for(unsigned layer = 0; layer < 2; layer++){
             double z = ecalFrontZ_ + layerZPositions_.at(layer);
-            modulePositionMap_[{layer,0}] = std::tuple<double,double,double>(0.,0.,z);
+            modulePositionMap_[EcalID(layer,0,0)] = std::tuple<double,double,double>(0.,0.,z);
             for(unsigned id = 1 ; id < 7 ; id++){
                 double x = (2.*moduler_+gap_)*sin( (id-1)*(C_PI/3.) );
                 double y = (2.*moduler_+gap_)*cos( (id-1)*(C_PI/3.) );
-                modulePositionMap_[{layer,id}] = std::tuple<double,double,double>(x,y,z);
-                if(verbose_>2) std::cout << TString::Format("  layer %d id %d is at (%.2f, %.2f, %.2f)",layer,id,x,y,z) << std::endl;
+                modulePositionMap_[EcalID(layer,id,0)] = std::tuple<double,double,double>(x,y,z);
+                if(verbose_>2) std::cout << TString::Format("  layerID %d moduleID %d is at (%.2f, %.2f, %.2f)",layer,id,x,y,z) << std::endl;
             }
         }
         //The first layer of each bi-layer remains the same (even number layers)
         for(unsigned layer = 2; layer < 34; layer = layer + 2){
             double z = ecalFrontZ_ + layerZPositions_.at(layer);
-            modulePositionMap_[{layer,0}] = std::tuple<double,double,double>(0.,0.,z);
+            modulePositionMap_[EcalID(layer,0,0)] = std::tuple<double,double,double>(0.,0.,z);
             for(unsigned id = 1 ; id < 7 ; id++){
                 double x = (2.*moduler_+gap_)*sin( (id-1)*(C_PI/3.) );
                 double y = (2.*moduler_+gap_)*cos( (id-1)*(C_PI/3.) );
-                modulePositionMap_[{layer,id}] = std::tuple<double,double,double>(x,y,z);
-                if(verbose_>2) std::cout << TString::Format("  layer %d id %d is at (%.2f, %.2f, %.2f)",layer,id,x,y,z) << std::endl;
+                modulePositionMap_[EcalID(layer,id,0)] = std::tuple<double,double,double>(x,y,z);
+                if(verbose_>2) std::cout << TString::Format("  layerID %d moduleID %d is at (%.2f, %.2f, %.2f)",layer,id,x,y,z) << std::endl;
             }
         }
         
         //The second layer of each bi-layer is shifted (odd number layers)
         for(unsigned layer = 3; layer < 34; layer = layer + 2){
             double z = ecalFrontZ_ + layerZPositions_.at(layer);
-            modulePositionMap_[{layer,0}]=std::tuple<double,double,double>(layerShiftX_,layerShiftY_,z);
+            modulePositionMap_[EcalID(layer,0,0)]=std::tuple<double,double,double>(layerShiftX_,layerShiftY_,z);
             for(unsigned id = 1 ; id < 7 ; id++){
                 double x = (2.*moduler_+gap_)*sin( (id-1)*(C_PI/3.) ) + layerShiftX_;
                 double y = (2.*moduler_+gap_)*cos( (id-1)*(C_PI/3.) ) + layerShiftY_;
-                modulePositionMap_[{layer,id}] = std::tuple<double,double,double>(x,y,z);
-                if(verbose_>2) std::cout << TString::Format("  layer %d id %d is at (%.2f, %.2f, %.2f)",layer,id,x,y,z) << std::endl;
+                modulePositionMap_[EcalID(layer,id,0)] = std::tuple<double,double,double>(x,y,z);
+                if(verbose_>2) std::cout << TString::Format("  layerID %d moduleID %d is at (%.2f, %.2f, %.2f)",layer,id,x,y,z) << std::endl;
             }
         }
+    if(verbose_>0) std::cout << std::endl;
     }
 
     void EcalHexReadout::buildCellMap() {
@@ -287,21 +294,24 @@ namespace ldmx {
     }
 
     void EcalHexReadout::buildCellModuleMap(){
+    /** cellModulePositionMap_
+    * Build the position map for hexagonal cells in each layer.
+    * Strategy: obtain the center of each module from modulePositionMap_, and obtain the cell layout in a module from cellPositionMap; then add the respective positions.
+    */
         if(verbose_>0) std::cout << std::endl << "[buildCellModuleMap] Building cellModule position map" << std::endl;
         for(auto const& module : modulePositionMap_) {
-            int layerID = module.first.first;
-            int moduleID = module.first.second;
-            double moduleX = module.second.first;
-            double moduleY = module.second.second;
-            double moduleZ = module.second.third;
+            int layerID = module.first.layer();
+            int moduleID = module.first.module();
+            double moduleX = std::get<0>(module.second);
+            double moduleY = std::get<1>(module.second);
+            double moduleZ = std::get<2>(module.second);
             for(auto const& cell : cellPositionMap_) {
                 int cellID = cell.first;
                 double cellX = cell.second.first;
                 double cellY = cell.second.second;
                 double x = cellX+moduleX;
                 double y = cellY+moduleY;
-                double z = moduleZ;
-                cellModulePositionMap_[EcalID(layerID,moduleID,cellID)] = std::tuple<double,double,double>(x,y,z);
+                cellModulePositionMap_[EcalID(layerID,moduleID,cellID)] = std::tuple<double,double,double>(x,y,moduleZ);
             }
         }
         if(verbose_>0) std::cout << "  contained " << cellModulePositionMap_.size() << " entries. " << std::endl;
@@ -323,14 +333,14 @@ namespace ldmx {
         NNNMap_.clear();
         for(auto const& centerChannel : cellModulePositionMap_) {
             EcalID centerID = centerChannel.first;
-            double centerX = centerChannel.second.first;
-            double centerY = centerChannel.second.second;
-            double centerZ = centerChannel.second.third;
+            double centerX = std::get<0>(centerChannel.second);
+            double centerY = std::get<1>(centerChannel.second);
+            double centerZ = std::get<2>(centerChannel.second);
             for(auto const& probeChannel : cellModulePositionMap_) {
                 EcalID probeID = probeChannel.first;
-                double probeX = probeChannel.second.first;
-                double probeY = probeChannel.second.second;
-                double probeZ = probeChannel.second.third;
+                double probeX = std::get<0>(probeChannel.second);
+                double probeY = std::get<1>(probeChannel.second);
+                double probeZ = std::get<2>(probeChannel.second);
                 double dist = sqrt( (probeX-centerX)*(probeX-centerX) + (probeY-centerY)*(probeY-centerY) );
                 if(      dist > 1*cellr_  && dist <= 3.*cellr_)  { NNMap_[centerID].push_back(probeID); }
                 else if( dist > 3.*cellr_ && dist <= 4.5*cellr_) {NNNMap_[centerID].push_back(probeID); }
@@ -339,21 +349,21 @@ namespace ldmx {
 				     << centerID << TString::Format(" with x,y,z (%.2f,%.2f,%.2f)", centerX, centerY, centerZ) << std::endl;
         }
         if(verbose_>2){
-            
-            double specialX = 0.5*moduleR_ - 0.5*cellr_; // center of a cell which is upper-right corner of center module
-            double specialY = moduler_ - 0.5*cellR_;
-	        EcalID specialCellModuleID = getCellModuleID(specialX,specialY);
-            std::cout << "The neighbors of the bin in the upper-right corner of the center module, with cellModuleID "
-                      << specialCellModuleID << " include " << std::endl;
-            for(auto centerNN : NNMap_.at(specialCellModuleID)){
-                std::cout << " NN " << centerNN << TString::Format(" (x,y) (%.2f, %.2f)",getCellCenterAbsolute(centerNN).first,getCellCenterAbsolute(centerNN).second) << std::endl;
+            for(auto const& layer : cellModulePositionMap_) {
+                double specialX = 0.5*moduleR_ - 0.5*cellr_; // center of a cell which is upper-right corner of center module
+                double specialY = moduler_ - 0.5*cellR_;
+                double specialZ = std::get<2>(layer.second);
+                EcalID specialCellModuleID = getCellModuleID(specialX,specialY,specialZ);
+                std::cout << "The neighbors of the bin in the upper-right corner of the center module, with cellModuleID "
+                          << specialCellModuleID << " include " << std::endl;
+                for(auto centerNN : NNMap_.at(specialCellModuleID)){
+                    std::cout << " NN " << centerNN << TString::Format(" (x,y,z) (%.2f, %.2f,%.2f)", std::get<0>(getCellCenterAbsolute(centerNN)), std::get<1>(getCellCenterAbsolute(centerNN)), std::get<2>(getCellCenterAbsolute(centerNN))) << std::endl;
+                }
+                for(auto centerNNN : NNNMap_.at(specialCellModuleID)){
+                    std::cout << " NNN " << centerNNN << TString::Format(" (x,y,z) (%.2f,%.2f,%.2f)", std::get<0>(getCellCenterAbsolute(centerNNN)), std::get<1>(getCellCenterAbsolute(centerNNN)), std::get<2>(getCellCenterAbsolute(centerNNN))) << std::endl;
+                }
+                std::cout << TString::Format("This bin is a distance of %.2f away from a module edge. Decision isEdge %d.", distanceToEdge(specialCellModuleID),isEdgeCell(specialCellModuleID)) << std::endl;
             }
-            for(auto centerNNN : NNNMap_.at(specialCellModuleID)){
-	      std::cout << " NNN " << centerNNN
-			<< TString::Format(" (x,y) (%.2f, %.2f)",getCellCenterAbsolute(centerNNN).first,getCellCenterAbsolute(centerNNN).second) << std::endl;
-            }
-            std::cout << TString::Format("This bin is a distance of %.2f away from a module edge. Decision isEdge %d.",
-                         distanceToEdge(specialCellModuleID),isEdgeCell(specialCellModuleID)) << std::endl;
         }
         if(verbose_>0) std::cout << std::endl;
         return;
