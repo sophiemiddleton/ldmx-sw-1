@@ -51,6 +51,12 @@ namespace ldmx {
                     float avgLayerHit,
                     float stdLayerHit,
                     float ecalBackEnergy,
+                    // MIP tracking
+                    int nStraightTracks,
+                    int nLinregTracks,
+                    int firstNearPhLayer,
+                    float epAng,
+                    float epSep,
 
                     std::vector<float> electronContainmentEnergy,
                     std::vector<float> photonContainmentEnergy,
@@ -122,6 +128,27 @@ namespace ldmx {
                 return ecalBackEnergy_;
             }
 
+            // MIP tracking:
+            int getNStraightTracks() {
+                return nStraightTracks_;
+            }
+
+            int getNLinregTracks() {
+                return nLinregTracks_;
+            }
+
+            int getFirstNearPhLayer() {
+                return firstNearPhLayer_;
+            }
+
+            float getEpAng() {
+                return epAng_;
+            }
+
+            float getEpSep() {
+                return epSep_;
+            }
+
             const std::vector<float>& getElectronContainmentEnergy() const {
                 return electronContainmentEnergy_;
             }
@@ -183,6 +210,12 @@ namespace ldmx {
             float avgLayerHit_{0};
             float stdLayerHit_{0};
             float ecalBackEnergy_{0};
+            // MIP tracking
+            int nStraightTracks_{0};
+            int nLinregTracks_{0};
+            int firstNearPhLayer_{0};
+            float epAng_{0};
+            float epSep_{0};
 
             std::vector<float> electronContainmentEnergy_;
             std::vector<float> photonContainmentEnergy_;
