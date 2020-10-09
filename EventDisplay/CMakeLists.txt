@@ -35,33 +35,10 @@ install(FILES ${CMAKE_CURRENT_BINARY_DIR}/libEventDisplayDic_rdict.pcm DESTINATI
 # Find all of the source files we want to add to the Event library
 file(GLOB EVENT_DISPLAY_SRC_FILES CONFIGURE_DEPENDS ${PROJECT_SOURCE_DIR}/src/*.cxx)
 
-# Create the Event target
-add_library(EventDisplay SHARED EventDisplayDic.cxx ${EVENT_DISPLAY_SRC_FILES})
-
-# Setup the include directories 
-target_include_directories(EventDisplay PUBLIC ${PROJECT_SOURCE_DIR}/include/)
-
-# Setup the libraries to link against 
-target_link_libraries(EventDisplay PUBLIC
-    Python3::Python
-    ROOT::Core
-    ROOT::Rint
-    ROOT::Geom
-    ROOT::Gui
-    ROOT::Eve
-    DARK::DetDescr
+setup_library(name EventDisplay
+              dependencies ROOT::Eve
+                           DARK::Framework DARK::DetDescr DARK::Event
 )
-
-# Define an alias 
-add_library(DARK::EventDisplay ALIAS EventDisplay)
-
-# Install the libraries and headers
-install(TARGETS EventDisplay
-    LIBRARY DESTINATION ${CMAKE_INSTALL_PREFIX}/lib
-)
-
-install(DIRECTORY ${PROJECT_SOURCE_DIR}/include/EventDisplay 
-        DESTINATION ${CMAKE_INSTALL_PREFIX}/include)
 
 # Add the event display executable
 add_executable(ldmx-eve ${PROJECT_SOURCE_DIR}/src/ldmx_eve.cxx)
