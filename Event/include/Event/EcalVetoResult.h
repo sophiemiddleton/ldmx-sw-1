@@ -243,7 +243,7 @@ namespace ldmx {
 
             std::vector<float> ecalLayerEdepReadout_;
 
-            ClassDef(EcalVetoResult, 4);
+            ClassDef(EcalVetoResult, 5);
     };
 }
 
