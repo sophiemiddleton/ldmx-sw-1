@@ -43,12 +43,12 @@ class HgcrocEmulator() :
         self.clockCycle = 25.0 #ns
         self.measTime = 0. #ns
         self.timingJitter = self.clockCycle / 100. #ns - pretty arbitrarily chosen
-        self.readoutPadCapacitance = 0.1 #pF <- derived from hardware of HGCROC
+        self.readoutPadCapacitance = 20. #pF <- derived from hardware of HGCROC
         self.maxADCRange = 320. #fC <- setting of HGCROC
         self.nADCs = 10 
         self.iSOI  = 0 
-        self.totMax = 200. #ns - maximum TOT allowed by chip
-        self.drainRate = 4000. / self.readoutPadCapacitance / self.totMax #mV / ns - maximum charge dep [fC] / pad capacitance [pF] / tot max [ns]
+        self.totMax = 200. #ns - maximum TOT allowed by chip (spec sheet)
+        self.drainRate = 10240. / self.totMax #fC / ns - rate charge drains off during TOT (spec sheet, is tune-able)
         self.rateUpSlope =  -0.345
         self.timeUpSlope = 70.6547
         self.rateDnSlope = 0.140068
@@ -70,6 +70,10 @@ class HgcrocEmulator() :
         self.readoutThreshold = 0. #mV - useless default
         self.toaThreshold     = 0. #mV - useless default
         self.totThreshold     = 0. #mV - useless default
+
+        # turn on or off noise
+        #   NOT DOCUMENTED - only meant for testing purposes
+        self.noise = True
 
     def calculateVoltage(self, electrons) :
         """Calculate the voltage signal [mV] of the input number of electrons
