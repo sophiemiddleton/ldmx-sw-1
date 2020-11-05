@@ -30,6 +30,16 @@ namespace ldmx {
         channelIDs_.clear();
         samples_.clear();
 
+	adctsamples_.clear();
+        sumEdep_.clear();
+        sumPE_.clear();
+        sumadc_.clear();
+        maxadc_.clear();
+        maxpe_.clear();
+        strip_.clear();
+        layer_.clear();
+        adc0_.clear();
+
         return;
     }
 
@@ -49,8 +59,9 @@ namespace ldmx {
                 samples_.begin()+digiIndex*getNumSamplesPerDigi() , *this );
     }
 
-    void HgcrocDigiCollection::addDigi(unsigned int id, const std::vector<HgcrocDigiCollection::Sample>& digi ) {
-
+    //void HgcrocDigiCollection::addDigi(unsigned int id, const std::vector<HgcrocDigiCollection::Sample>& digi ) {
+    void HgcrocDigiCollection::addDigi(unsigned int id, const std::vector<HgcrocDigiCollection::Sample>& digi,
+				       double sumEdep, int sumPE, int maxpe, int strip, int layer) {
         if ( digi.size() != this->getNumSamplesPerDigi() ) {
             std::cerr << "[ WARN ] [ HgcrocDigiCollection ] Input list of samples has size '"
                 << digi.size() << "' that does not match the number of samples per digi '"
@@ -59,8 +70,26 @@ namespace ldmx {
         }
         
         channelIDs_.push_back( id );
-        for ( auto const &s : digi ) samples_.push_back(s);
+	int sum_adc = 0;
+        int max_adc = 0;
+        int adc_0 = 0;
+        adc_0 = digi.at(0).adc_t();
+        for ( auto const &s : digi ) {
+	  samples_.push_back(s);
+	  adctsamples_.push_back( s.adc_t() );
+          sum_adc += s.adc_t();
+          if(s.adc_t() > max_adc)
+            max_adc = s.adc_t();
+	}
 
+	sumEdep_.push_back(sumEdep);
+        sumPE_.push_back(sumPE);
+        sumadc_.push_back( sum_adc);
+        maxadc_.push_back( max_adc);
+        maxpe_.push_back( maxpe);
+        strip_.push_back( strip);
+        layer_.push_back( layer);
+        adc0_.push_back( adc_0 );
         return;
     }
 

@@ -389,8 +389,9 @@ namespace ldmx {
              * @param[in] id global integer ID for this channel
              * @param[in] digi list of new samples to add
              */
-            void addDigi( unsigned int id, const std::vector<Sample>& digi );
-
+            //void addDigi( unsigned int id, const std::vector<Sample>& digi );
+	    void addDigi( unsigned int id, const std::vector<Sample>& digi,
+                          double sumEdep=0., int sumPE=0, int maxpe=0, int strip=0, int layer=0);
         private:
 
             /** Mask for lowest order bit in an int */
@@ -424,6 +425,17 @@ namespace ldmx {
 
             /** index for the sample of interest in the samples list */
             unsigned int sampleOfInterest_;
+
+            /** temp */
+	    std::vector< int > adctsamples_;
+	    std::vector< double > sumEdep_;
+	    std::vector< int > sumPE_;
+	    std::vector< int > sumadc_;
+	    std::vector< int > maxadc_;
+	    std::vector< int > maxpe_;
+	    std::vector< int > strip_;
+	    std::vector< int > layer_;
+	    std::vector< int > adc0_;
 
             /**
              * The ROOT class definition.
