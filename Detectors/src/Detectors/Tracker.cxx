@@ -50,10 +50,16 @@ static Ref_t create_tracker(Detector &lcdd, xml::Handle_t xml_handle,
   for (xml::Collection_t imodule(det_handle, _U(module)); imodule; ++imodule) {
     xml::Component xml_module(imodule);
     
+    std::string moduleName = "module_" + std::to_string(xml_module.id());
+    unsigned int moduleNum = xml_module.id();
+    
+    // The module detector element
+    // A module is made out of 2 layers.
+    DetElement moduleElement(moduleName+"_elementTemplate", 0);
+    
     // Start by creating an assembly for the layers. An assembly will act as
     // bounding box for the two silicon layers it encloses.
-    Assembly module_assembly("module_" + std::to_string(xml_module.id()) +
-                             "_assembly");
+    Assembly module_assembly(moduleName+"_assembly");
     
     //Visualization attributes -- empty for the moment.
     module_assembly.setVisAttributes(lcdd,xml_module.visStr());
@@ -82,8 +88,8 @@ static Ref_t create_tracker(Detector &lcdd, xml::Handle_t xml_handle,
       // Create a volume out of the box and set the material it's made from.
       auto sensor_mat{lcdd.material(xml_layer.materialStr())};
       auto position{xml_layer.position()};
-      std::string moduleName= "module_" + std::to_string(xml_module.id()) + "_layer_" + std::to_string(xml_layer.id());
-      unsigned int moduleNum = xml_module.id()*10+xml_layer.id();
+      std::string layerName= "module_" + std::to_string(xml_module.id()) + "_layer_" + std::to_string(xml_layer.id());
+      unsigned int layerNum = xml_module.id()*10+xml_layer.id();
       Volume layer_vol(moduleName,sensor_box, sensor_mat);
       
       //Add the vis attributes?
@@ -103,9 +109,14 @@ static Ref_t create_tracker(Detector &lcdd, xml::Handle_t xml_handle,
           layer_vol, Transform3D(rotation, Position(position.x(), position.y(),
                                                     position.z())));
       
-      DetElement sensorElement(tracker, moduleName, moduleNum);
+      DetElement layerElement(moduleElement, layerName, layerNum);
+      // Add the sensor extension
+      Acts::ActsExtension* layerExtension = new Acts::ActsExtension();
+      layerExtension->addType("layer", "detector");
+      layerExtension->addType("axes", "definitions", "XYZ");
+      layerElement.addExtension<Acts::ActsExtension>(layerExtension);
       
-    }
+    }// loop over the layers
 
     // Get the position of the module and place it inside of the tracker
     // envelope.
@@ -113,7 +124,14 @@ static Ref_t create_tracker(Detector &lcdd, xml::Handle_t xml_handle,
     pv = env_vol.placeVolume(module_assembly,
                              Position(module_position.x(), module_position.y(),
                                       module_position.z()));
-  }
+
+    // Clone the module detector element  (is this necessary?)
+    auto moduleElement_clone = moduleElement.clone(moduleName, moduleNum);
+    
+    //add the module to the tracker
+    tracker.add(moduleElement_clone);
+    
+  }// loop over the modules
 
   std::cout<<"PF::DEBUG "<<__PRETTY_FUNCTION__<<" Returning tracker"<<std::endl;
   return tracker;
