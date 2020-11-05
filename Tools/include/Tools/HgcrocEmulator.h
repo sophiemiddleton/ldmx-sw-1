@@ -147,9 +147,11 @@ namespace ldmx {
              * @return true if digis were constructed (false if hit was below readout)
              */
             bool digitize( const int &channelID,
-                    const std::vector<double> &voltages, 
-                    const std::vector<double> &times, 
-                    std::vector<HgcrocDigiCollection::Sample> &digiToAdd ) const;
+			   const std::vector<double> &voltages, 
+			   const std::vector<double> &times, 
+			   std::vector<HgcrocDigiCollection::Sample> &digiToAdd,
+			   const double &attenuation=0.,
+			   const double &shift=0.) const;
         
         private:
 
@@ -193,7 +195,7 @@ namespace ldmx {
             bool verbose_{false};
 
             /// Put noise in channels, not configurable, only helpful in development
-            bool noise_{true};
+            bool noise_{false};
 
             /**************************************************************************************
              * Parameters Identical for all Chips
