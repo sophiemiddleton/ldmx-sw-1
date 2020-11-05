@@ -1,5 +1,6 @@
 
 #include "XML/Helper.h"
+//#include "XML/XML.h"
 #include "Acts/Plugins/DD4hep/ActsExtension.hpp"
 
 using namespace dd4hep;
@@ -20,22 +21,55 @@ static Ref_t create_tracker(Detector &lcdd, xml::Handle_t xml_handle,
   env_vol.setAttributes(lcdd, det_handle.regionStr(), det_handle.limitsStr(),
                         det_handle.visStr());
 
+
+  // Create the tracker detector element
+  DetElement tracker(det_handle.nameStr(), det_handle.id());
+  std::cout<<"PF::DEBUG "<<__PRETTY_FUNCTION__<<" name:"<<tracker.name()<< " type:"<<tracker.type()<<std::endl;
+  
+  //Add the ActsExtension for the Reco Geometry
+  Acts::ActsExtension* trackerExtension = new Acts::ActsExtension();
+
+  //Is name correct here? I think should be type() but returns empty above?
+  trackerExtension->addType(tracker.name(), "detector");
+  tracker.addExtension<Acts::ActsExtension>(trackerExtension);
+  
+  // Get the global position of the tracker envelope and place it in the mother
+  // volume.
+  auto env_pos{det_handle.position()};
+  auto env_placed_vol(lcdd.pickMotherVolume(tracker).placeVolume(
+      env_vol, Position(env_pos.x(), env_pos.y(), env_pos.z())));
+  tracker.setPlacement(env_placed_vol);
+  
+  
+
+
   // The placed volume
   PlacedVolume pv;
 
   // Loop over all of the modules and create the sensor volumes.
   for (xml::Collection_t imodule(det_handle, _U(module)); imodule; ++imodule) {
     xml::Component xml_module(imodule);
-
+    
     // Start by creating an assembly for the layers. An assembly will act as
     // bounding box for the two silicon layers it encloses.
     Assembly module_assembly("module_" + std::to_string(xml_module.id()) +
                              "_assembly");
+    
+    //Visualization attributes -- empty for the moment.
+    module_assembly.setVisAttributes(lcdd,xml_module.visStr());
+    
+    //Components
+    unsigned int compNum = 0;
+    
+    //Sensors 
+    unsigned int layerNum = 0;
 
     // Build up the layers inside of the assembly
-    for (xml::Collection_t ilayer(xml_module, _U(layer)); ilayer; ++ilayer) {
+    for (xml::Collection_t ilayer(xml_module, _U(layer)); ilayer; ++ilayer,++layerNum) {
 
       xml::Component xml_layer(ilayer);
+
+      
 
       // Create the box shape representing the sensor.  If a box can't be
       // created, throw an exception.
@@ -48,9 +82,12 @@ static Ref_t create_tracker(Detector &lcdd, xml::Handle_t xml_handle,
       // Create a volume out of the box and set the material it's made from.
       auto sensor_mat{lcdd.material(xml_layer.materialStr())};
       auto position{xml_layer.position()};
-      Volume layer_vol("module_" + std::to_string(xml_module.id()) + "_layer_" +
-                           std::to_string(xml_layer.id()),
-                       sensor_box, sensor_mat);
+      std::string moduleName= "module_" + std::to_string(xml_module.id()) + "_layer_" + std::to_string(xml_layer.id());
+      unsigned int moduleNum = xml_module.id()*10+xml_layer.id();
+      Volume layer_vol(moduleName,sensor_box, sensor_mat);
+      
+      //Add the vis attributes?
+      layer_vol.setVisAttributes(lcdd, xml_layer.visStr());
 
       // Rotate the sensor if a rotation was specified.
       RotationZYX rotation;
@@ -65,6 +102,9 @@ static Ref_t create_tracker(Detector &lcdd, xml::Handle_t xml_handle,
       pv = module_assembly.placeVolume(
           layer_vol, Transform3D(rotation, Position(position.x(), position.y(),
                                                     position.z())));
+      
+      DetElement sensorElement(tracker, moduleName, moduleNum);
+      
     }
 
     // Get the position of the module and place it inside of the tracker
@@ -75,21 +115,7 @@ static Ref_t create_tracker(Detector &lcdd, xml::Handle_t xml_handle,
                                       module_position.z()));
   }
 
-  // Create the tracker detector element
-  DetElement tracker(det_handle.nameStr(), det_handle.id());
-  std::cout<<"PF::DEBUG "<<__PRETTY_FUNCTION__<<" "<<tracker.name()<< " "<<tracker.type()<<std::endl;
-
-  //Add the ActsExtension for the Reco Geometry
-  Acts::ActsExtension* trackerExtension = new Acts::ActsExtension();
-  trackerExtension->addType("tracker", "detector");
-
-  // Get the global position of the tracker envelope and place it in the mother
-  // volume.
-  auto env_pos{det_handle.position()};
-  auto env_placed_vol(lcdd.pickMotherVolume(tracker).placeVolume(
-      env_vol, Position(env_pos.x(), env_pos.y(), env_pos.z())));
-  tracker.setPlacement(env_placed_vol);
-
+  std::cout<<"PF::DEBUG "<<__PRETTY_FUNCTION__<<" Returning tracker"<<std::endl;
   return tracker;
 }
 
