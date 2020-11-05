@@ -57,7 +57,9 @@ namespace ldmx {
             const int &channelID,
             const std::vector<double> &voltages,
             const std::vector<double> &times,
-            std::vector<HgcrocDigiCollection::Sample> &digiToAdd
+            std::vector<HgcrocDigiCollection::Sample> &digiToAdd,
+	    const double &attenuation,
+            const double &shift
     ) const {
 
         digiToAdd.clear(); //make sure it is clean
@@ -77,6 +79,18 @@ namespace ldmx {
             timeInWindow    += voltages.at(iContrib) * times.at(iContrib);
         }
         if ( signalAmplitude > 0. ) timeInWindow /= signalAmplitude; //voltage weighted average
+
+	// attenuate amplitude
+        if( attenuation> 0. ){
+	  //std::cout << "att " << attenuation << " amplitude before att " << signalAmplitude << " after " << signalAmplitude*attenuation << std::endl;
+          signalAmplitude *= attenuation;
+	}
+
+        // shift time c=distance_traveled/time
+        if( shift > 0.){
+	  //std::cout << "shift " << shift << " time before shift " << timeInWindow << " after " << timeInWindow+shift << std::endl;
+          timeInWindow += shift;
+	}
 
         // put noise onto timing
         //TODO more physical way of simulating the timing jitter
@@ -119,14 +133,17 @@ namespace ldmx {
         // choose readout mode
         double pulsePeak = measurePulse( timeInWindow , false );
         if (verbose_) {
-            std::cout << "Pulse: { "
-                << "Amplitude: " << pulsePeak << "mV, "
-                << "Beginning: " << measurePulse(0.,false) << "mV, "
-                << "Time: " << timeInWindow << "ns } -> ";
+	  std::cout << "Pulse: { "
+		    << "Amplitude: " << pulsePeak << "mV, "
+		    << "Beginning: " << measurePulse(0.,false) << "mV, "
+		    << "Time: " << timeInWindow << "ns } -> ";
+	  std::cout << "pulsepeak " << pulsePeak << " readoutThreshold " << readoutThreshold << " toathres " << toaThreshold << std::endl;
         }
+
         if ( pulsePeak < readoutThreshold ) {
             //below readout threshold -> skip this hit
-            if (verbose_) std::cout << "Below Readout" << std::endl;
+            if (verbose_) 
+	      std::cout << "Below Readout" << std::endl;
             return false; //skip this hit
         } else if ( pulsePeak < totThreshold ) {
             //below TOT threshold -> do ADC readout mode
@@ -136,9 +153,14 @@ namespace ldmx {
             double toa(0.);
             // make sure pulse crosses TOA threshold
             if ( measurePulse(0.,false) < toaThreshold and pulsePeak > toaThreshold ) {
-                toa = pulseFunc_.GetX(toaThreshold-gain*pedestal, -nADCs_*clockCycle_, timeInWindow);
+	      toa = pulseFunc_.GetX(toaThreshold-gain*pedestal, -nADCs_*clockCycle_, timeInWindow);
             }
-            if (verbose_) std::cout << "TOA: " << toa << "ns, ";
+	    else{
+	      if (verbose_) 
+		std::cout << "does not pass toaThreshold, at 0 should be less " << measurePulse(0.,false) << " and at peak more " << pulsePeak << " than thres " << toaThreshold << std::endl;
+	    }
+            if (verbose_) 
+	      std::cout << "TOA: " << toa << "ns, " << " toa x ns " << toa * ns_ << std::endl;
 
             //measure ADCs
             for ( unsigned int iADC = 0; iADC < nADCs_; iADC++ ) {
