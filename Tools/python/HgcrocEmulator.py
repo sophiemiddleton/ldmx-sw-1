@@ -86,6 +86,14 @@ class HgcrocEmulator() :
 
         return electrons*(0.162/1000.)*(1./self.readoutPadCapacitance)
     
+    def calculateVoltagePE(self, PE) :
+        """ 
+        Assuming that 7 PEs ~ 2500mV
+        Assuming that 1 PEs ~ 0.5mV
+        """
+        return PE*(2500/7)                                                                                                                                                      
+        #return PE*(5/1)
+
     def setNoise(self, noiseIntercept , noiseSlope ) :
         """Calculate the Noise RMS [mV] from the capacitance of the readout pads.
 
