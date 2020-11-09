@@ -173,8 +173,9 @@ def dark_brem( ap_mass , lhe, detector ) :
     db_model.epsilon   = 0.01 #decrease epsilon from one to help with Geant4 biasing calculations
     sim.dark_brem.activate( ap_mass , db_model )
 
-    import math
-    factor = ( sim.dark_brem.ap_mass**2 ) / ( sim.dark_brem.model.epsilon ** 2 )
+    from math import log10 
+    mass_power = max(log10(sim.dark_brem.ap_mass),2.)
+    factor = ( sim.dark_brem.ap_mass**mass_power ) / ( sim.dark_brem.model.epsilon ** 2 )
     # Biasing dark brem up inside of the target
     sim.biasing_operators = [
                 bias_operators.DarkBrem.target(factor)
