@@ -1,4 +1,4 @@
-#include "DetDescr/HcalReadout.h"
+#include "DetDescr/HcalGeometry.h"
 
 #include <assert.h>
 #include <iostream>
@@ -6,15 +6,10 @@
 
 namespace ldmx {
 
-    HcalReadout::HcalReadout(const Parameters& ps) : ConditionsObject(HcalReadout::CONDITIONS_OBJECT_NAME) {
+    HcalGeometry::HcalGeometry(const Parameters& ps) : ConditionsObject(HcalGeometry::CONDITIONS_OBJECT_NAME) {
 
         hcalThicknessScint_ = ps.getParameter<double>("hcalThicknessScint");
 	hcalWidthScint_     = ps.getParameter<double>("hcalWidthScint");
-        // hcalZeroLayer_      = ps.getParameter<std::map< HcalID::HcalSection , double >>("hcalZeroLayer");
-	// hcalZeroStrip_      = ps.getParameter<std::map< HcalID::HcalSection , double >>("hcalZeroStrip");
-        // hcalLayerThickness_ = ps.getParameter<std::map< HcalID::HcalSection , double >>("hcalLayerThickness");
-	// hcalNLayers_        = ps.getParameter<std::map< HcalID::HcalSection , int >>("hcalNLayers");
-        // hcalNStrips_        = ps.getParameter<std::map< HcalID::HcalSection , int >>("hcalNStrips");
         hcalZeroLayer_      = ps.getParameter<std::vector< double >>("hcalZeroLayer");
         hcalZeroStrip_      = ps.getParameter<std::vector< double >>("hcalZeroStrip");
         hcalLayerThickness_ = ps.getParameter<std::vector< double >>("hcalLayerThickness");
@@ -25,15 +20,17 @@ namespace ldmx {
 	buildStripPositionMap();
     }
 
-    void HcalReadout::buildStripPositionMap() {
-      double x{0},y{0};
+    void HcalGeometry::buildStripPositionMap() {
+      double x{0},y{0},z{0};
       for(int section=0; section<=HcalID::HcalSection::LEFT; section++) {
 	HcalID::HcalSection hcalsection = (HcalID::HcalSection) section;
 	for(int layer=0; layer<hcalNLayers_[section]; layer++) {
+	  double layercenter = layer*hcalLayerThickness_.at( section ) + 0.5*hcalThicknessScint_;
 	  for(int strip=0; strip<hcalNStrips_[section]; strip++) {
 	    double stripcenter = (strip + 0.5)*hcalWidthScint_;
 
 	    if(hcalsection == HcalID::HcalSection::BACK ) {
+	      z = hcalZeroLayer_.at( section ) + layercenter;
 	      if(layer % 2 == 1){ // odd layers have bars horizontal
 		y = -1*hcalZeroStrip_.at( section ) + stripcenter;
 	      }
@@ -42,22 +39,25 @@ namespace ldmx {
 	      }
 	    }
 	    else{ 
+	      z = hcalZeroStrip_.at( section ) + stripcenter;
 	      if ( hcalsection == HcalID::HcalSection::TOP or hcalsection == HcalID::HcalSection::BOTTOM ) {
-		y = hcalZeroStrip_.at( section ) + stripcenter;
+                y = hcalZeroLayer_.at( section ) + layercenter;
+		//y = hcalZeroStrip_.at( section ) + stripcenter;
 		// also v confused here
 		if ( hcalsection == HcalID::HcalSection::BOTTOM ) {
 		  y *= -1;
                 }
 	      }
 	      else{
-                x = hcalZeroStrip_.at( section ) + stripcenter;
+                x = hcalZeroLayer_.at( section ) + layercenter;
+                //x = hcalZeroStrip_.at( section ) + stripcenter;
 		// confused here too
 		if ( hcalsection == HcalID::HcalSection::RIGHT ) {
 		  x *= -1;
 		}
 	      }
 	    }
-	    stripPositionMap_[HcalID(section,layer,strip)] = std::pair<double,double>(x,y);
+	    stripPositionMap_[HcalID(section,layer,strip)] = std::tuple<double,double,double>(x,y,z);
 	  } // loop over strips
 	} // loop over layers
       } // loop over sections

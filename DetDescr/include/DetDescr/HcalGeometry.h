@@ -1,10 +1,10 @@
 /**
- * @file EcalHexReadout.h
- * @brief Class that translates raw positions of HCal bar hits into cells in a hexagonal readout
+ * @file HcalGeometry.h
+ * @brief Class that translates HCal ID into positions of bar hits
  */
 
-#ifndef DETDESCR_HCALREADOUT_H_
-#define DETDESCR_HCALREADOUT_H_
+#ifndef DETDESCR_HCALGEOMETRY_H_
+#define DETDESCR_HCALGEOMETRY_H_
 
 // LDMX
 #include "Framework/Exception.h"
@@ -20,21 +20,21 @@ namespace ldmx {
     class HcalGeometryProvider;
   
     /**
-     * @class HcalReadout
+     * @class HcalGeometry
      * @brief Implementation of HCal bar readout
      *
      */
-    class HcalReadout : public ConditionsObject {
+    class HcalGeometry : public ConditionsObject {
 
         public:
-            static constexpr const char* CONDITIONS_OBJECT_NAME{"HcalReadout"};
+            static constexpr const char* CONDITIONS_OBJECT_NAME{"HcalGeometry"};
 
             /**
              * Class destructor.
              *
              * Does nothing because the stl containers clean up automatically.
              */
-            virtual ~HcalReadout() { }
+            virtual ~HcalGeometry() { }
 
             /**
              * Get entire real space position for the strip with the input raw ID
@@ -48,57 +48,35 @@ namespace ldmx {
              * @param[out] z set to z-coordinate of strip center
              */
             void getStripAbsolutePosition( HcalID id, double &x, double &y, double &z ) const {
-	        std::pair<double,double> xy = this->getStripCenterAbsolute( id );
-	        x = xy.first;
-		y = xy.second;
-                z = getZPosition(id);
+	        std::tuple<double,double,double> xyz = this->getStripCenterAbsolute( id );
+	        x = std::get<0>(xyz);
+		y = std::get<1>(xyz);
+                z = std::get<2>(xyz);
                 return;
             }
 
-	    /**
-	     * Get the z-coordinate given the layer id
-	     *
-             * @param[in] layer int layer id 
-             * @return z-coordinate of the input sensitive layer
-	     */
-            double getZPosition(HcalID id) const {
-	        int layer   = id.layer();
-		HcalID::HcalSection hcalsection = (HcalID::HcalSection)id.section();
-		int section = id.section();
-	        double layercenter = layer*hcalLayerThickness_.at( section ) + 0.5*hcalThicknessScint_;
-		double z =0;
-		if(hcalsection == HcalID::HcalSection::BACK){
-		  z = hcalZeroLayer_.at(section) + layercenter;
-		}
-		else{
-		  z = hcalZeroStrip_.at(section) + layercenter; 
-		  // need to x-check this because this is confusing https://github.com/LDMX-Software/ldmx-sw/blob/master/EventDisplay/src/DetectorGeometry.cxx#L264
-		}
-		return z;
-            }
-
             /**
-             * Get a strip center X and Y position relative to hcal center from a combined hcal ID
+             * Get a strip center X, Y and Z position relative to hcal center from a combined hcal ID
              *
              * @throw std::out_of_range if HcalID isn't created with valid bar or bar IDs.
              *
              * @param HcalID 
-             * @return The X and Y position of the center of the bar.
+             * @return The X, Y and Z position of the center of the bar.
              */
-	    std::pair<double,double> getStripCenterAbsolute(HcalID id) const {
+	    std::tuple<double,double,double> getStripCenterAbsolute(HcalID id) const {
 	      return stripPositionMap_.at(id);
             }
 
-    static HcalReadout* debugMake(const Parameters& p) { return new HcalReadout(p); }
+    static HcalGeometry* debugMake(const Parameters& p) { return new HcalGeometry(p); }
     
         private:
 
             /**
              * Class constructor, for use only by the provider
              *
-             * @param ps Parameters to configure the HcalReadout
+             * @param ps Parameters to configure the HcalGeometry
              */
-            HcalReadout(const Parameters &ps);
+            HcalGeometry(const Parameters &ps);
             friend class HcalGeometryProvider;
 
             void buildStripPositionMap();
@@ -116,26 +94,21 @@ namespace ldmx {
 
             /// Front of HCal relative to world geometry for each section [mm]
 	    std::vector<double> hcalZeroLayer_;
-	    //std::map< HcalID::HcalSection , double > hcalZeroLayer_;
 
             /// The plane of the zero'th strip of each section [mm] 
 	    std::vector<double> hcalZeroStrip_;
-	    //std::map< HcalID::HcalSection , double > hcalZeroStrip_;
 
 	    /// Thickness of the layers in each section [mm] 
 	    std::vector<double> hcalLayerThickness_;
-	    //std::map< HcalID::HcalSection , double > hcalLayerThickness_;
 
 	    /// Number of layers in each section 
 	    std::vector<int> hcalNLayers_;
-	    //std::map< HcalID::HcalSection , int > hcalNLayers_;
 
             /// Number of strips per layer in each section
 	    std::vector<int> hcalNStrips_;
-	    //std::map< HcalID::HcalSection , int > hcalNStrips_;
 
             /// Position of bar centers relative to world geometry (uses ID with real bar and section and layer as zero for key)
-            std::map<HcalID, std::pair<double,double>> stripPositionMap_;
+            std::map<HcalID, std::tuple<double,double,double>> stripPositionMap_;
     };
     
 }

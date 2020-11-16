@@ -1,7 +1,7 @@
-"""Configuration for HcalReadout"""
+"""Configuration for HcalGeometry"""
 
 class HcalReadoutGeometry() :
-    """Configuration for HcalReadout for a specific geometry
+    """Configuration for HcalGeometry for a specific geometry
 
     Attributes
     ----------
@@ -28,7 +28,7 @@ class HcalReadoutGeometry() :
         s = 'HcalReadoutGeometry'
         return s
 
-class HcalReadout() :
+class HcalGeometry() :
     """Container for the various geometries
 
     """
