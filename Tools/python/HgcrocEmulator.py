@@ -90,13 +90,15 @@ class HgcrocEmulator() :
 
         return electrons*(0.162/1000.)*(1./self.readoutPadCapacitance)
     
-    def calculateVoltagePE(self, PE) :
+    def calculateVoltageHcal(self, PE) :
         """ 
-        Assuming that 7 PEs ~ 2500mV
-        Assuming that 1 PEs ~ 0.5mV
+        Assuming that 1 PEs ~ 5mV (before it was  7 PEs ~ 2.5V)
+        Parameters
+        ----------
+        PE : int                                                                                                                                                              
+            Number of photo-electrons produced  
         """
-        return PE*(2500/7)                                                                                                                                                      
-        #return PE*(5/1)
+        return PE*(5/1)
 
     def setNoise(self, noiseIntercept , noiseSlope ) :
         """Calculate the Noise RMS [mV] from the capacitance of the readout pads.
@@ -136,3 +138,13 @@ class HgcrocEmulator() :
         self.toaThreshold = self.gain*self.pedestal + self.calculateVoltage( 5.*nElectronsPerMIP )
         self.totThreshold = self.gain*self.pedestal + self.calculateVoltage( 50.*nElectronsPerMIP )
 
+    def setThresholdDefaultsHcal(self, gain):
+        self.pedestal = 50. # ADC
+        # gain = maximum ADC range [fC] ( 1 / readout pad capacitance in pF ) ( 1 / 2^10 ADC Counts ) = mV / ADC counts
+        # if gain = 0.5 and cap = 20 pF => maxADCrange = 10240 fC  = 10 pC
+        self.gain = gain # mV/ADC
+        self.maxADCRange = 10240. # fC
+        self.readoutThreshold = self.calculateVoltageHcal(1) # [mV] # readout threshold 1 PE
+        #self.toaThreshold = self.calculateVoltageHcal(1) # toa 1 PE
+        self.toaThreshold = self.pedestal*gain + self.calculateVoltageHcal(1) # toa 1 PE 
+        self.totThreshold = 1000000. # just leave tot mode out for now  
