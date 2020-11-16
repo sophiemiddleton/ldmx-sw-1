@@ -62,6 +62,34 @@ namespace ldmx {
         hcalLayerThickness_[ HcalID::HcalSection::LEFT   ] = 20. + hcalThicknessScint_ + 2*2.;
         hcalLayerThickness_[ HcalID::HcalSection::RIGHT  ] = 20. + hcalThicknessScint_ + 2*2.;
 
+        std::map<std::string,std::any> hcalReadoutParams;
+	hcalReadoutParams["hcalThicknessScint"] = hcalThicknesasScint_;
+        hcalReadoutParams["hcalWidthScint"] = hcalWidthScint_;
+        std::vector<double> hcalZeroLayer = {hcalZeroLayer_[ HcalID::HcalSection::BACK   ],hcalZeroLayer_[ HcalID::HcalSection::TOP    ],
+					     hcalZeroLayer_[ HcalID::HcalSection::BOTTOM ], hcalZeroLayer_[ HcalID::HcalSection::LEFT   ], 
+					     hcalZeroLayer_[ HcalID::HcalSection::RIGHT  ]};
+        hcalReadoutParams["hcalZeroLayer"] = hcalZeroLayer;
+	std::vector<double> hcalZeroStrip = {hcalZeroStrip_[ HcalID::HcalSection::BACK   ], hcalZeroStrip_[ HcalID::HcalSection::TOP    ],
+					     hcalZeroStrip_[ HcalID::HcalSection::BOTTOM ], hcalZeroStrip_[ HcalID::HcalSection::LEFT   ],
+					     hcalZeroStrip_[ HcalID::HcalSection::RIGHT  ]};
+        hcalReadoutParams["hcalZeroStrip"] = hcalZeroStrip;
+	std::vector<double> hcalLayerThickness = {hcalLayerThickness_[ HcalID::HcalSection::BACK   ], hcalLayerThickness_[ HcalID::HcalSection::TOP    ],
+						  hcalLayerThickness_[ HcalID::HcalSection::BOTTOM ], hcalLayerThickness_[ HcalID::HcalSection::LEFT   ],
+						  hcalLayerThickness_[ HcalID::HcalSection::RIGHT  ]};
+        hcalReadoutParams["hcalLayerThickness"] = hcalLayerThickness;
+	std::vector<int> hcalNLayers = {hcalNLayers_[ HcalID::HcalSection::BACK   ],hcalNLayers_[HcalID::HcalSection::TOP ],
+					hcalNLayers_[ HcalID::HcalSection::BOTTOM ],hcalNLayers_[HcalID::HcalSection::LEFT ],
+					hcalNLayers_[ HcalID::HcalSection::RIGHT  ]};
+        hcalReadoutParams["hcalNLayers"] = hcalNLayers;
+	std::vector<int> hcalNStrips = {hcalNStrips_[ HcalID::HcalSection::BACK   ],hcalNStrips_[HcalID::HcalSection::TOP ],
+					hcalNStrips_[ HcalID::HcalSection::BOTTOM ],hcalNStrips_[HcalID::HcalSection::LEFT ],
+					hcalNStrips_[ HcalID::HcalSection::RIGHT  ]};
+        hcalReadoutParams["hcalNStrips"] = hcalNStrips;
+        hcalReadoutParams["verbose"] = 0;
+        Parameters hcalReadout;
+        hcalReadout.setParameters( hcalReadoutParams );
+        hcalReader_ = std::make_unique<HcalReadout>( hcalReadout );
+
         ///////////////////////////////////////////////////////////////////////////////////
         // ECAL
 

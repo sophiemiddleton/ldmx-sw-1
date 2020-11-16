@@ -17,6 +17,7 @@
 
 //LDMX Framework
 #include "DetDescr/HcalID.h"
+#include "DetDescr/HcalReadout.h"
 #include "DetDescr/EcalID.h"
 #include "DetDescr/EcalHexReadout.h"
 #include "Event/SimTrackerHit.h" //recoil hits
@@ -173,6 +174,9 @@ namespace ldmx {
 
             /** Width of Scintillator Strip [mm] */
             double hcalWidthScint_;
+
+	    /** Helper class to calculate (x,y,z) coordinate from id */
+	    std::unique_ptr<HcalReadout> hcalReader_;
 
             /////////////////////////////////////////////////////////////
             // ECAL
