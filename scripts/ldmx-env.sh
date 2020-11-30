@@ -179,6 +179,7 @@ function ldmx() {
     then
         docker run \
             -it \
+            -e "PYTHONPATH=$PYTHONPATH:/home/phillip/Research/ldmx-container/mipTracking/rootman" \
             -e LDMX_BASE \
             -v $LDMX_BASE:$LDMX_BASE \
             -u $(id -u ${USER}):$(id -g ${USER}) \
