@@ -139,10 +139,11 @@ class HgcrocEmulator() :
     def setThresholdDefaultsHcal(self, gain):
         self.pedestal = 50. # ADC
         # gain = maximum ADC range [fC] ( 1 / readout pad capacitance in pF ) ( 1 / 2^10 ADC Counts ) = mV / ADC counts
-        # if gain = 0.5 and cap = 20 pF => maxADCrange = 10240 fC  = 10 pC
+        # if gain = 0.4 and cap = 20 pF => maxADCrange = 8192 = 8pC
+        # if gain = 0.1 and cap = 20 pF => maxADCrange = 2pC
+        self.maxADCRange = 8192. # fC
         self.gain = gain # mV/ADC
-        self.maxADCRange = 10240. # fC
-        self.readoutThreshold = self.calculateVoltageHcal(1) # [mV] # readout threshold 1 PE
-        #self.toaThreshold = self.calculateVoltageHcal(1) # toa 1 PE
-        self.toaThreshold = self.pedestal*gain + self.calculateVoltageHcal(1) # toa 1 PE 
-        self.totThreshold = 1000000. # just leave tot mode out for now  
+        #self.readoutThreshold = self.gain*self.pedestal + self.calculateVoltageHcal(1) # [mV] # readout threshold 1 PE -> 5 mV
+        self.readoutThreshold = self.pedestal + self.calculateVoltageHcal(1)/self.gain # readout threshold 1 PE -> 5 mV -> 62.5 ADC(?) -> goes to int
+        self.toaThreshold     = self.gain*self.pedestal + self.calculateVoltageHcal(0.1*68) # toa 0.1 MIP + ped*gain -> if gain=0.015, ped=50 -> theshold 34.75 [mV]
+        self.totThreshold     = self.gain*self.pedestal + self.calculateVoltageHcal(2*68) # tot 2 MIPs
