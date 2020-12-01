@@ -108,12 +108,13 @@ namespace ldmx {
         //Configure chip settings based off of table (that may have been passed)
         double gain             = getCondition( channelID , "gain" , gain_ );
         double pedestal         = getCondition( channelID , "pedestal" , pedestal_ );
-        double readoutThreshold = getCondition( channelID , "readoutThreshold" , readoutThreshold_ );
         double toaThreshold     = getCondition( channelID , "toaThreshold" , toaThreshold_ );
         double totThreshold     = getCondition( channelID , "totThreshold" , totThreshold_ );
         double measTime         = getCondition( channelID , "measTime" , measTime_ );
         double drainRate        = getCondition( channelID , "drainRate" , drainRate_ );
 
+        double readoutThresholdFloat = getCondition( channelID , "readoutThreshold" , readoutThreshold_ );
+        int readoutThreshold = int(readoutThresholdFloat);
         /* debug printout
         std::cout << "Configuration: {"
                   << "gain: " << gain << " mV/ADC, "
@@ -142,12 +143,7 @@ namespace ldmx {
 	  std::cout << "pulsepeak " << pulsePeak << " readoutThreshold " << readoutThreshold << " toathres " << toaThreshold << std::endl;
         }
 
-        if ( pulsePeak < readoutThreshold ) {
-            //below readout threshold -> skip this hit
-            if (verbose_) 
-	      std::cout << "Below Readout" << std::endl;
-            return false; //skip this hit
-        } else if ( pulsePeak < totThreshold ) {
+        if ( pulsePeak < totThreshold ) {
             /**
              * TODO more realistic ADC readout
              *
@@ -186,9 +182,15 @@ namespace ldmx {
                         measurePulse( fullMeasTime, noise_ )/gain, //ADC t is second measurement
                         toa * ns_ //TOA is third measurement
                         );
-                if (verbose_) std::cout << " ADC " << iADC << ": " << digiToAdd[iADC].adc_t()*gain << "mV, ";
+                if (verbose_) std::cout << " ADC " << iADC << ": " << digiToAdd[iADC].adc_t() << ", ";
             }
             if (verbose_) std::cout << "}" << std::endl;
+
+            /**
+             * Determine whether to readout this hit depending on the readout
+             * threshold
+             */
+            return (digiToAdd.at(iSOI_).adc_t() >= readoutThreshold);
 
         } else {
             /**
@@ -262,9 +264,12 @@ namespace ldmx {
                         );
             }
 
+            /**
+             * Always readout TOT hits
+             */
+            return true;
         } //where is the amplitude of the hit w.r.t. readout and TOT thresholds
 
-        return true;
     } //HgcrocEmulator::digitize
 
 } // ldmx

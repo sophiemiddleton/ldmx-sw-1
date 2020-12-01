@@ -266,7 +266,7 @@ namespace ldmx {
             /// base pedestal [ADC units]
             double pedestal_;
 
-            /// Min threshold for reading out a channel [mV]
+            /// Min threshold for reading out a channel [ADC units]
             double readoutThreshold_;
 
             /// Min threshold for measuring TOA [mV]
