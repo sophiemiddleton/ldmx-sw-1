@@ -192,7 +192,7 @@ namespace ldmx {
         private:
 
             /// Verbosity, not configurable, only helpful in development
-            bool verbose_{false};
+            bool verbose_{true};
 
             /**************************************************************************************
              * Parameters Identical for all Chips

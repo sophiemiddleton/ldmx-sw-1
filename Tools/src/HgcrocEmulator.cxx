@@ -82,16 +82,15 @@ namespace ldmx {
         }
         if ( signalAmplitude > 0. ) timeInWindow /= signalAmplitude; //voltage weighted average
 
+	// for Hcal attenuated pulses at each of the bar
 	// attenuate amplitude
         if( attenuation> 0. ){
-	  //std::cout << "att " << attenuation << " amplitude before att " << signalAmplitude << " after " << signalAmplitude*attenuation << std::endl;
           signalAmplitude *= attenuation;
 	}
-
-        // shift time c=distance_traveled/time
+        // shift time =  distance_traveled/speed of light in scintillator bar
         if( shift > 0.){
-	  //std::cout << "shift " << shift << " time before shift " << timeInWindow << " after " << timeInWindow+shift << std::endl;
-          timeInWindow += shift;
+	  double timeShift = 50;  // FIXME: arbitrary fixed time shift so that pulses start at t > 0 for 0.5 MIP (intercept is 8ns) and (toa is > 0) for 6800 PEs  (100 MIPs)
+          timeInWindow += shift + timeShift;  
 	}
 
         // put noise onto timing
@@ -103,6 +102,7 @@ namespace ldmx {
         if ( timeInWindow   < 0. ) timeInWindow = 0.;
 
         //setup up pulse by changing the amplitude and timing parameters
+	std::cout << " configure signal Ampl " << signalAmplitude << " time " << timeInWindow << std::endl;
         configurePulse( signalAmplitude , timeInWindow );
 
         //Configure chip settings based off of table (that may have been passed)
@@ -163,6 +163,7 @@ namespace ldmx {
             //measure time of arrival (TOA) using TOA threshold
             double toa(0.);
             // make sure pulse crosses TOA threshold
+	    std::cout << "pulse y-intercept " << measurePulse(0.,false) << " pulsePeak " << pulsePeak << " toathreshold is " << toaThreshold << std::endl;
             if ( measurePulse(0.,false) < toaThreshold and pulsePeak > toaThreshold ) {
 	      toa = pulseFunc_.GetX(toaThreshold-gain*pedestal, -nADCs_*clockCycle_, timeInWindow);
             }
@@ -182,14 +183,19 @@ namespace ldmx {
                         measurePulse( fullMeasTime, noise_ )/gain, //ADC t is second measurement
                         toa * ns_ //TOA is third measurement
                         );
-                if (verbose_) std::cout << " ADC " << iADC << ": " << digiToAdd[iADC].adc_t() << ", ";
-            }
-            if (verbose_) std::cout << "}" << std::endl;
-
+                if (verbose_){
+		  std::cout << " ADC " << iADC << ": " << digiToAdd[iADC].adc_t() << ", " << std::endl;
+		  std::cout << " ADC " << iADC << ": measure time "  <<fullMeasTime << " pulse " << measurePulse( fullMeasTime, noise_ ) << std::endl;
+		  std::cout << " ADC " << iADC << ": in gain " << gain << " div by gain " << measurePulse( fullMeasTime, noise_ )/gain << std::endl;
+		  std::cout << " ADC " << iADC << ": " << digiToAdd[iADC].adc_t()*gain << "mV, " << std::endl;
+		}
+		//if (verbose_) std::cout << "}" << std::endl;
+	    }
             /**
              * Determine whether to readout this hit depending on the readout
              * threshold
              */
+	    std::cout << "ISOI " << digiToAdd.at(iSOI_).adc_t() << " and rthres " << readoutThreshold << std::endl;
             return (digiToAdd.at(iSOI_).adc_t() >= readoutThreshold);
 
         } else {
@@ -205,6 +211,7 @@ namespace ldmx {
             // above TOT threshold -> do TOT readout mode
 
             double charge_deposited = signalAmplitude * readoutPadCapacitance_;
+	    std::cout << "charge deposited " << charge_deposited << " readout PC " << readoutPadCapacitance_ << " drainrate " << drainRate << std::endl;
 
             // Measure Time Over Threshold (TOT) by using the drain rate.
             //      1. Use drain rate to see how long it takes for the charge to drain off
