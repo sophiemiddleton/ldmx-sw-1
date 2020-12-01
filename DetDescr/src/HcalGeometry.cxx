@@ -21,13 +21,14 @@ namespace ldmx {
     }
 
     void HcalGeometry::buildStripPositionMap() {
-      double x{0},y{0},z{0};
+
       for(int section=0; section<=HcalID::HcalSection::LEFT; section++) {
 	HcalID::HcalSection hcalsection = (HcalID::HcalSection) section;
 	for(int layer=0; layer<hcalNLayers_[section]; layer++) {
 	  double layercenter = layer*hcalLayerThickness_.at( section ) + 0.5*hcalThicknessScint_;
 	  for(int strip=0; strip<hcalNStrips_[section]; strip++) {
 	    double stripcenter = (strip + 0.5)*hcalWidthScint_;
+	    double x{-10000},y{-10000},z{-10000};
 
 	    if(hcalsection == HcalID::HcalSection::BACK ) {
 	      z = hcalZeroLayer_.at( section ) + layercenter;
@@ -35,7 +36,7 @@ namespace ldmx {
 		y = -1*hcalZeroStrip_.at( section ) + stripcenter;
 	      }
 	      else{ // even layers have bars vertical 
-		x = -hcalZeroStrip_.at( section ) + stripcenter;
+		x = -1*hcalZeroStrip_.at( section ) + stripcenter;
 	      }
 	    }
 	    else{ 
