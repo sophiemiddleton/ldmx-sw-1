@@ -51,6 +51,10 @@ def electro_nuclear( detector, generator ) :
     sim.generators.append(generator)
     
     # Enable and configure the biasing
+<<<<<<< HEAD
+=======
+    from LDMX.SimCore import bias_operators
+>>>>>>> 5439e962... running dynamically-loaded biasing operators
     sim.biasing_operators = [
             bias_operators.ElectroNuclear('target',1e8)
             ]
@@ -109,6 +113,10 @@ def photo_nuclear( detector, generator ) :
     sim.generators.append(generator)
     
     # Enable and configure the biasing
+<<<<<<< HEAD
+=======
+    from LDMX.SimCore import bias_operators
+>>>>>>> 5439e962... running dynamically-loaded biasing operators
     sim.biasing_operators = [
             bias_operators.PhotoNuclear('target',450.,2500.)
             ]
@@ -175,6 +183,7 @@ def dark_brem( ap_mass , lhe, detector ) :
 
     from math import log10 
     mass_power = max(log10(sim.dark_brem.ap_mass),2.)
+<<<<<<< HEAD
     factor = ( sim.dark_brem.ap_mass**mass_power ) / ( sim.dark_brem.model.epsilon ** 2 )
     # Biasing dark brem up inside of the target
     sim.biasing_operators = [
@@ -184,6 +193,12 @@ def dark_brem( ap_mass , lhe, detector ) :
     # the following filters are in a library that needs to be included
     from LDMX.Biasing import include
     include.library()
+=======
+    from LDMX.SimCore import bias_operators
+    sim.biasing_operators = [
+            bias_operators.DarkBrem.target(sim.dark_brem.ap_mass**mass_power / db_model.epsilon**2)
+            ]
+>>>>>>> 5439e962... running dynamically-loaded biasing operators
 
     sim.actions.extend([
         # make sure electron reaches target with 3.5GeV

@@ -57,6 +57,10 @@ def photo_nuclear( detector, generator ) :
     sim.generators.append( generator )
     
     # Enable and configure the biasing
+<<<<<<< HEAD
+=======
+    from LDMX.SimCore import bias_operators
+>>>>>>> 5439e962... running dynamically-loaded biasing operators
     sim.biasing_operators = [ bias_operators.PhotoNuclear('ecal',450.,2500.) ]
 
     # the following filters are in a library that needs to be included
