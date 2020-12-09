@@ -10,6 +10,7 @@ from LDMX.SimCore import generators
 from LDMX.SimCore import simulator
 from LDMX.SimCore import bias_operators
 from LDMX.Biasing import filters
+from LDMX.Biasing import util
 from LDMX.Biasing import include as includeBiasing
 
 def electro_nuclear( detector, generator ) :
@@ -51,10 +52,6 @@ def electro_nuclear( detector, generator ) :
     sim.generators.append(generator)
     
     # Enable and configure the biasing
-<<<<<<< HEAD
-=======
-    from LDMX.SimCore import bias_operators
->>>>>>> 5439e962... running dynamically-loaded biasing operators
     sim.biasing_operators = [
             bias_operators.ElectroNuclear('target',1e8)
             ]
@@ -66,7 +63,7 @@ def electro_nuclear( detector, generator ) :
     sim.actions.extend([
             filters.TaggerVetoFilter(),
             filters.TargetENFilter(2500.),
-            filters.TrackProcessFilter.electro_nuclear()      
+            util.TrackProcessFilter.electro_nuclear()      
     ])
 
     return sim
@@ -113,10 +110,6 @@ def photo_nuclear( detector, generator ) :
     sim.generators.append(generator)
     
     # Enable and configure the biasing
-<<<<<<< HEAD
-=======
-    from LDMX.SimCore import bias_operators
->>>>>>> 5439e962... running dynamically-loaded biasing operators
     sim.biasing_operators = [
             bias_operators.PhotoNuclear('target',450.,2500.)
             ]
@@ -131,7 +124,7 @@ def photo_nuclear( detector, generator ) :
             filters.TargetBremFilter(),
             filters.TargetPNFilter(),
             # Tag all photo-nuclear tracks to persist them to the event.
-            filters.TrackProcessFilter.photo_nuclear()
+            util.TrackProcessFilter.photo_nuclear()
     ])
 
     return sim
@@ -183,7 +176,6 @@ def dark_brem( ap_mass , lhe, detector ) :
 
     from math import log10 
     mass_power = max(log10(sim.dark_brem.ap_mass),2.)
-<<<<<<< HEAD
     factor = ( sim.dark_brem.ap_mass**mass_power ) / ( sim.dark_brem.model.epsilon ** 2 )
     # Biasing dark brem up inside of the target
     sim.biasing_operators = [
@@ -193,12 +185,6 @@ def dark_brem( ap_mass , lhe, detector ) :
     # the following filters are in a library that needs to be included
     from LDMX.Biasing import include
     include.library()
-=======
-    from LDMX.SimCore import bias_operators
-    sim.biasing_operators = [
-            bias_operators.DarkBrem.target(sim.dark_brem.ap_mass**mass_power / db_model.epsilon**2)
-            ]
->>>>>>> 5439e962... running dynamically-loaded biasing operators
 
     sim.actions.extend([
         # make sure electron reaches target with 3.5GeV
@@ -206,7 +192,7 @@ def dark_brem( ap_mass , lhe, detector ) :
         # make sure dark brem occurs in the target where A' has at least 2GeV
         filters.TargetDarkBremFilter(2000.),
         # keep all prodcuts of dark brem (A' and recoil electron)
-        filters.TrackProcessFilter.dark_brem()
+        util.TrackProcessFilter.dark_brem()
         ])
 
     return sim

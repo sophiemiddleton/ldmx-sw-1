@@ -10,6 +10,7 @@ from LDMX.SimCore import simulator
 from LDMX.SimCore import generators
 from LDMX.SimCore import bias_operators
 from LDMX.Biasing import filters
+from LDMX.Biasing import util
 from LDMX.Biasing import include as includeBiasing
 
 def photo_nuclear( detector, generator ) :
@@ -57,10 +58,6 @@ def photo_nuclear( detector, generator ) :
     sim.generators.append( generator )
     
     # Enable and configure the biasing
-<<<<<<< HEAD
-=======
-    from LDMX.SimCore import bias_operators
->>>>>>> 5439e962... running dynamically-loaded biasing operators
     sim.biasing_operators = [ bias_operators.PhotoNuclear('ecal',450.,2500.) ]
 
     # the following filters are in a library that needs to be included
@@ -74,7 +71,7 @@ def photo_nuclear( detector, generator ) :
             # Only consider events where a PN reaction happnes in the ECal
             filters.EcalProcessFilter(),     
             # Tag all photo-nuclear tracks to persist them to the event.
-            filters.TrackProcessFilter.photo_nuclear()
+            util.TrackProcessFilter.photo_nuclear()
     ])
 
     return sim
