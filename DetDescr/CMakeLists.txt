@@ -10,7 +10,7 @@ project(DetDescr VERSION 2.1.0
 # Search and configure ROOT
 find_package(ROOT 6.16 CONFIG REQUIRED)
 
-setup_library(name DetDescr
+setup_library(module DetDescr
               dependencies  ROOT::Core ROOT::Hist
                             Framework::Exception Framework::Configure 
 )
@@ -18,4 +18,4 @@ setup_library(name DetDescr
 setup_python(package_name ${PYTHON_PACKAGE_NAME}/DetDescr)
 
 # Setup the test
-setup_test(dependencies DARK::DetDescr)
+setup_test(dependencies DetDescr::DetDescr)
