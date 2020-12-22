@@ -8,6 +8,7 @@
 
 from LDMX.SimCore import simulator
 from LDMX.SimCore import generators
+from LDMX.SimCore import bias_operators
 from LDMX.Biasing import filters
 from LDMX.Biasing import include as includeBiasing
 
@@ -56,8 +57,7 @@ def photo_nuclear( detector, generator ) :
     sim.generators.append( generator )
     
     # Enable and configure the biasing
-    sim.biasingOn()
-    sim.biasingConfigure( 'photonNuclear' , 'ecal' , 2500. , 450 )
+    sim.biasing_operators = [ bias_operators.PhotoNuclear('ecal',450.,2500.) ]
 
     # the following filters are in a library that needs to be included
     includeBiasing.library()
@@ -75,60 +75,3 @@ def photo_nuclear( detector, generator ) :
 
     return sim
 
-def dark_brem( ap_mass , lhe, detector ) :
-    """Example configuration for producing dark brem interactions in the ECal. 
-
-    This configures the simulator to fire a 4 GeV electron upstream of the 
-    tagger tracker.  The electron is allowed to propagate into the ECal where 
-    the dark-photon production cross-section is biased up.  Only events that 
-    result in a dark-photon being produced in the ECal are kept. 
-
-    Parameters
-    ----------
-    ap_mass : float
-        The mass of the A' in MeV.
-    lhe : str
-        The path to the LHE file to use as vertices of the dark brem. 
-    detector : str
-        Path to the detector.
-
-    Return
-    ------
-    Instance of the simulator configured for dark-brem production in the ECal.
-
-    Example
-    -------
-
-        ecal_ap_sim = ecal.dark_brem(1000, 'path/to/lhe', 'ldmx-det-v12')
-
-
-    """
-    
-    sim = simulator.simulator( "darkBrem_%sMeV" % str(massAPrime) )
-    
-    sim.description = "One e- fired far upstream with Dark Brem turned on and biased up in ECal"
-    sim.setDetector( detector , True )
-    sim.generators.append( generators.single_4gev_e_upstream_tagger() )
-    
-    # Bias the electron dark brem process inside of the ECal
-    # These commands allow us to restrict the dark brem process to a given 
-    # volume.
-    sim.biasingOn()
-    sim.biasingConfigure( 'eDBrem' , 'ecal' , 0. , 100000 )
-    
-    sim.darkBremOn( massAPrime #MeV
-            , lheFile 
-            , 1 ) #Forward Only
-    
-    # the following filters are in a library that needs to be included
-    includeBiasing.library()
-
-    # Then give the UserAction to the simulation so that it knows to use it
-    sim.actions().extend([ 
-            # Only keep events when a dark brem happens in the target
-            filters.DarkBremFilter('ecal') , 
-            # Keep all of the dark brem daughters. 
-            filters.TrackProcessFilter.dark_brem()
-    ])
-    
-    return sim
