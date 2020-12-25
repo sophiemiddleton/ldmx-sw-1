@@ -8,7 +8,7 @@
 #include "Event/ClusterAlgoResult.h"
 #include "Event/EcalCluster.h"
 #include "Event/EcalHit.h"
-#include "Event/EcalDigiCollection.h"
+#include "Event/HgcrocDigiCollection.h"
 #include "Event/EcalVetoResult.h"
 #include "Event/EventConstants.h"
 #include "Event/EventHeader.h"
@@ -26,7 +26,10 @@
 #include "Event/SimTrackerHit.h"
 #include "Event/TrackerVetoResult.h"
 #include "Event/TriggerResult.h"
-#include "Event/TrigScintHit.h" 
+#include "Event/TrigScintHit.h"
+#include "Event/TrigScintCluster.h" 
+#include "Event/TrigScintTrack.h" 
+#include "Event/HgcrocTrigDigi.h"
 
 #include <variant>
 
@@ -50,7 +53,7 @@ namespace ldmx {
      */
     typedef std::variant< 
         ClusterAlgoResult,
-        EcalDigiCollection,
+        HgcrocDigiCollection,
         EcalVetoResult,
         EventHeader,
         HcalVetoResult,
@@ -59,6 +62,9 @@ namespace ldmx {
         TrackerVetoResult,
         TriggerResult,
         TrigScintHit,
+        TrigScintCluster,
+        TrigScintTrack,
+        HgcrocTrigDigiCollection,
         std::vector < CalorimeterHit >,
         std::vector < EcalCluster >,
         std::vector < EcalHit >,
@@ -69,6 +75,8 @@ namespace ldmx {
         std::vector < SiStripHit >,
         std::vector < SimTrackerHit >,
         std::vector < TrigScintHit >,
+        std::vector < TrigScintCluster >,
+        std::vector < TrigScintTrack >,
         std::map< int , SimParticle >
     > EventBusPassenger;
 
