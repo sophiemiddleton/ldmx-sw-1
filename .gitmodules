@@ -24,4 +24,4 @@
 	url = https://github.com/LDMX-Software/TrigScint
 [submodule "Trigger"]
 	path = Trigger
-	url = git@github.com:LDMX-Software/Trigger.git
+	url = https://github.com/LDMX-Software/Trigger.git
