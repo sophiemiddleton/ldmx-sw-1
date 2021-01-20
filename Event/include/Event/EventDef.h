@@ -30,7 +30,7 @@
 #include "Event/TrigScintCluster.h" 
 #include "Event/TrigScintTrack.h" 
 #include "Event/HgcrocTrigDigi.h"
-
+#include "Event/HcalCluster.h"
 #include <variant>
 
 namespace ldmx {
@@ -77,7 +77,8 @@ namespace ldmx {
         std::vector < TrigScintHit >,
         std::vector < TrigScintCluster >,
         std::vector < TrigScintTrack >,
-        std::map< int , SimParticle >
+        std::map< int , SimParticle >, 
+        std::vector < HcalCluster >
     > EventBusPassenger;
 
 }
