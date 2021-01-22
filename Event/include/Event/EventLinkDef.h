@@ -42,7 +42,7 @@
 #pragma link C++ class ldmx::SiStripHit+; 
 #pragma link C++ class ldmx::RawHit+;
 #pragma link C++ class ldmx::HgcrocTrigDigi+;
-
+#pragma link C++ class ldmx::HcalCluster+;
 //objects that we want to be added inside of an STL collection must be repeated below
 #pragma link C++ class std::vector<ldmx::SimCalorimeterHit>+;
 #pragma link C++ class std::vector<ldmx::SimTrackerHit>+;
@@ -59,6 +59,6 @@
 #pragma link C++ class std::vector< ldmx::TrigScintCluster >+;
 #pragma link C++ class std::vector< ldmx::TrigScintTrack >+;
 #pragma link C++ class std::vector<ldmx::HgcrocTrigDigi>+;
-
+#pragma link C++ class std::vector<ldmx::HcalCluster>+;
 #endif
 
