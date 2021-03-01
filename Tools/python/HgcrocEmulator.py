@@ -104,6 +104,16 @@ class HgcrocEmulator() :
         """
         return PE*(5/1)
     
+    def calculateVoltageHcal(self, PE) :
+        """ 
+        Assuming that 1 PEs ~ 5mV (before it was  7 PEs ~ 2.5V)
+        Parameters
+        ----------
+        PE : int                                                                                                                                                              
+            Number of photo-electrons produced  
+        """
+        return PE*(5/1)
+
     def setNoise(self, noiseIntercept , noiseSlope ) :
         """Calculate the Noise RMS [mV] from the capacitance of the readout pads.
 
@@ -139,6 +149,7 @@ class HgcrocEmulator() :
         self.toaThreshold = self.gain*self.pedestal + self.calculateVoltage( 5.*nElectronsPerMIP )
         self.totThreshold = self.gain*self.pedestal + self.calculateVoltage( 50.*nElectronsPerMIP )
 
+<<<<<<< HEAD
     def setThresholdDefaultsHcal(self, nPEPerMIP):
         """Set the different thresholds of the chip for Hcal
 
@@ -155,3 +166,16 @@ class HgcrocEmulator() :
 
         self.toaThreshold     = self.gain*self.pedestal + self.calculateVoltageHcal(0.05*nPEPerMIP) # if gain=0.5, ped=1 -> threshold = 20.9 [mV] (42 ADC)
         self.totThreshold     = 10000.
+=======
+    def setThresholdDefaultsHcal(self):
+        self.pedestal = 25. # ADC
+        # gain = maximum ADC range [fC] ( 1 / readout pad capacitance in pF ) ( 1 / 2^10 ADC Counts ) = mV / ADC counts
+        # if gain = 0.4 and cap = 20 pF => maxADCrange = 8192 = 8pC
+        # if gain = 0.1 and cap = 20 pF => maxADCrange = 2pC
+        self.maxADCRange = 8192. # fC
+        self.gain = 0.1 # mV/ADC
+        #self.readoutThreshold = self.gain*self.pedestal + self.calculateVoltageHcal(1) # [mV] # readout threshold 1 PE -> 5 mV
+        self.readoutThreshold = self.pedestal + self.calculateVoltageHcal(1)/self.gain # readout threshold 1 PE -> 5 mV -> 62.5 ADC(?) -> goes to int
+        self.toaThreshold     = self.gain*self.pedestal + self.calculateVoltageHcal(0.1*68) # toa 0.1 MIP + ped*gain -> if gain=0.015, ped=50 -> theshold 34.75 [mV]
+        self.totThreshold     = self.gain*self.pedestal + self.calculateVoltageHcal(2*68) # tot 2 MIPs
+>>>>>>> e77cc4d30017f8ee8c9885fe03c9e9e8291372bb
