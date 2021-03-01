@@ -6,9 +6,8 @@ from LDMX.SimCore import simulator
 
 p=ldmxcfg.Process("v12")
 
-from LDMX.Ecal import digi
-from LDMX.Ecal import vetos
 from LDMX.Hcal import hcal
+from LDMX.Hcal import digi
 from LDMX.DetDescr.HcalGeometry import HcalGeometry
 from LDMX.Hcal import HcalGeometry
 from LDMX.Tools.HgcrocEmulator import HgcrocEmulator
@@ -36,10 +35,10 @@ sim.generators.append(generators.lhe( "Signal Generator", ("WAB_FF3.lhe" )))
 
 
 
-#hcalDigis = digi.HcalDigiProducer()
+hcalDigis = digi.HcalDigiProducer()
 #hcalDigis.hgcroc.noise = False
 hcalClusters = hcal.HcalClusterProducer()
-hcalOldDigis = hcal.HcalOldDigiProducer()
+#hcalOldDigis = hcal.HcalOldDigiProducer()
 
 #hcalrec = hcal.HcalRecProducer()
 #hcalVeto  = hcal.HcalVetoProcessor()
@@ -47,7 +46,7 @@ hcalOldDigis = hcal.HcalOldDigiProducer()
 geom = HcalGeometry.HcalGeometryProvider.getInstance()
 
 
-p.sequence=[ sim, hcalOldDigis,hcalClusters]
+p.sequence=[ sim, hcalDigis,hcalClusters]
 
 p.outputFiles = [ "test.root"]
 

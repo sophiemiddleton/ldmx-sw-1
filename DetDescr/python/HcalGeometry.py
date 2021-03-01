@@ -1,4 +1,3 @@
-
 """Configuration for HcalGeometry"""
 
 class HcalReadoutGeometry() :
