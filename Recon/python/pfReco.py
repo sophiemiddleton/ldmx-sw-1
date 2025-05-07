@@ -50,7 +50,7 @@ class pfProducer(ldmxcfg.Producer) :
         self.inputTrackCollName = 'PFTracks'
         self.outputCollName     = 'PFCandidates'
         self.singleParticle     = False
-  
+
 class pfTruthProducer(ldmxcfg.Producer) :
     """Configuration for track selector for particle reco"""
     def __init__(self, name='PFTruth') :

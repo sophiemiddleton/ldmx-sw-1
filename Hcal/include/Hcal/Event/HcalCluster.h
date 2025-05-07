@@ -41,7 +41,9 @@ class HcalCluster : public ldmx::CaloCluster {
    * collection.
    */
   void addHits(const std::vector<const ldmx::HcalHit*> hitsVec);
-
+  void addHitList(HcalHit hit){
+  hits_.push_back(hit);
+}
   void setTime(double x) { time_ = x; }
 
   double getTime() const { return time_; }
@@ -49,10 +51,10 @@ class HcalCluster : public ldmx::CaloCluster {
   bool operator<(const HcalCluster& rhs) const {
     return this->getEnergy() < rhs.getEnergy();
   }
-
+ const std::vector<ldmx::HcalHit>& getHits() const { return hits_; }
  private:
   double time_{0};
-
+ std::vector<ldmx::HcalHit> hits_;
   ClassDef(HcalCluster, 1);
 };
 }  // namespace ldmx

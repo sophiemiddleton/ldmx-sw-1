@@ -84,6 +84,7 @@ class LHEEvent {
    * Parse the vertex from a line of the form "#vertex [x] [y] [z]"
    */
   void setVertex(const std::string& line);
+  void setVertex(double alp_mass, double alp_px, double alp_py, double alp_pz, double alp_vtim, double gamma);
 
   /**
    * Get the vertex location (careful to match units as expected!)

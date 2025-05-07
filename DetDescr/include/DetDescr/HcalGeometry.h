@@ -195,6 +195,14 @@ class HcalGeometry : public framework::ConditionsObject {
   std::vector<double> rotateGlobalToLocalBarPosition(
       const std::vector<double> &globalPosition, const ldmx::HcalID &id) const;
 
+      void buildStripPositionMap();
+      /**
+       * Debugging utility, prints out the HcalID and corresponding value of all
+       * entries in the strip_position_map_ for a given section.
+       *
+       * @param section The section number to print, see HcalID for details.
+       */
+       
  private:
   /**
    * Class constructor, for use only by the provider
@@ -214,13 +222,7 @@ class HcalGeometry : public framework::ConditionsObject {
    * Odd layers have horizontal strips.
    * Even layers have vertical strips.
    */
-  void buildStripPositionMap();
-  /**
-   * Debugging utility, prints out the HcalID and corresponding value of all
-   * entries in the strip_position_map_ for a given section.
-   *
-   * @param section The section number to print, see HcalID for details.
-   */
+
   void printPositionMap(int section) const;
   /**
    * Debugging utility, prints out the HcalID and corresponding value of all

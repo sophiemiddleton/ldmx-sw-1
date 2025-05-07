@@ -88,10 +88,41 @@ class HcalClusterProducer(ldmxcfg.Producer) :
         super().__init__(name,'hcal::HcalClusterProducer','Hcal')
 
         #self.EminSeed = 0.1 # Not used
-        self.EnoiseCut = 0.01
+        self.EnoiseCut = 0.05
         self.deltaTime = 10.
         self.deltaR = 0.
-        self.EminCluster = 0.5 # Minimum Energy to be classed as a cluster TODO
+        self.EminCluster = 1.0# Minimum Energy to be classed as a cluster TODO
         self.cutOff = 10.
 
         self.clusterCollName = 'HcalClusters'
+
+class HcalNewClusterProducer(ldmxcfg.Producer) :
+    """Configuration forcluster producer in the HCal
+        Sets all parameters to reasonable defaults.
+    Examples
+    --------
+        from LDMX.EventProc.hcal import HcalNewClusterProducer
+        p.sequence.append( HcalNewClusterProducer() )
+    """
+
+    def __init__(self,name = 'hcalNewClusters') :
+        super().__init__(name,'hcal::HcalNewClusterProducer','Hcal')
+
+        self.EminSeed = 1.0 # minimum energy for a "seed" (20)
+        self.EnoiseCut = 0.5 # minimum allowed hit energy
+        self.deltaTime = 50. # difference between hits in one cluster
+        self.deltaR = 100. # minimum radial 3D distance between two clusters to make them separate entitities
+        self.deltaZ = 1000. # minimum length parameter
+        self.EminCluster = 0.5 # Minimum Energy to be classed as a cluster TODO
+        self.cutOff = 10.
+
+        # good for PN
+        """
+        self.EminSeed = 3. # minimum energy for a "seed" (20)
+        self.EnoiseCut = 0.5 # minimum allowed hit energy
+        self.deltaTime = 5. # difference between hits in one cluster
+        self.deltaR = 0.
+        self.EminCluster = 1. # Minimum Energy to be classed as a cluster TODO
+        self.cutOff = 10.
+        """
+        self.clusterCollName = 'HcalNewClusters'

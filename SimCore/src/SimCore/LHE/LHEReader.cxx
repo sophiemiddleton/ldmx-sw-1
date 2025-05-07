@@ -2,7 +2,7 @@
 
 // STL
 #include <iostream>
-
+#include "TLorentzVector.h"
 namespace simcore::lhe {
 
 LHEReader::LHEReader(std::string& filename) {
@@ -37,9 +37,19 @@ LHEEvent* LHEReader::readNextEvent() {
       // break if the event ended or in LHE 3.0 if we reach the mgrwt block
       break;
     }
-
+    int proc = 1; //1=prima, 2=PF
     if (line.find("#") == std::string::npos) {  // not a comment line
       LHEParticle* particle = new LHEParticle(line);
+      if(proc == 2 and particle->getIDUP() == 666){
+        double alp_vtim = particle->getVTIMUP();
+        double alp_mass=particle->getPUP(4);
+        double alp_px=particle->getPUP(0);
+        double alp_py=particle->getPUP(1);
+        double alp_pz=particle->getPUP(2);
+        TLorentzVector p4 = TLorentzVector(particle->getPUP(0),particle->getPUP(1),particle->getPUP(2),particle->getPUP(3));
+        double alp_gamma=p4.Gamma();
+        nextEvent->setVertex(alp_mass,alp_px,alp_py,alp_pz,alp_vtim,alp_gamma);
+      }
       nextEvent->addParticle(particle);
     } else {
       if (line.find("#vertex") != std::string::npos) {
